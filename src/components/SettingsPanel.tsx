@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { useT } from '../i18n/I18nContext';
 import { SUPPORTED_LANGUAGES } from '../lang';
-import type { LanguageCode } from '../lang';
+
 import type { AppConfig } from '../types/settings';
 import type { ProviderConfig, ConnectionTestResult, OllamaModel } from '../types/provider';
 

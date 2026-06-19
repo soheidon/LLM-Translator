@@ -47,6 +47,11 @@
     "windows": {
       "webviewInstallMode": {
         "type": "embedBootstrapper"
+      },
+      "nsis": {
+        "installerIcon": "icons/icon.ico",
+        "installMode": "currentUser",
+        "languages": ["English", "Japanese", "SimpChinese", "TradChinese", "Korean", "French", "German", "Spanish", "Portuguese", "Russian", "Italian"]
       }
     }
   }

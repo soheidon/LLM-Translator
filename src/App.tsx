@@ -247,19 +247,19 @@ function AppContent({
 
   return (
     <div className="app-layout">
-      <header className="titlebar" data-tauri-drag-region>
-        <div className="titlebar-left" data-tauri-drag-region onMouseDown={() => invoke('start_drag')}>
+      <header className="titlebar" data-tauri-drag-region onMouseDown={() => invoke('start_drag')}>
+        <div className="titlebar-left" data-tauri-drag-region>
           <span className="titlebar-title" data-tauri-drag-region>{t('app.title')}</span>
         </div>
         <div className="titlebar-right">
           <div className="window-controls">
-            <button className="window-btn" onClick={() => invoke('window_minimize')} title={t('titlebar.minimize')}>
+            <button className="window-btn" onClick={() => invoke('window_minimize')} onMouseDown={(e) => e.stopPropagation()} title={t('titlebar.minimize')}>
               <span className="minimize-icon" />
             </button>
-            <button className="window-btn" onClick={() => invoke('window_maximize')} title={t('titlebar.maximize')}>
+            <button className="window-btn" onClick={() => invoke('window_maximize')} onMouseDown={(e) => e.stopPropagation()} title={t('titlebar.maximize')}>
               <span className="maximize-icon" />
             </button>
-            <button className="window-btn window-btn-close" onClick={() => invoke('window_close')} title={t('titlebar.close')}>
+            <button className="window-btn window-btn-close" onClick={() => invoke('window_close')} onMouseDown={(e) => e.stopPropagation()} title={t('titlebar.close')}>
               <span className="close-icon">✕</span>
             </button>
           </div>

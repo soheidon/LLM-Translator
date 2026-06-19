@@ -248,7 +248,7 @@ function AppContent({
   return (
     <div className="app-layout">
       <header className="titlebar" data-tauri-drag-region>
-        <div className="titlebar-left" data-tauri-drag-region>
+        <div className="titlebar-left" data-tauri-drag-region onMouseDown={() => invoke('start_drag')}>
           <span className="titlebar-title" data-tauri-drag-region>{t('app.title')}</span>
         </div>
         <div className="titlebar-right">

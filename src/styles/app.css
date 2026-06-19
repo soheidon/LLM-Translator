@@ -86,6 +86,14 @@ html, body, #root {
   -webkit-user-select: none;
 }
 
+[data-tauri-drag-region] {
+  cursor: grab;
+}
+
+[data-tauri-drag-region]:active {
+  cursor: grabbing;
+}
+
 .titlebar-left {
   display: flex;
   align-items: center;

@@ -110,6 +110,7 @@ pub fn run() {
             commands::window_close,
             commands::focus_window,
             commands::set_always_on_top,
+            commands::start_drag,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

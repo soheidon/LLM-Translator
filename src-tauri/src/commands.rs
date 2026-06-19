@@ -237,6 +237,11 @@ pub async fn set_always_on_top(window: tauri::Window, always_on_top: bool) -> Re
     window.set_always_on_top(always_on_top).map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+pub fn start_drag(window: tauri::Window) -> Result<(), String> {
+    window.start_dragging().map_err(|e| e.to_string())
+}
+
 #[derive(serde::Serialize, Clone)]
 pub struct LanguageInfo {
     pub code: String,

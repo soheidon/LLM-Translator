@@ -1,0 +1,101 @@
+{
+  "app": { "title": "LLM Translator Desktop", "version": "v0.1.0" },
+  "titlebar": { "settings": "설정", "minimize": "최소화", "maximize": "최대화", "close": "닫기" },
+  "main": {
+    "swap_languages": "언어 전환",
+    "placeholder_hint": "텍스트를 선택하고 Ctrl+C+C로 번역하세요",
+    "translating": "번역 중...",
+    "result_placeholder": "번역 결과가 여기에 표시됩니다",
+    "char_count": "{count}자",
+    "button_clear": "지우기",
+    "button_paste": "붙여넣기",
+    "button_retranslate": "재번역",
+    "button_copy": "복사",
+    "copied": "복사됨"
+  },
+  "settings": {
+    "sidebar": { "general": "일반", "api": "API", "presets": "프리셋", "history": "기록", "close": "← 설정 닫기" },
+    "general": {
+      "title": "일반 설정",
+      "desc": "애플리케이션 기본 동작과 단축키를 설정합니다.",
+      "ui_language": "UI 언어",
+      "start_minimized": "시작 시 최소화",
+      "start_minimized_desc": "시작 시 메인 창을 표시하지 않고 시스템 트레이에 상주합니다.",
+      "always_on_top": "항상 위에 표시",
+      "always_on_top_desc": "번역 창을 다른 창보다 위에 표시합니다.",
+      "focus_on_translate": "번역 시 전면 표시",
+      "focus_on_translate_desc": "Ctrl+C+C 또는 클립보드 감지로 번역이 시작되면 창을 전면으로 가져옵니다.",
+      "close_on_escape": "Esc로 닫기",
+      "close_on_escape_desc": "Esc 키로 번역 창을 닫습니다.",
+      "close_on_outside_click": "바깥 클릭 시 닫기",
+      "close_on_outside_click_desc": "팝업 번역 창 바깥을 클릭하면 닫힙니다.",
+      "quick_translate": "Ctrl+C+C Quick Translate",
+      "quick_translate_desc": "Press Ctrl+C twice in any app to translate clipboard content.",
+      "alt_shortcut": "대체 단축키",
+      "open_window": "번역 창 열기",
+      "open_history": "기록 열기",
+      "history_enabled": "번역 기록 저장",
+      "history_enabled_desc": "과거 번역 결과를 로컬에 저장하여 나중에 확인할 수 있습니다.",
+      "notification_sound": "알림음"
+    },
+    "api": {
+      "title": "API configuration",
+      "desc": "번역에 사용할 LLM 제공자를 설정합니다. API 키는 저장되지 않고 OS 환경 변수에서 읽어옵니다.",
+      "table_provider": "PROVIDER", "table_status": "STATUS",
+      "status_testing": "테스트 중...", "status_connected": "연결 성공", "status_failed": "연결 실패",
+      "status_local_connected": "로컬 연결됨", "status_configured_untested": "설정됨 (미테스트)",
+      "status_missing_env": "환경 변수 미설정", "status_no_model": "모델 미선택",
+      "env_var_label": "환경 변수 / API 키", "env_var_base_url": "Base URL",
+      "env_var_help": "왼쪽: 환경 변수명 (덮어쓰기 가능)　오른쪽: API 키 입력 → 「환경 변수에 저장」으로 OS에 저장",
+      "apps_script_url": "Web App URL", "apps_script_placeholder": "https://script.google.com/macros/s/...",
+      "apps_script_help": "왼쪽: 환경 변수명 ({name})  오른쪽: Apps Script Web App URL 입력 → 「환경 변수에 저장」",
+      "ollama_connection": "연결", "ollama_help": "Ollama는 로컬 LLM이므로 API 키가 필요하지 않습니다. Base URL에 Ollama 서버 주소를 지정하세요.",
+      "ollama_local_models": "로컬 모델", "ollama_fetch": "모델 가져오기", "ollama_fetching": "가져오는 중...",
+      "ollama_select_model": "모델을 선택하세요", "ollama_help_started": "Ollama가 실행 중이어야 합니다. 모델 목록은 Ollama API에서 가져옵니다.",
+      "ollama_models_found": "{count}개의 모델을 찾았습니다. 선택하면 자동 저장됩니다.", "ollama_no_models": "모델을 찾을 수 없습니다",
+      "test_connection": "연결 테스트", "set_default": "기본값으로 설정", "default_badge": "기본값",
+      "save_env_var": "환경 변수에 저장", "saving": "저장 중...",
+      "advanced_show": "▶ 상세 설정 표시", "advanced_hide": "▼ 상세 설정 숨기기",
+      "api_type": "API 유형", "model_mapping": "모델 매핑", "model_role": "역할",
+      "model_id": "모델 ID", "model_mode": "모드",
+      "role_high_quality": "고품질 모델", "role_fast": "고속 모델",
+      "mode_thinking": "Thinking", "mode_normal": "일반"
+    },
+    "presets": {
+      "title": "프리셋", "search": "프리셋 검색", "name": "프리셋 이름", "description": "설명",
+      "system_prompt": "시스템 프롬프트", "user_prompt_template": "사용자 프롬프트 템플릿",
+      "placeholder_hint": "{{text}}가 원본 텍스트로 치환됩니다."
+    },
+    "history": { "title": "기록 설정", "max_items": "최대 저장 건수" }
+  },
+  "history_panel": {
+    "title": "기록", "delete_all": "전체 삭제", "close": "✕ 닫기",
+    "search": "기록 검색", "empty": "기록이 없습니다",
+    "retranslate": "재번역", "copy": "복사", "load_more": "더 보기",
+    "loading": "로딩 중...", "confirm_delete_all": "모든 기록을 삭제하시겠습니까?",
+    "source_label": "{lang} (원문)", "target_label": "{lang} (번역문)"
+  },
+  "status_bar": {
+    "hint": "Ctrl+C+C로 번역",
+    "label_model": "MODEL", "label_tone": "문체", "label_preset": "PRESET",
+    "default_provider": "기본값", "no_api_key": "API 키 미설정"
+  },
+  "languages": { "auto": "자동 감지", "en": "English", "ja": "日本語", "zh": "中文", "ko": "한국어", "fr": "Français", "de": "Deutsch", "es": "Español", "pt": "Português", "ru": "Русский", "it": "Italiano" },
+  "modes": { "news": "뉴스 번역", "academic": "논문 번역", "technical": "기술 문서 번역", "email": "메일 번역", "subtitle": "자막 번역", "natural": "자연스러운 번역", "literal": "직역", "formal": "격식체 번역", "casual": "캐주얼 번역", "friendly": "친근한 번역" },
+  "tones": { "auto": "자동", "plain": "평이체", "polite": "경어체" },
+  "preset_names": { "news": "뉴스 번역", "academic": "논문 번역", "technical": "기술 문서 번역", "email": "메일 번역", "subtitle": "자막 번역", "natural": "자연스러운 번역", "literal": "직역", "formal": "격식체 번역", "casual": "캐주얼 번역", "friendly": "친근한 번역" },
+  "preset_descs": { "news": "신문 기사에 적합한 자연스러운 문체", "academic": "학술 용어를 유지하는 번역", "technical": "기술 용어와 코드 참조를 유지", "email": "비즈니스 메일에 적합한 경어", "subtitle": "자막에 적합한 짧고 자연스러운 표현", "natural": "자연스러운 번역", "literal": "원문 구조를 유지하는 번역", "formal": "격식 있는 표현", "casual": "편안하고 자연스러운 표현", "friendly": "따뜻하고 다가가기 쉬운 표현" },
+  "preset_tags": { "news": "뉴스", "academic": "학술", "technical": "기술", "email": "비즈니스", "subtitle": "미디어", "natural": "일반", "literal": "일반", "formal": "문체", "casual": "문체", "friendly": "문체" },
+  "errors": {
+    "empty_clipboard": "클립보드가 비어 있습니다", "clipboard_read_failed": "클립보드 읽기 실패",
+    "empty_text": "번역할 텍스트가 없습니다", "translation_error": "번역 오류",
+    "env_var_name_empty": "환경 변수명이 비어 있습니다", "api_key_empty": "API 키가 비어 있습니다",
+    "setx_failed": "setx 실행 실패: {error}", "env_var_save_failed": "환경 변수 저장 실패: {error}",
+    "env_var_saved": "환경 변수 {name} 저장 완료", "provider_not_found": "제공자 '{id}'를 찾을 수 없습니다",
+    "no_default_provider": "기본 제공자가 설정되지 않았습니다", "ollama_connect_failed": "Ollama 연결 실패: {error}",
+    "ollama_error": "Ollama 오류: HTTP {status}", "ollama_parse_failed": "응답 분석 실패: {error}",
+    "connection_success": "연결 성공", "connection_success_usage": "연결 성공 — {usage}",
+    "connection_failed": "연결 실패: {message}", "env_var_not_set": "환경 변수 {name}이(가) 설정되지 않았습니다"
+  },
+  "lang_selector": { "en": "English", "ja": "日本語", "zh-CN": "中文(简体)", "zh-TW": "中文(繁體)", "ko": "한국어", "fr": "Français", "de": "Deutsch", "es": "Español", "pt": "Português", "ru": "Русский", "it": "Italiano" }
+}

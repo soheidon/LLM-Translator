@@ -1,0 +1,116 @@
+mod commands;
+mod config;
+mod history;
+mod keyboard_hook;
+mod providers;
+mod translator;
+mod tray;
+
+use commands::AppState;
+use std::sync::Mutex;
+use tauri::{Emitter, Manager};
+
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
+pub fn run() {
+    tauri::Builder::default()
+        .plugin(tauri_plugin_log::Builder::default().build())
+        .plugin(tauri_plugin_global_shortcut::Builder::default().build())
+        .plugin(tauri_plugin_clipboard_manager::init())
+        .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_store::Builder::default().build())
+        .setup(|app| {
+            // Load config
+            let app_config = config::load_config();
+
+            // Register state
+            app.manage(AppState {
+                config: Mutex::new(app_config),
+            });
+
+            // Setup system tray
+            tray::setup_tray(app)?;
+
+            // Apply always_on_top from config
+            {
+                let state = app.state::<AppState>();
+                let always = state.config.lock().unwrap().general.always_on_top;
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.set_always_on_top(always);
+                }
+            }
+
+            // Register global shortcut
+            let handle = app.handle().clone();
+            let shortcut_config = {
+                let state = app.state::<AppState>();
+                let cfg = state.config.lock().unwrap();
+                cfg.shortcut.clone()
+            };
+
+            use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut};
+            let shortcut_str = shortcut_config.primary.clone();
+            let shortcut = match shortcut_str.as_str() {
+                "Ctrl+Alt+C" => Shortcut::new(Some(Modifiers::CONTROL | Modifiers::ALT), Code::KeyC),
+                "Ctrl+Shift+C" => Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::KeyC),
+                "Ctrl+Alt+T" => Shortcut::new(Some(Modifiers::CONTROL | Modifiers::ALT), Code::KeyT),
+                "Ctrl+Alt+H" => Shortcut::new(Some(Modifiers::CONTROL | Modifiers::ALT), Code::KeyH),
+                _ => Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::KeyC),
+            };
+            // Start global keyboard hook for double Ctrl+C detection (OS-wide, like DeepL)
+            let shortcut_cfg = {
+                let state = app.state::<AppState>();
+                let cfg = state.config.lock().unwrap().shortcut.clone();
+                cfg
+            };
+            if shortcut_cfg.double_copy_enabled {
+                keyboard_hook::start_global_hook(handle.clone(), shortcut_cfg.double_copy_threshold_ms);
+            }
+
+            let handle_clone = handle.clone();
+            let _ = handle.global_shortcut().on_shortcut(
+                shortcut,
+                move |app, _shortcut, event| {
+                    if event.state == tauri_plugin_global_shortcut::ShortcutState::Pressed {
+                        if let Some(window) = handle_clone.get_webview_window("main") {
+                            let focus = app
+                                .state::<AppState>()
+                                .config
+                                .lock()
+                                .map(|c| c.general.focus_on_translate)
+                                .unwrap_or(true);
+                            if focus {
+                                let _ = window.show();
+                                let _ = window.set_focus();
+                            }
+                            let _ = window.emit("trigger-translate", ());
+                        }
+                    }
+                },
+            );
+
+            Ok(())
+        })
+        .invoke_handler(tauri::generate_handler![
+            commands::get_config,
+            commands::save_config,
+            commands::get_providers,
+            commands::save_provider,
+            commands::test_connection,
+            commands::translate,
+            commands::get_history,
+            commands::delete_history,
+            commands::clear_all_history,
+            commands::get_modes,
+            commands::get_languages,
+            commands::check_env_var,
+            commands::set_user_env_var,
+            commands::list_ollama_models,
+            commands::window_minimize,
+            commands::window_maximize,
+            commands::window_close,
+            commands::focus_window,
+            commands::set_always_on_top,
+        ])
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
+}

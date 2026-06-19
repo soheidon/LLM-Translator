@@ -1,0 +1,100 @@
+{
+  "app": { "title": "LLM Translator Desktop", "version": "v0.1.0" },
+  "titlebar": { "settings": "设置", "minimize": "最小化", "maximize": "最大化", "close": "关闭" },
+  "main": {
+    "swap_languages": "切换语言",
+    "placeholder_hint": "选择文本并按 Ctrl+C+C 翻译",
+    "translating": "翻译中...",
+    "result_placeholder": "翻译结果将显示在此处",
+    "char_count": "{count} 字符",
+    "button_clear": "清除",
+    "button_paste": "粘贴",
+    "button_retranslate": "重新翻译",
+    "button_copy": "复制",
+    "copied": "已复制"
+  },
+  "settings": {
+    "sidebar": { "general": "常规", "api": "API", "presets": "预设", "history": "历史", "close": "← 关闭设置" },
+    "general": {
+      "title": "常规设置",
+      "desc": "配置应用程序的基本行为和快捷键。",
+      "ui_language": "界面语言",
+      "start_minimized": "启动时最小化",
+      "start_minimized_desc": "启动时不显示主窗口，驻留在系统托盘中。",
+      "always_on_top": "始终置顶",
+      "always_on_top_desc": "将翻译窗口保持在其他窗口上方。",
+      "focus_on_translate": "翻译时前置",
+      "focus_on_translate_desc": "通过 Ctrl+C+C 或剪贴板检测触发翻译时，将窗口置于前台。",
+      "close_on_escape": "按 Esc 关闭",
+      "close_on_escape_desc": "按 Esc 键关闭翻译窗口。",
+      "close_on_outside_click": "点击外部关闭",
+      "close_on_outside_click_desc": "点击弹出翻译窗口外部时关闭窗口。",
+      "quick_translate": "Ctrl+C+C Quick Translate",
+      "quick_translate_desc": "Press Ctrl+C twice in any app to translate clipboard content.",
+      "alt_shortcut": "备用快捷键",
+      "open_window": "打开翻译窗口",
+      "open_history": "打开历史记录",
+      "history_enabled": "保存翻译历史",
+      "history_enabled_desc": "将过去的翻译结果保存到本地，以便日后查看。",
+      "notification_sound": "通知音效"
+    },
+    "api": {
+      "title": "API configuration",
+      "desc": "配置用于翻译的 LLM 提供商。API 密钥不会存储，而是从系统环境变量中读取。",
+      "table_provider": "PROVIDER", "table_status": "STATUS",
+      "status_testing": "测试中...", "status_connected": "连接成功", "status_failed": "连接失败",
+      "status_local_connected": "本地已连接", "status_configured_untested": "已配置（未测试）",
+      "status_missing_env": "未设置环境变量", "status_no_model": "未选择模型",
+      "env_var_label": "环境变量 / API 密钥", "env_var_base_url": "Base URL",
+      "env_var_help": "左：环境变量名（可覆盖）　右：输入 API 密钥 → 「保存到环境变量」以保存到系统",
+      "apps_script_url": "Web App URL", "apps_script_placeholder": "https://script.google.com/macros/s/...",
+      "apps_script_help": "左：环境变量名（{name}） 右：输入 Apps Script Web App URL → 「保存到环境变量」",
+      "ollama_connection": "连接", "ollama_help": "Ollama 是本地 LLM，无需 API 密钥。请在 Base URL 中指定 Ollama 服务器地址。",
+      "ollama_local_models": "本地模型", "ollama_fetch": "获取模型", "ollama_fetching": "获取中...",
+      "ollama_select_model": "请选择模型", "ollama_help_started": "Ollama 必须正在运行。模型列表从 Ollama API 获取。",
+      "ollama_models_found": "找到 {count} 个模型。选择后自动保存。", "ollama_no_models": "未找到模型",
+      "test_connection": "连接测试", "set_default": "设为默认", "default_badge": "默认",
+      "save_env_var": "保存到环境变量", "saving": "保存中...",
+      "advanced_show": "▶ 显示详细设置", "advanced_hide": "▼ 隐藏详细设置",
+      "api_type": "API 类型", "model_mapping": "模型映射", "model_role": "角色",
+      "model_id": "模型 ID", "model_mode": "模式",
+      "role_high_quality": "高质量模型", "role_fast": "快速模型",
+      "mode_thinking": "思考", "mode_normal": "标准"
+    },
+    "presets": {
+      "title": "预设", "search": "搜索预设", "name": "预设名称", "description": "说明",
+      "system_prompt": "系统提示词", "user_prompt_template": "用户提示词模板",
+      "placeholder_hint": "{{text}} 将被替换为源文本。"
+    },
+    "history": { "title": "历史设置", "max_items": "最大保存条数" }
+  },
+  "history_panel": {
+    "title": "历史", "delete_all": "全部删除", "close": "✕ 关闭",
+    "search": "搜索历史", "empty": "暂无历史记录",
+    "retranslate": "重新翻译", "copy": "复制", "load_more": "加载更多",
+    "loading": "加载中...", "confirm_delete_all": "删除所有历史记录？",
+    "source_label": "{lang} (原文)", "target_label": "{lang} (译文)"
+  },
+  "status_bar": {
+    "hint": "Ctrl+C+C 翻译",
+    "label_model": "MODEL", "label_tone": "语体", "label_preset": "PRESET",
+    "default_provider": "默认", "no_api_key": "未设置 API 密钥"
+  },
+  "languages": { "auto": "自动检测", "en": "English", "ja": "日本語", "zh": "中文", "ko": "한국어", "fr": "Français", "de": "Deutsch", "es": "Español", "pt": "Português", "ru": "Русский", "it": "Italiano" },
+  "modes": { "news": "新闻翻译", "academic": "学术翻译", "technical": "技术文档翻译", "email": "邮件翻译", "subtitle": "字幕翻译", "natural": "自然翻译", "literal": "直译", "formal": "正式翻译", "casual": "随意翻译", "friendly": "亲切翻译" },
+  "tones": { "auto": "自动", "plain": "简体", "polite": "敬体" },
+  "preset_names": { "news": "新闻翻译", "academic": "学术翻译", "technical": "技术文档翻译", "email": "邮件翻译", "subtitle": "字幕翻译", "natural": "自然翻译", "literal": "直译", "formal": "正式翻译", "casual": "随意翻译", "friendly": "亲切翻译" },
+  "preset_descs": { "news": "适合新闻文章的自然文体", "academic": "保留学术术语的翻译", "technical": "保留技术术语和代码引用", "email": "适用于商务邮件的适当礼貌用语", "subtitle": "简短自然的字幕表达", "natural": "自然流畅的翻译", "literal": "保留原文句子结构", "formal": "正式语体", "casual": "随意自然的表达", "friendly": "温暖亲切的表达" },
+  "preset_tags": { "news": "新闻", "academic": "学术", "technical": "技术", "email": "商务", "subtitle": "媒体", "natural": "通用", "literal": "通用", "formal": "文体", "casual": "文体", "friendly": "文体" },
+  "errors": {
+    "empty_clipboard": "剪贴板为空", "clipboard_read_failed": "读取剪贴板失败", "empty_text": "没有要翻译的文本",
+    "translation_error": "翻译错误", "env_var_name_empty": "环境变量名为空", "api_key_empty": "API 密钥为空",
+    "setx_failed": "执行 setx 失败: {error}", "env_var_save_failed": "保存环境变量失败: {error}",
+    "env_var_saved": "已保存环境变量 {name}", "provider_not_found": "未找到提供商 '{id}'",
+    "no_default_provider": "未配置默认提供商", "ollama_connect_failed": "连接 Ollama 失败: {error}",
+    "ollama_error": "Ollama 返回错误: HTTP {status}", "ollama_parse_failed": "解析响应失败: {error}",
+    "connection_success": "连接成功", "connection_success_usage": "连接成功 — {usage}",
+    "connection_failed": "连接失败: {message}", "env_var_not_set": "未设置环境变量 {name}"
+  },
+  "lang_selector": { "en": "English", "ja": "日本語", "zh-CN": "中文(简体)", "zh-TW": "中文(繁體)", "ko": "한국어", "fr": "Français", "de": "Deutsch", "es": "Español", "pt": "Português", "ru": "Русский", "it": "Italiano" }
+}

@@ -97,6 +97,14 @@ html, body, #root {
 .titlebar-left {
   display: flex;
   align-items: center;
+  gap: 8px;
+}
+
+.titlebar-left .app-icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  color: var(--color-on-surface);
 }
 
 .titlebar-title {
@@ -392,6 +400,36 @@ html, body, #root {
   stroke-linecap: round;
   stroke-linejoin: round;
   flex-shrink: 0;
+}
+
+/* DOM診断 (Google Translate settings toggle) */
+.google-debug-btn {
+  font-family: var(--font-label);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border: none;
+  border-radius: 6px;
+  background: var(--color-surface-container-high);
+  color: var(--color-on-surface-variant);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.google-debug-btn:hover {
+  background: var(--color-surface-container-highest);
+  color: var(--color-on-surface);
+}
+.google-debug-textarea {
+  flex-shrink: 0;
+  height: 120px;
+  font-family: var(--font-code);
+  font-size: 11px;
+  background: var(--color-surface-container-high);
+  color: var(--color-on-surface);
+  border: none;
+  border-top: 1px solid var(--color-outline-variant);
+  padding: 6px 8px;
+  resize: none;
 }
 
 .translation-area {
@@ -837,6 +875,19 @@ html, body, #root {
   flex-shrink: 0;
 }
 
+.top-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.top-bar-left .app-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: var(--color-on-surface);
+}
+
 .top-bar-title {
   font-family: var(--font-body);
   font-size: 14px;
@@ -1105,6 +1156,16 @@ html, body, #root {
 
 .sidebar-header {
   padding: 0 24px 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sidebar-header .app-icon {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  color: var(--color-primary);
 }
 
 .sidebar-title {
@@ -1149,10 +1210,10 @@ html, body, #root {
 }
 
 .sidebar-item .icon {
-  font-size: 18px;
-  width: 22px;
-  text-align: center;
+  width: 20px;
+  height: 20px;
   flex-shrink: 0;
+  color: inherit;
 }
 
 .sidebar-close {

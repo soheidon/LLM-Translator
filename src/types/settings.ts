@@ -16,6 +16,8 @@ export interface GeneralConfig {
   close_on_escape: boolean;
   close_on_outside_click: boolean;
   notification_sound: boolean;
+  google_translate_toolbar: string;
+  google_translate_debug_tool: boolean;
 }
 
 export interface ShortcutConfig {

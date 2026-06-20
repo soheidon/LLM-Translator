@@ -1,7 +1,7 @@
 {
   "app": {
     "title": "LLM Translator Desktop",
-    "version": "v0.1.3"
+    "version": "v0.2.0"
   },
   "titlebar": {
     "settings": "Settings",
@@ -33,6 +33,7 @@
       "presets": "Presets",
       "history": "History",
       "google_translate": "Google Translate",
+      "chatgpt_translate": "chatGPT Translate",
       "close": "← Close Settings"
     },
     "general": {
@@ -120,8 +121,15 @@
       "desc": "Set the source and target languages for the Google Translate tab.",
       "source_lang": "Source language",
       "target_lang": "Target language",
-      "saved": "Saved"
-    }
+      "saved": "Saved",
+      "toolbar_mode": "Browser toolbar",
+      "toolbar_always": "Always show",
+      "toolbar_hide_on_translate": "Hide on translation page",
+      "toolbar_never": "Never show",
+      "debug_tool": "DOM diagnostic tool",
+      "debug_tool_desc": "When enabled, shows a DOM diagnostic button in the browser toolbar"
+    },
+    "chatgpt_translate": { "title": "chatGPT Translate", "desc": "Set source and target languages for the chatGPT Translate tab.", "source_lang": "Source language", "target_lang": "Target language" }
   },
   "history_panel": {
     "title": "History",

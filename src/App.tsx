@@ -12,6 +12,8 @@ import { useTranslationState } from './hooks/useTranslationState';
 import { I18nProvider, useT } from './i18n/I18nContext';
 import type { LanguageCode } from './lang';
 import type { HistoryEntry, ModeInfo } from './types/translation';
+import { GOOGLE_TRANSLATE_LANGUAGES } from './data/googleTranslateLanguages';
+import { AppIcon } from './components/AppIcon';
 import './styles/app.css';
 
 type View = 'translate' | 'settings' | 'history';
@@ -92,26 +94,52 @@ export default function App() {
   activeProviderIdRef.current = activeProviderId;
   const resolveModelRef = useRef(resolveModel);
   resolveModelRef.current = resolveModel;
+  const activeTabRef = useRef(activeTab);
+  activeTabRef.current = activeTab;
+
+  // Route clipboard text based on active tab
+  const routeClipboard = useCallback(async (text: string) => {
+    const tab = activeTabRef.current;
+    if (tab === 'google') {
+      console.log('[Ctrl+C+C] to google', { textLength: text.length });
+      await invoke('set_google_translate_text', { text });
+      return;
+    }
+    if (tab === 'chatgpt') {
+      console.log('[Ctrl+C+C] to chatgpt', { textLength: text.length });
+      await invoke('set_chatgpt_translate_text', { text });
+      return;
+    }
+    // llm tab
+    const t = translateRef.current;
+    const c = configRef.current;
+    t.setSourceText(text);
+    t.translate({
+      text,
+      source_lang: c?.translation.source_lang || 'auto',
+      target_lang: c?.translation.target_lang || 'ja',
+      mode: c?.translation.mode || 'news',
+      tone: c?.translation.tone || 'auto',
+      preset_id: c?.translation.preset_id,
+      provider_id: activeProviderIdRef.current || undefined,
+      model: resolveModelRef.current(activeProviderIdRef.current),
+    });
+  }, []);
 
   // Listen for Tauri events (shortcut triggers from Rust)
   useEffect(() => {
-    const unlistenTranslate = listen('trigger-translate', () => {
+    const unlistenTranslate = listen('trigger-translate', async () => {
       setView('translate');
-      setActiveTab('llm');
-      const t = translateRef.current;
       const c = configRef.current;
       if (c?.general.focus_on_translate) {
         invoke('focus_window').catch(() => {});
       }
-      t.translateFromClipboard({
-        source_lang: c?.translation.source_lang,
-        target_lang: c?.translation.target_lang || 'ja',
-        mode: c?.translation.mode || 'news',
-        tone: c?.translation.tone || 'auto',
-        preset_id: c?.translation.preset_id,
-        provider_id: activeProviderIdRef.current || undefined,
-        model: resolveModelRef.current(activeProviderIdRef.current),
-      });
+      try {
+        const text = await readText();
+        if (text && text.trim()) {
+          await routeClipboard(text.trim());
+        }
+      } catch { /* clipboard read error */ }
     });
 
     const unlistenHistory = listen('show-history', () => {
@@ -155,19 +183,8 @@ export default function App() {
           if (p?.general.focus_on_translate) {
             invoke('focus_window').catch(() => {});
           }
-          const t = translateRef.current;
           setView('translate');
-          t.setSourceText(trimmed);
-          t.translate({
-            text: trimmed,
-            source_lang: p?.translation.source_lang || 'auto',
-            target_lang: p?.translation.target_lang || 'ja',
-            mode: p?.translation.mode || 'news',
-            tone: p?.translation.tone || 'auto',
-            preset_id: p?.translation.preset_id,
-            provider_id: activeProviderIdRef.current || undefined,
-            model: resolveModelRef.current(activeProviderIdRef.current),
-          });
+          routeClipboard(trimmed);
         }, 600);
       } catch {
         // clipboard read error, ignore
@@ -255,6 +272,8 @@ function getGoogleTranslateUrl(): string {
   return 'https://translate.google.com/?sl=auto&tl=ja&op=translate';
 }
 
+const CHATGPT_TRANSLATE_URL = 'https://chatgpt.com/ja-JP/translate/';
+
 function BackIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -290,13 +309,12 @@ function HomeIcon() {
   );
 }
 
-function GoogleTranslatePanel() {
+function GoogleTranslatePanel({ googleTranslateToolbar, debugTool }: { googleTranslateToolbar: string; debugTool: boolean }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
-  const [showControls, setShowControls] = useState(false);
-  const showControlsRef = useRef(false);
-  showControlsRef.current = showControls;
-  const toolbarH = 36;
+  const [debugDom, setDebugDom] = useState('');
+  const showToolbar = googleTranslateToolbar === 'always' || debugTool;
+  const toolbarH = showToolbar ? 36 : 0;
 
   const getRect = useCallback(() => {
     if (!containerRef.current) return null;
@@ -310,24 +328,15 @@ function GoogleTranslatePanel() {
   }, []);
 
   useEffect(() => {
-    const checkUrl = async () => {
-      try {
-        const currentUrl = await invoke<string>('get_google_translate_url');
-        const isTranslate = /^https?:\/\/translate\.google\.com\/?(\?.*)?(#.*)?$/.test(currentUrl);
-        setShowControls(!isTranslate);
-      } catch { /* webview not ready yet */ }
-    };
-
     const syncPosition = () => {
       const r = getRect();
       if (!r) return;
-      const offset = showControlsRef.current ? toolbarH : 0;
       invoke('set_google_translate_visible', {
         visible: true,
         x: r.x,
-        y: r.y + offset,
+        y: r.y + toolbarH,
         width: r.width,
-        height: r.height - offset,
+        height: r.height - toolbarH,
       }).catch(() => {});
     };
 
@@ -344,10 +353,7 @@ function GoogleTranslatePanel() {
       requestAnimationFrame(syncPosition);
     });
 
-    const interval = setInterval(() => {
-      syncPosition();
-      checkUrl();
-    }, 500);
+    const interval = setInterval(syncPosition, 500);
 
     return () => {
       clearInterval(interval);
@@ -363,9 +369,20 @@ function GoogleTranslatePanel() {
     invoke('google_translate_home', { url: homeUrl }).catch(console.error);
   };
 
+  const handleDebugDom = async () => {
+    try {
+      const result = await invoke<string>('debug_google_translate_dom');
+      console.log('[Google DOM debug]', result);
+      setDebugDom(result);
+    } catch (e) {
+      console.error('[Google DOM debug failed]', e);
+      setDebugDom('Error: ' + String(e));
+    }
+  };
+
   return (
     <div ref={containerRef} className="translate-container" style={{ background: 'transparent', position: 'relative' }}>
-      {showControls && ready && (
+      {ready && showToolbar && (
         <div className="browser-toolbar">
           <button className="browser-toolbar-btn" onClick={handleBack} aria-label="戻る" title="戻る">
             <BackIcon />
@@ -379,8 +396,94 @@ function GoogleTranslatePanel() {
           <button className="browser-toolbar-btn" onClick={handleHome} aria-label="Google翻訳へ戻る" title="Google翻訳へ戻る">
             <HomeIcon />
           </button>
+          <span style={{ flex: 1 }} />
+            {debugTool && (
+              <button className="google-debug-btn" onClick={handleDebugDom}>DOM診断</button>
+            )}
         </div>
       )}
+      {debugTool && debugDom && (
+        <textarea
+          className="google-debug-textarea"
+          value={debugDom}
+          readOnly
+          onClick={e => (e.target as HTMLTextAreaElement).select()}
+        />
+      )}
+      {!ready && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+          <div className="loading-spinner" />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ChatGptTranslatePanel() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [ready, setReady] = useState(false);
+  const toolbarH = 0;
+
+  const getRect = useCallback(() => {
+    if (!containerRef.current) return null;
+    const rect = containerRef.current.getBoundingClientRect();
+    return {
+      x: Math.round(rect.left),
+      y: Math.round(rect.top),
+      width: Math.round(rect.width),
+      height: Math.round(rect.height),
+    };
+  }, []);
+
+  useEffect(() => {
+    const syncPosition = () => {
+      const r = getRect();
+      if (!r) return;
+      invoke('set_chatgpt_translate_visible', {
+        visible: true,
+        x: r.x,
+        y: r.y + toolbarH,
+        width: r.width,
+        height: r.height - toolbarH,
+      }).catch(() => {});
+    };
+
+    const rect = getRect();
+    if (!rect) return;
+
+    invoke('open_chatgpt_translate', { url: CHATGPT_TRANSLATE_URL, ...rect })
+      .then(() => {
+        setReady(true);
+        const sourceCode = (() => {
+          try { return localStorage.getItem('chatgptTranslateSourceLang') || 'auto'; }
+          catch { return 'auto'; }
+        })();
+        const targetCode = (() => {
+          try { return localStorage.getItem('chatgptTranslateTargetLang') || 'ja'; }
+          catch { return 'ja'; }
+        })();
+        const sourceLang = GOOGLE_TRANSLATE_LANGUAGES.find(l => l.code === sourceCode);
+        const targetLang = GOOGLE_TRANSLATE_LANGUAGES.find(l => l.code === targetCode);
+        const sourceLabel = sourceCode === 'auto' ? '言語を検出する' : (sourceLang?.nameJa || '言語を検出する');
+        const targetLabel = targetLang?.nameJa || '日本語';
+        return invoke('set_chatgpt_translate_languages', { sourceLabel, targetLabel });
+      })
+      .catch(console.error);
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(syncPosition);
+    });
+
+    const interval = setInterval(syncPosition, 500);
+
+    return () => {
+      clearInterval(interval);
+      invoke('set_chatgpt_translate_visible', { visible: false, x: 0, y: 0, width: 0, height: 0 }).catch(() => {});
+    };
+  }, [getRect]);
+
+  return (
+    <div ref={containerRef} className="translate-container" style={{ background: 'transparent', position: 'relative' }}>
       {!ready && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
           <div className="loading-spinner" />
@@ -417,6 +520,7 @@ function AppContent({
     <div className="app-layout">
       <header className="titlebar" data-tauri-drag-region onMouseDown={() => invoke('start_drag')}>
         <div className="titlebar-left" data-tauri-drag-region>
+          <AppIcon />
           <span className="titlebar-title" data-tauri-drag-region>{t('app.title')}</span>
         </div>
         <div className="titlebar-right">
@@ -446,9 +550,9 @@ function AppContent({
             providerId={activeProviderId}
           />
         ) : activeTab === 'google' ? (
-          <GoogleTranslatePanel />
+          <GoogleTranslatePanel googleTranslateToolbar={config.general.google_translate_toolbar} debugTool={config.general.google_translate_debug_tool} />
         ) : (
-          <div className="translate-container" />
+          <ChatGptTranslatePanel />
         )
       ) : (
         <div className="app-content">
@@ -462,6 +566,7 @@ function AppContent({
         tone={tone}
         availableProviders={availableProviders}
         activeProviderId={activeProviderId}
+        activeTab={activeTab}
         onChangeMode={setMode}
         onChangeTone={setTone}
         onChangeProvider={setActiveProviderId}

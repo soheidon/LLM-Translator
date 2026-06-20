@@ -1,5 +1,5 @@
 {
-  "app": { "title": "LLM Translator Desktop", "version": "v0.1.3" },
+  "app": { "title": "LLM Translator Desktop", "version": "v0.2.0" },
   "titlebar": { "settings": "Einstellungen", "minimize": "Minimieren", "maximize": "Maximieren", "close": "Schließen" },
   "tabs": { "llm": "LLM", "google": "Google Übersetzung", "chatgpt": "chatGPT Übersetzung" },
   "main": {
@@ -15,7 +15,8 @@
     "copied": "Kopiert"
   },
   "settings": {
-    "sidebar": { "general": "Allgemein", "api": "API", "presets": "Voreinstellungen", "history": "Verlauf", "google_translate": "Google Übersetzer", "close": "← Einstellungen schließen" },
+    "sidebar": { "general": "Allgemein", "api": "API", "presets": "Voreinstellungen", "history": "Verlauf", "google_translate": "Google Übersetzer",
+      "chatgpt_translate": "chatGPT Übersetzer", "close": "← Einstellungen schließen" },
     "general": {
       "title": "Allgemeine Einstellungen",
       "desc": "Grundeinstellungen und Tastenkombinationen konfigurieren.",
@@ -69,7 +70,8 @@
       "placeholder_hint": "{{text}} wird durch den Quelltext ersetzt."
     },
     "history": { "title": "Verlaufseinstellungen", "max_items": "Max. Einträge" },
-    "google_translate": { "title": "Google Übersetzer", "desc": "Quell- und Zielsprache für den Google Übersetzer-Tab festlegen.", "source_lang": "Quellsprache", "target_lang": "Zielsprache", "saved": "Gespeichert" }
+    "google_translate": { "title": "Google Übersetzer", "desc": "Quell- und Zielsprache für den Google Übersetzer-Tab festlegen.", "source_lang": "Quellsprache", "target_lang": "Zielsprache", "saved": "Gespeichert", "toolbar_mode": "Browser-Symbolleiste", "toolbar_always": "Immer anzeigen", "toolbar_hide_on_translate": "Auf Übersetzungsseite ausblenden", "toolbar_never": "Nie anzeigen", "debug_tool": "DOM-Diagnosetool", "debug_tool_desc": "Wenn aktiviert, wird eine DOM-Diagnose-Schaltfläche in der Symbolleiste angezeigt" },
+    "chatgpt_translate": { "title": "chatGPT Übersetzer", "desc": "Quell- und Zielsprache für den chatGPT Übersetzer-Tab festlegen.", "source_lang": "Quellsprache", "target_lang": "Zielsprache" }
   },
   "history_panel": {
     "title": "Verlauf", "delete_all": "Alle löschen", "close": "✕ Schließen",

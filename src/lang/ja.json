@@ -1,7 +1,7 @@
 {
   "app": {
     "title": "LLM Translator Desktop",
-    "version": "v0.1.3"
+    "version": "v0.2.0"
   },
   "titlebar": {
     "settings": "設定",
@@ -10,7 +10,7 @@
     "close": "閉じる"
   },
   "tabs": {
-    "llm": "LLM",
+    "llm": "LLM翻訳",
     "google": "Google翻訳",
     "chatgpt": "chatGPT翻訳"
   },
@@ -33,6 +33,7 @@
       "presets": "プリセット",
       "history": "履歴",
       "google_translate": "Google翻訳",
+      "chatgpt_translate": "chatGPT翻訳",
       "close": "← 設定を閉じる"
     },
     "general": {
@@ -120,7 +121,19 @@
       "desc": "Google翻訳タブで開く翻訳元言語と翻訳先言語を設定します。",
       "source_lang": "翻訳元言語",
       "target_lang": "翻訳先言語",
-      "saved": "保存しました"
+      "saved": "保存しました",
+      "toolbar_mode": "ブラウザツールバーの表示",
+      "toolbar_always": "常に表示させる",
+      "toolbar_hide_on_translate": "翻訳ページには表示させない",
+      "toolbar_never": "常に表示させない",
+      "debug_tool": "DOM診断ツール",
+      "debug_tool_desc": "有効にするとブラウザツールバーにDOM診断ボタンが表示されます"
+    },
+    "chatgpt_translate": {
+      "title": "chatGPT翻訳",
+      "desc": "chatGPT翻訳タブで使用する翻訳元・翻訳先言語を設定します。",
+      "source_lang": "翻訳元言語",
+      "target_lang": "翻訳先言語"
     }
   },
   "history_panel": {

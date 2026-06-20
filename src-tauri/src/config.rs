@@ -21,6 +21,14 @@ pub struct GeneralConfig {
     pub close_on_escape: bool,
     pub close_on_outside_click: bool,
     pub notification_sound: bool,
+    #[serde(default = "default_toolbar_mode")]
+    pub google_translate_toolbar: String,
+    #[serde(default)]
+    pub google_translate_debug_tool: bool,
+}
+
+fn default_toolbar_mode() -> String {
+    "hide_on_translate".to_string()
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -333,6 +341,8 @@ impl Default for AppConfig {
                 close_on_escape: true,
                 close_on_outside_click: false,
                 notification_sound: false,
+                google_translate_toolbar: "hide_on_translate".to_string(),
+                google_translate_debug_tool: false,
             },
             shortcut: ShortcutConfig {
                 primary: "Ctrl+Shift+C".to_string(),

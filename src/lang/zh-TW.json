@@ -1,5 +1,5 @@
 {
-  "app": { "title": "LLM Translator Desktop", "version": "v0.1.3" },
+  "app": { "title": "LLM Translator Desktop", "version": "v0.2.0" },
   "titlebar": { "settings": "設定", "minimize": "最小化", "maximize": "最大化", "close": "關閉" },
   "tabs": { "llm": "LLM", "google": "Google翻譯", "chatgpt": "chatGPT翻譯" },
   "main": {
@@ -15,7 +15,8 @@
     "copied": "已複製"
   },
   "settings": {
-    "sidebar": { "general": "一般", "api": "API", "presets": "預設", "history": "歷史", "google_translate": "Google翻譯", "close": "← 關閉設定" },
+    "sidebar": { "general": "一般", "api": "API", "presets": "預設", "history": "歷史", "google_translate": "Google翻譯",
+      "chatgpt_translate": "chatGPT翻譯", "close": "← 關閉設定" },
     "general": {
       "title": "一般設定",
       "desc": "設定應用程式的基本行為與快捷鍵。",
@@ -68,7 +69,8 @@
       "placeholder_hint": "{{text}} 將被替換為來源文字。"
     },
     "history": { "title": "歷史設定", "max_items": "最大儲存筆數" },
-    "google_translate": { "title": "Google翻譯", "desc": "設定Google翻譯標籤頁的來源語言和目標語言。", "source_lang": "來源語言", "target_lang": "目標語言", "saved": "已儲存" }
+    "google_translate": { "title": "Google翻譯", "desc": "設定Google翻譯標籤頁的來源語言和目標語言。", "source_lang": "來源語言", "target_lang": "目標語言", "saved": "已儲存", "toolbar_mode": "瀏覽器工具列", "toolbar_always": "一律顯示", "toolbar_hide_on_translate": "翻譯頁面不顯示", "toolbar_never": "一律不顯示", "debug_tool": "DOM診斷工具", "debug_tool_desc": "啟用後，工具列中將顯示DOM診斷按鈕" },
+    "chatgpt_translate": { "title": "chatGPT翻譯", "desc": "chatGPT翻訳タブで使用する翻訳元・翻訳先言語を設定します。", "source_lang": "翻訳元言語", "target_lang": "翻訳先言語" }
   },
   "history_panel": {
     "title": "歷史", "delete_all": "全部刪除", "close": "✕ 關閉",

@@ -1,5 +1,5 @@
 {
-  "app": { "title": "LLM Translator Desktop", "version": "v0.1.3" },
+  "app": { "title": "LLM Translator Desktop", "version": "v0.2.0" },
   "titlebar": { "settings": "Impostazioni", "minimize": "Riduci a icona", "maximize": "Ingrandisci", "close": "Chiudi" },
   "tabs": { "llm": "LLM", "google": "Google Traduzione", "chatgpt": "chatGPT Traduzione" },
   "main": {
@@ -15,7 +15,8 @@
     "copied": "Copiato"
   },
   "settings": {
-    "sidebar": { "general": "Generale", "api": "API", "presets": "Preimpostazioni", "history": "Cronologia", "google_translate": "Google Traduttore", "close": "← Chiudi impostazioni" },
+    "sidebar": { "general": "Generale", "api": "API", "presets": "Preimpostazioni", "history": "Cronologia", "google_translate": "Google Traduttore",
+      "chatgpt_translate": "chatGPT Traduttore", "close": "← Chiudi impostazioni" },
     "general": {
       "title": "Impostazioni generali",
       "desc": "Configura il comportamento di base e le scorciatoie.",
@@ -69,7 +70,8 @@
       "placeholder_hint": "{{text}} verrà sostituito con il testo di origine."
     },
     "history": { "title": "Impostazioni cronologia", "max_items": "Max elementi" },
-    "google_translate": { "title": "Google Traduttore", "desc": "Imposta la lingua di origine e di destinazione per la scheda Google Traduttore.", "source_lang": "Lingua di origine", "target_lang": "Lingua di destinazione", "saved": "Salvato" }
+    "google_translate": { "title": "Google Traduttore", "desc": "Imposta la lingua di origine e di destinazione per la scheda Google Traduttore.", "source_lang": "Lingua di origine", "target_lang": "Lingua di destinazione", "saved": "Salvato", "toolbar_mode": "Barra degli strumenti", "toolbar_always": "Mostra sempre", "toolbar_hide_on_translate": "Nascondi nella pagina di traduzione", "toolbar_never": "Non mostrare mai", "debug_tool": "Strumento diagnostico DOM", "debug_tool_desc": "Se attivato, mostra un pulsante diagnostico DOM nella barra degli strumenti" },
+    "chatgpt_translate": { "title": "chatGPT Traduttore", "desc": "chatGPT翻訳タブで使用する翻訳元・翻訳先言語を設定します。", "source_lang": "翻訳元言語", "target_lang": "翻訳先言語" }
   },
   "history_panel": {
     "title": "Cronologia", "delete_all": "Elimina tutto", "close": "✕ Chiudi",

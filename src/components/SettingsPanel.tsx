@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { useT } from '../i18n/I18nContext';
 import { SUPPORTED_LANGUAGES } from '../lang';
+import { AppIcon } from './AppIcon';
 
 import type { AppConfig } from '../types/settings';
 import type { ProviderConfig, ConnectionTestResult, OllamaModel } from '../types/provider';
@@ -16,7 +17,22 @@ interface Props {
   onClose: () => void;
 }
 
-type SettingsTab = 'general' | 'api' | 'presets' | 'history' | 'googleTranslate';
+type SettingsTab = 'general' | 'api' | 'presets' | 'history' | 'googleTranslate' | 'chatgptTranslate';
+
+function SidebarIcon({ children }: { children: React.ReactNode }) {
+  return (
+    <svg className="icon" viewBox="0 0 24 24" aria-hidden="true"
+      fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      {children}
+    </svg>
+  );
+}
+function GearIcon() { return <SidebarIcon><path d="M12 2l.7 3.7c.5.1 1 .3 1.5.6l3.2-2 1.4 2.6-2.8 2.3c.2.6.3 1.2.3 1.8s-.1 1.2-.3 1.8l2.8 2.3-1.4 2.6-3.2-2c-.5.3-1 .5-1.5.6L12 22l-.7-3.7c-.5-.1-1-.3-1.5-.6l-3.2 2-1.4-2.6 2.8-2.3c-.2-.6-.3-1.2-.3-1.8s.1-1.2.3-1.8l-2.8-2.3 1.4-2.6 3.2 2c.5-.3 1-.5 1.5-.6L12 2Z" /><circle cx="12" cy="12" r="3" /></SidebarIcon>; }
+function PlugIcon() { return <SidebarIcon><path d="M8 2v4M16 2v4M6 6h12l-1 14H7L6 6Z" /><path d="M10 10v4M14 10v4" /></SidebarIcon>; }
+function SlidersIcon() { return <SidebarIcon><path d="M4 8h4M4 8a2 2 0 1 0 4 0M12 8h8" /><path d="M4 16h8M16 16h4M16 16a2 2 0 1 1-4 0" /></SidebarIcon>; }
+function ClipboardIcon() { return <SidebarIcon><rect x="8" y="2" width="8" height="4" rx="1" /><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /><path d="M9 12h6M9 16h6" /></SidebarIcon>; }
+function TranslateIcon() { return <SidebarIcon><path d="M3 5h8M7 5c-.3 3-1.7 5.5-4 7.5M5.5 8.5c1 1.5 2.3 2.7 4 3.5" /><rect x="10" y="5" width="11" height="14" rx="2" /><path d="M13.5 9.5h4M15.5 9.5v6M14 13h3" /></SidebarIcon>; }
+function ChatIcon() { return <SidebarIcon><path d="M6 7a3 3 0 0 1 3-3h6a3 3 0 0 1 3 3v5a3 3 0 0 1-3 3h-5l-4 3v-3.5A3 3 0 0 1 6 12V7Z" /><path d="M9 9h5M9 12h3" /><path d="M18.5 17l.3.7.8.3-.8.3-.3.7-.3-.7-.8-.3.8-.3.3-.7Z" /></SidebarIcon>; }
 
 export function SettingsPanel({ config, onUpdateGeneral, onUpdateShortcut, onUpdateHistory, onSaveProvider, onClose }: Props) {
   const [tab, setTab] = useState<SettingsTab>('general');
@@ -27,37 +43,44 @@ export function SettingsPanel({ config, onUpdateGeneral, onUpdateShortcut, onUpd
       {/* Sidebar */}
       <nav className="sidebar">
         <div className="sidebar-header">
+          <AppIcon />
           <div className="sidebar-title">{t('app.title')}</div>
         </div>
         <ul className="sidebar-nav">
           <li>
             <a className={`sidebar-item ${tab === 'general' ? 'active' : ''}`} onClick={() => setTab('general')}>
-              <span className="icon">⚙</span>
+              <GearIcon />
               <span>{t('settings.sidebar.general')}</span>
             </a>
           </li>
           <li>
             <a className={`sidebar-item ${tab === 'api' ? 'active' : ''}`} onClick={() => setTab('api')}>
-              <span className="icon">🔌</span>
+              <PlugIcon />
               <span>{t('settings.sidebar.api')}</span>
             </a>
           </li>
           <li>
             <a className={`sidebar-item ${tab === 'presets' ? 'active' : ''}`} onClick={() => setTab('presets')}>
-              <span className="icon">🎛</span>
+              <SlidersIcon />
               <span>{t('settings.sidebar.presets')}</span>
             </a>
           </li>
           <li>
             <a className={`sidebar-item ${tab === 'history' ? 'active' : ''}`} onClick={() => setTab('history')}>
-              <span className="icon">📋</span>
+              <ClipboardIcon />
               <span>{t('settings.sidebar.history')}</span>
             </a>
           </li>
           <li>
             <a className={`sidebar-item ${tab === 'googleTranslate' ? 'active' : ''}`} onClick={() => setTab('googleTranslate')}>
-              <span className="icon">🌐</span>
+              <TranslateIcon />
               <span>{t('settings.sidebar.google_translate')}</span>
+            </a>
+          </li>
+          <li>
+            <a className={`sidebar-item ${tab === 'chatgptTranslate' ? 'active' : ''}`} onClick={() => setTab('chatgptTranslate')}>
+              <ChatIcon />
+              <span>{t('settings.sidebar.chatgpt_translate')}</span>
             </a>
           </li>
         </ul>
@@ -71,7 +94,7 @@ export function SettingsPanel({ config, onUpdateGeneral, onUpdateShortcut, onUpd
       {/* Main */}
       <div className="main-content">
         <header className="top-bar">
-          <h1 className="top-bar-title">{t('app.title')}</h1>
+          <div />
           <button className="settings-close-button" onClick={onClose} title={t('settings.sidebar.close')}>
             <span className="settings-close-icon">×</span>
           </button>
@@ -91,7 +114,10 @@ export function SettingsPanel({ config, onUpdateGeneral, onUpdateShortcut, onUpd
             <HistorySettings config={config} onUpdateHistory={onUpdateHistory} />
           )}
           {tab === 'googleTranslate' && (
-            <GoogleTranslateSettings />
+            <GoogleTranslateSettings config={config} onUpdateGeneral={onUpdateGeneral} />
+          )}
+          {tab === 'chatgptTranslate' && (
+            <ChatGptTranslateSettings />
           )}
         </div>
       </div>
@@ -949,7 +975,10 @@ function loadTargetLang(): string {
   return DEFAULT_TARGET_LANG;
 }
 
-function GoogleTranslateSettings() {
+function GoogleTranslateSettings({ config, onUpdateGeneral }: {
+  config: AppConfig;
+  onUpdateGeneral: (u: Partial<AppConfig['general']>) => void;
+}) {
   const { t, language } = useT();
   const [sourceLang, setSourceLang] = useState(loadSourceLang);
   const [targetLang, setTargetLang] = useState(loadTargetLang);
@@ -1022,6 +1051,121 @@ function GoogleTranslateSettings() {
         )}
       </div>
 
+      <div className="settings-group" style={{ marginTop: 24 }}>
+        <label className="settings-label">{t('settings.google_translate.toolbar_mode')}</label>
+        <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {(['always', 'hide_on_translate', 'never'] as const).map(mode => (
+            <label key={mode} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 14 }}>
+              <input
+                type="radio"
+                name="google_toolbar"
+                value={mode}
+                checked={config.general.google_translate_toolbar === mode}
+                onChange={() => onUpdateGeneral({ google_translate_toolbar: mode })}
+              />
+              {t(`settings.google_translate.toolbar_${mode}`)}
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div className="settings-group" style={{ marginTop: 24 }}>
+        <div className="settings-row">
+          <div>
+            <div className="settings-label">{t('settings.google_translate.debug_tool')}</div>
+            <div className="settings-description">{t('settings.google_translate.debug_tool_desc')}</div>
+          </div>
+          <div className="settings-control">
+            <button className={`toggle ${config.general.google_translate_debug_tool ? 'active' : ''}`} onClick={() => onUpdateGeneral({ google_translate_debug_tool: !config.general.google_translate_debug_tool })} />
+          </div>
+        </div>
+      </div>
+
+    </div>
+  );
+}
+
+// --- ChatGPT Translate Settings ---
+const CHATGPT_SOURCE_KEY = 'chatgptTranslateSourceLang';
+const CHATGPT_TARGET_KEY = 'chatgptTranslateTargetLang';
+const CHATGPT_DEFAULT_SOURCE = 'auto';
+const CHATGPT_DEFAULT_TARGET = 'ja';
+
+function loadChatGptSourceLang(): string {
+  try {
+    const saved = localStorage.getItem(CHATGPT_SOURCE_KEY);
+    if (saved && GOOGLE_TRANSLATE_LANGUAGES.some(l => l.code === saved)) return saved;
+  } catch { /* storage unavailable */ }
+  return CHATGPT_DEFAULT_SOURCE;
+}
+
+function loadChatGptTargetLang(): string {
+  try {
+    const saved = localStorage.getItem(CHATGPT_TARGET_KEY);
+    if (saved && saved !== 'auto' && GOOGLE_TRANSLATE_LANGUAGES.some(l => l.code === saved)) return saved;
+  } catch { /* storage unavailable */ }
+  return CHATGPT_DEFAULT_TARGET;
+}
+
+function ChatGptTranslateSettings() {
+  const { t, language } = useT();
+  const [sourceLang, setSourceLang] = useState(loadChatGptSourceLang);
+  const [targetLang, setTargetLang] = useState(loadChatGptTargetLang);
+
+  const isJapanese = language.startsWith('ja');
+
+  const sourceLangs = GOOGLE_TRANSLATE_LANGUAGES;
+  const targetLangs = GOOGLE_TRANSLATE_LANGUAGES.filter(l => l.code !== 'auto');
+
+  const handleSourceChange = (code: string) => {
+    setSourceLang(code);
+    try { localStorage.setItem(CHATGPT_SOURCE_KEY, code); } catch {}
+  };
+
+  const handleTargetChange = (code: string) => {
+    setTargetLang(code);
+    try { localStorage.setItem(CHATGPT_TARGET_KEY, code); } catch {}
+  };
+
+  return (
+    <div className="settings-section">
+      <h3>{t('settings.chatgpt_translate.title')}</h3>
+      <p className="settings-section-desc">{t('settings.chatgpt_translate.desc')}</p>
+
+      <div className="settings-group" style={{ marginTop: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div>
+            <label className="settings-label">{t('settings.chatgpt_translate.source_lang')}</label>
+            <select
+              className="select"
+              style={{ width: '100%', marginTop: 4 }}
+              value={sourceLang}
+              onChange={e => handleSourceChange(e.target.value)}
+            >
+              {sourceLangs.map(l => (
+                <option key={l.code} value={l.code}>
+                  {isJapanese ? l.nameJa : l.nameEn}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="settings-label">{t('settings.chatgpt_translate.target_lang')}</label>
+            <select
+              className="select"
+              style={{ width: '100%', marginTop: 4 }}
+              value={targetLang}
+              onChange={e => handleTargetChange(e.target.value)}
+            >
+              {targetLangs.map(l => (
+                <option key={l.code} value={l.code}>
+                  {isJapanese ? l.nameJa : l.nameEn}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

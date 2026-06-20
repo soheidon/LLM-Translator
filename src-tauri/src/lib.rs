@@ -109,6 +109,7 @@ pub fn run() {
             commands::window_maximize,
             commands::window_close,
             commands::focus_window,
+            commands::focus_main_window,
             commands::set_always_on_top,
             commands::start_drag,
             commands::open_google_translate,
@@ -118,6 +119,17 @@ pub fn run() {
             commands::google_translate_reload,
             commands::google_translate_home,
             commands::get_google_translate_url,
+            commands::set_google_translate_text,
+            commands::debug_google_translate_dom,
+            commands::open_chatgpt_translate,
+            commands::set_chatgpt_translate_visible,
+            commands::chatgpt_translate_back,
+            commands::chatgpt_translate_forward,
+            commands::chatgpt_translate_reload,
+            commands::chatgpt_translate_home,
+            commands::get_chatgpt_translate_url,
+            commands::set_chatgpt_translate_text,
+            commands::set_chatgpt_translate_languages,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

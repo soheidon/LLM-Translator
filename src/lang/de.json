@@ -1,6 +1,7 @@
 {
-  "app": { "title": "LLM Translator Desktop", "version": "v0.1.0" },
+  "app": { "title": "LLM Translator Desktop", "version": "v0.1.3" },
   "titlebar": { "settings": "Einstellungen", "minimize": "Minimieren", "maximize": "Maximieren", "close": "Schließen" },
+  "tabs": { "llm": "LLM", "google": "Google Übersetzung", "chatgpt": "chatGPT Übersetzung" },
   "main": {
     "swap_languages": "Sprachen tauschen",
     "placeholder_hint": "Text auswählen und Strg+C+C zum Übersetzen drücken",
@@ -14,7 +15,7 @@
     "copied": "Kopiert"
   },
   "settings": {
-    "sidebar": { "general": "Allgemein", "api": "API", "presets": "Voreinstellungen", "history": "Verlauf", "close": "← Einstellungen schließen" },
+    "sidebar": { "general": "Allgemein", "api": "API", "presets": "Voreinstellungen", "history": "Verlauf", "google_translate": "Google Übersetzer", "close": "← Einstellungen schließen" },
     "general": {
       "title": "Allgemeine Einstellungen",
       "desc": "Grundeinstellungen und Tastenkombinationen konfigurieren.",
@@ -67,7 +68,8 @@
       "user_prompt_template": "Benutzer-Prompt-Vorlage",
       "placeholder_hint": "{{text}} wird durch den Quelltext ersetzt."
     },
-    "history": { "title": "Verlaufseinstellungen", "max_items": "Max. Einträge" }
+    "history": { "title": "Verlaufseinstellungen", "max_items": "Max. Einträge" },
+    "google_translate": { "title": "Google Übersetzer", "desc": "Quell- und Zielsprache für den Google Übersetzer-Tab festlegen.", "source_lang": "Quellsprache", "target_lang": "Zielsprache", "saved": "Gespeichert" }
   },
   "history_panel": {
     "title": "Verlauf", "delete_all": "Alle löschen", "close": "✕ Schließen",

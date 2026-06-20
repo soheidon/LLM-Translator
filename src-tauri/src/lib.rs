@@ -111,6 +111,13 @@ pub fn run() {
             commands::focus_window,
             commands::set_always_on_top,
             commands::start_drag,
+            commands::open_google_translate,
+            commands::set_google_translate_visible,
+            commands::google_translate_back,
+            commands::google_translate_forward,
+            commands::google_translate_reload,
+            commands::google_translate_home,
+            commands::get_google_translate_url,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

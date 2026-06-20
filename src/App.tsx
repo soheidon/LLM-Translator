@@ -6,6 +6,7 @@ import { MainTranslate } from './components/MainTranslate';
 import { SettingsPanel } from './components/SettingsPanel';
 import { HistoryPanel } from './components/HistoryPanel';
 import { StatusBar } from './components/StatusBar';
+import { TabBar, type TranslateTab } from './components/TabBar';
 import { useSettings } from './hooks/useSettings';
 import { useTranslationState } from './hooks/useTranslationState';
 import { I18nProvider, useT } from './i18n/I18nContext';
@@ -15,9 +16,29 @@ import './styles/app.css';
 
 type View = 'translate' | 'settings' | 'history';
 
+const TAB_STORAGE_KEY = 'llm-translator:last-active-tab';
+const VALID_TABS: readonly TranslateTab[] = ['llm', 'google', 'chatgpt'];
+
+function loadInitialTab(): TranslateTab {
+  try {
+    const saved = localStorage.getItem(TAB_STORAGE_KEY);
+    if (saved && VALID_TABS.includes(saved as TranslateTab)) {
+      return saved as TranslateTab;
+    }
+  } catch { /* storage unavailable */ }
+  return 'llm';
+}
+
 export default function App() {
   const [view, setView] = useState<View>('translate');
+  const [activeTab, setActiveTab] = useState<TranslateTab>(loadInitialTab);
   const { config, loading, updateGeneral, updateTranslation, updateShortcut, updateHistory, saveProvider } = useSettings();
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(TAB_STORAGE_KEY, activeTab);
+    } catch { /* storage unavailable */ }
+  }, [activeTab]);
   const translation = useTranslationState();
   const [modes, setModes] = useState<ModeInfo[]>([]);
   const [mode, setMode] = useState('news');
@@ -76,6 +97,7 @@ export default function App() {
   useEffect(() => {
     const unlistenTranslate = listen('trigger-translate', () => {
       setView('translate');
+      setActiveTab('llm');
       const t = translateRef.current;
       const c = configRef.current;
       if (c?.general.focus_on_translate) {
@@ -201,6 +223,8 @@ export default function App() {
       <AppContent
         view={view}
         setView={setView}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
         config={config}
         translation={translation}
         modes={modes}
@@ -222,8 +246,152 @@ export default function App() {
   );
 }
 
+function getGoogleTranslateUrl(): string {
+  try {
+    const source = localStorage.getItem('googleTranslateSourceLang') || 'auto';
+    const target = localStorage.getItem('googleTranslateTargetLang') || 'ja';
+    return `https://translate.google.com/?sl=${source}&tl=${target}&op=translate`;
+  } catch { /* storage unavailable */ }
+  return 'https://translate.google.com/?sl=auto&tl=ja&op=translate';
+}
+
+function BackIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M15 18l-6-6 6-6" />
+    </svg>
+  );
+}
+
+function ForwardIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M9 6l6 6-6 6" />
+    </svg>
+  );
+}
+
+function ReloadIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M20 11a8 8 0 1 0-2.34 5.66" />
+      <path d="M20 4v7h-7" />
+    </svg>
+  );
+}
+
+function HomeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M3 11l9-8 9 8" />
+      <path d="M5 10v10h14V10" />
+      <path d="M9 20v-6h6v6" />
+    </svg>
+  );
+}
+
+function GoogleTranslatePanel() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [ready, setReady] = useState(false);
+  const [showControls, setShowControls] = useState(false);
+  const showControlsRef = useRef(false);
+  showControlsRef.current = showControls;
+  const toolbarH = 36;
+
+  const getRect = useCallback(() => {
+    if (!containerRef.current) return null;
+    const rect = containerRef.current.getBoundingClientRect();
+    return {
+      x: Math.round(rect.left),
+      y: Math.round(rect.top),
+      width: Math.round(rect.width),
+      height: Math.round(rect.height),
+    };
+  }, []);
+
+  useEffect(() => {
+    const checkUrl = async () => {
+      try {
+        const currentUrl = await invoke<string>('get_google_translate_url');
+        const isTranslate = /^https?:\/\/translate\.google\.com\/?(\?.*)?(#.*)?$/.test(currentUrl);
+        setShowControls(!isTranslate);
+      } catch { /* webview not ready yet */ }
+    };
+
+    const syncPosition = () => {
+      const r = getRect();
+      if (!r) return;
+      const offset = showControlsRef.current ? toolbarH : 0;
+      invoke('set_google_translate_visible', {
+        visible: true,
+        x: r.x,
+        y: r.y + offset,
+        width: r.width,
+        height: r.height - offset,
+      }).catch(() => {});
+    };
+
+    const rect = getRect();
+    if (!rect) return;
+
+    const url = getGoogleTranslateUrl();
+
+    invoke('open_google_translate', { url, ...rect })
+      .then(() => setReady(true))
+      .catch(console.error);
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(syncPosition);
+    });
+
+    const interval = setInterval(() => {
+      syncPosition();
+      checkUrl();
+    }, 500);
+
+    return () => {
+      clearInterval(interval);
+      invoke('set_google_translate_visible', { visible: false, x: 0, y: 0, width: 0, height: 0 }).catch(() => {});
+    };
+  }, [getRect]);
+
+  const handleBack = () => invoke('google_translate_back').catch(console.error);
+  const handleForward = () => invoke('google_translate_forward').catch(console.error);
+  const handleReload = () => invoke('google_translate_reload').catch(console.error);
+  const handleHome = () => {
+    const homeUrl = getGoogleTranslateUrl();
+    invoke('google_translate_home', { url: homeUrl }).catch(console.error);
+  };
+
+  return (
+    <div ref={containerRef} className="translate-container" style={{ background: 'transparent', position: 'relative' }}>
+      {showControls && ready && (
+        <div className="browser-toolbar">
+          <button className="browser-toolbar-btn" onClick={handleBack} aria-label="戻る" title="戻る">
+            <BackIcon />
+          </button>
+          <button className="browser-toolbar-btn" onClick={handleForward} aria-label="進む" title="進む">
+            <ForwardIcon />
+          </button>
+          <button className="browser-toolbar-btn" onClick={handleReload} aria-label="再読み込み" title="再読み込み">
+            <ReloadIcon />
+          </button>
+          <button className="browser-toolbar-btn" onClick={handleHome} aria-label="Google翻訳へ戻る" title="Google翻訳へ戻る">
+            <HomeIcon />
+          </button>
+        </div>
+      )}
+      {!ready && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+          <div className="loading-spinner" />
+        </div>
+      )}
+    </div>
+  );
+}
+
 function AppContent({
-  view, setView, config, translation,
+  view, setView, activeTab, setActiveTab, config, translation,
   modes, mode, tone, availableProviders, activeProviderId,
   setMode, setTone, setActiveProviderId,
   updateGeneral, updateTranslation, updateShortcut, updateHistory, saveProvider,
@@ -266,14 +434,22 @@ function AppContent({
         </div>
       </header>
 
+      <TabBar activeTab={activeTab} onChangeTab={setActiveTab} />
+
       {view === 'translate' ? (
-        <MainTranslate
-          config={config}
-          translation={translation}
-          mode={mode}
-          tone={tone}
-          providerId={activeProviderId}
-        />
+        activeTab === 'llm' ? (
+          <MainTranslate
+            config={config}
+            translation={translation}
+            mode={mode}
+            tone={tone}
+            providerId={activeProviderId}
+          />
+        ) : activeTab === 'google' ? (
+          <GoogleTranslatePanel />
+        ) : (
+          <div className="translate-container" />
+        )
       ) : (
         <div className="app-content">
           <HistoryPanel onRetranslate={handleRetranslate} onClose={() => setView('translate')} />

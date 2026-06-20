@@ -242,6 +242,100 @@ pub fn start_drag(window: tauri::Window) -> Result<(), String> {
     window.start_dragging().map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+pub async fn open_google_translate(app: tauri::AppHandle, url: String, x: f64, y: f64, width: f64, height: f64) -> Result<(), String> {
+    use tauri::{Manager, Position, Size, Url, WebviewBuilder, WebviewUrl};
+    let label = "google-translate";
+    let parsed_url: Url = url.parse().map_err(|e| format!("invalid url: {}", e))?;
+    if let Some(w) = app.get_webview(label) {
+        let _ = w.navigate(parsed_url);
+        let _ = w.set_position(Position::Logical(tauri::LogicalPosition { x, y }));
+        let _ = w.set_size(Size::Logical(tauri::LogicalSize { width, height }));
+        let _ = w.show();
+        return Ok(());
+    }
+    let main_webview = app.get_webview("main").ok_or("main webview not found")?;
+    let main_window = main_webview.window();
+
+    let data_dir = dirs::data_dir()
+        .unwrap_or_else(|| std::path::PathBuf::from("."))
+        .join("llm-translator")
+        .join("google-translate-webview");
+
+    let webview_builder = WebviewBuilder::new(label, WebviewUrl::External(parsed_url))
+        .transparent(true)
+        .auto_resize()
+        .data_directory(data_dir);
+
+    main_window
+        .add_child(
+            webview_builder,
+            Position::Logical(tauri::LogicalPosition { x, y }),
+            Size::Logical(tauri::LogicalSize { width, height }),
+        )
+        .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn set_google_translate_visible(
+    app: tauri::AppHandle,
+    visible: bool,
+    x: f64,
+    y: f64,
+    width: f64,
+    height: f64,
+) -> Result<(), String> {
+    use tauri::Manager;
+    let label = "google-translate";
+    let w = app.get_webview(label).ok_or("webview not found")?;
+    if visible {
+        let _ = w.set_position(tauri::Position::Logical(tauri::LogicalPosition { x, y }));
+        let _ = w.set_size(tauri::Size::Logical(tauri::LogicalSize { width, height }));
+        let _ = w.show();
+    } else {
+        let _ = w.hide();
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn google_translate_back(app: tauri::AppHandle) -> Result<(), String> {
+    use tauri::Manager;
+    let w = app.get_webview("google-translate").ok_or("webview not found")?;
+    w.eval("window.history.back()").map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn google_translate_forward(app: tauri::AppHandle) -> Result<(), String> {
+    use tauri::Manager;
+    let w = app.get_webview("google-translate").ok_or("webview not found")?;
+    w.eval("window.history.forward()").map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn google_translate_reload(app: tauri::AppHandle) -> Result<(), String> {
+    use tauri::Manager;
+    let w = app.get_webview("google-translate").ok_or("webview not found")?;
+    w.eval("window.location.reload()").map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn google_translate_home(app: tauri::AppHandle, url: String) -> Result<(), String> {
+    use tauri::Manager;
+    let w = app.get_webview("google-translate").ok_or("webview not found")?;
+    let parsed: tauri::Url = url.parse().map_err(|e| format!("invalid url: {}", e))?;
+    w.navigate(parsed).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn get_google_translate_url(app: tauri::AppHandle) -> Result<String, String> {
+    use tauri::Manager;
+    let w = app.get_webview("google-translate").ok_or("webview not found")?;
+    w.url().map(|u| u.to_string()).map_err(|e| e.to_string())
+}
+
 #[derive(serde::Serialize, Clone)]
 pub struct LanguageInfo {
     pub code: String,

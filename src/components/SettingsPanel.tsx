@@ -16,7 +16,7 @@ interface Props {
   onClose: () => void;
 }
 
-type SettingsTab = 'general' | 'api' | 'presets' | 'history';
+type SettingsTab = 'general' | 'api' | 'presets' | 'history' | 'googleTranslate';
 
 export function SettingsPanel({ config, onUpdateGeneral, onUpdateShortcut, onUpdateHistory, onSaveProvider, onClose }: Props) {
   const [tab, setTab] = useState<SettingsTab>('general');
@@ -28,7 +28,6 @@ export function SettingsPanel({ config, onUpdateGeneral, onUpdateShortcut, onUpd
       <nav className="sidebar">
         <div className="sidebar-header">
           <div className="sidebar-title">{t('app.title')}</div>
-          <div className="sidebar-version">{t('app.version')}</div>
         </div>
         <ul className="sidebar-nav">
           <li>
@@ -53,6 +52,12 @@ export function SettingsPanel({ config, onUpdateGeneral, onUpdateShortcut, onUpd
             <a className={`sidebar-item ${tab === 'history' ? 'active' : ''}`} onClick={() => setTab('history')}>
               <span className="icon">📋</span>
               <span>{t('settings.sidebar.history')}</span>
+            </a>
+          </li>
+          <li>
+            <a className={`sidebar-item ${tab === 'googleTranslate' ? 'active' : ''}`} onClick={() => setTab('googleTranslate')}>
+              <span className="icon">🌐</span>
+              <span>{t('settings.sidebar.google_translate')}</span>
             </a>
           </li>
         </ul>
@@ -84,6 +89,9 @@ export function SettingsPanel({ config, onUpdateGeneral, onUpdateShortcut, onUpd
           )}
           {tab === 'history' && (
             <HistorySettings config={config} onUpdateHistory={onUpdateHistory} />
+          )}
+          {tab === 'googleTranslate' && (
+            <GoogleTranslateSettings />
           )}
         </div>
       </div>
@@ -913,6 +921,107 @@ function HistorySettings({ config, onUpdateHistory }: {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// --- Google Translate Settings ---
+import { GOOGLE_TRANSLATE_LANGUAGES } from '../data/googleTranslateLanguages';
+
+const GOOGLE_TRANSLATE_SOURCE_KEY = 'googleTranslateSourceLang';
+const GOOGLE_TRANSLATE_TARGET_KEY = 'googleTranslateTargetLang';
+const DEFAULT_SOURCE_LANG = 'auto';
+const DEFAULT_TARGET_LANG = 'ja';
+
+function loadSourceLang(): string {
+  try {
+    const saved = localStorage.getItem(GOOGLE_TRANSLATE_SOURCE_KEY);
+    if (saved && GOOGLE_TRANSLATE_LANGUAGES.some(l => l.code === saved)) return saved;
+  } catch { /* storage unavailable */ }
+  return DEFAULT_SOURCE_LANG;
+}
+
+function loadTargetLang(): string {
+  try {
+    const saved = localStorage.getItem(GOOGLE_TRANSLATE_TARGET_KEY);
+    if (saved && saved !== 'auto' && GOOGLE_TRANSLATE_LANGUAGES.some(l => l.code === saved)) return saved;
+  } catch { /* storage unavailable */ }
+  return DEFAULT_TARGET_LANG;
+}
+
+function GoogleTranslateSettings() {
+  const { t, language } = useT();
+  const [sourceLang, setSourceLang] = useState(loadSourceLang);
+  const [targetLang, setTargetLang] = useState(loadTargetLang);
+  const [saved, setSaved] = useState(false);
+
+  const isJapanese = language.startsWith('ja');
+
+  const sourceLangs = GOOGLE_TRANSLATE_LANGUAGES; // includes 'auto'
+  const targetLangs = GOOGLE_TRANSLATE_LANGUAGES.filter(l => l.code !== 'auto');
+
+  const showSaved = () => {
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  const handleSourceChange = (code: string) => {
+    setSourceLang(code);
+    try { localStorage.setItem(GOOGLE_TRANSLATE_SOURCE_KEY, code); } catch {}
+    showSaved();
+  };
+
+  const handleTargetChange = (code: string) => {
+    setTargetLang(code);
+    try { localStorage.setItem(GOOGLE_TRANSLATE_TARGET_KEY, code); } catch {}
+    showSaved();
+  };
+
+  return (
+    <div className="settings-section">
+      <h3>{t('settings.google_translate.title')}</h3>
+      <p className="settings-section-desc">{t('settings.google_translate.desc')}</p>
+
+      <div className="settings-group" style={{ marginTop: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div>
+            <label className="settings-label">{t('settings.google_translate.source_lang')}</label>
+            <select
+              className="select"
+              style={{ width: '100%', marginTop: 4 }}
+              value={sourceLang}
+              onChange={e => handleSourceChange(e.target.value)}
+            >
+              {sourceLangs.map(l => (
+                <option key={l.code} value={l.code}>
+                  {isJapanese ? l.nameJa : l.nameEn}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="settings-label">{t('settings.google_translate.target_lang')}</label>
+            <select
+              className="select"
+              style={{ width: '100%', marginTop: 4 }}
+              value={targetLang}
+              onChange={e => handleTargetChange(e.target.value)}
+            >
+              {targetLangs.map(l => (
+                <option key={l.code} value={l.code}>
+                  {isJapanese ? l.nameJa : l.nameEn}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        {saved && (
+          <span style={{ fontSize: 12, color: 'var(--color-secondary)', marginTop: 8, display: 'inline-block' }}>
+            ✓ {t('settings.google_translate.saved')}
+          </span>
+        )}
+      </div>
+
     </div>
   );
 }

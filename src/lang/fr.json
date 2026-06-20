@@ -1,6 +1,7 @@
 {
-  "app": { "title": "LLM Translator Desktop", "version": "v0.1.0" },
+  "app": { "title": "LLM Translator Desktop", "version": "v0.1.3" },
   "titlebar": { "settings": "Paramètres", "minimize": "Réduire", "maximize": "Agrandir", "close": "Fermer" },
+  "tabs": { "llm": "LLM", "google": "Google Traduction", "chatgpt": "chatGPT Traduction" },
   "main": {
     "swap_languages": "Échanger les langues",
     "placeholder_hint": "Sélectionnez du texte et appuyez sur Ctrl+C+C pour traduire",
@@ -14,7 +15,7 @@
     "copied": "Copié"
   },
   "settings": {
-    "sidebar": { "general": "Général", "api": "API", "presets": "Préréglages", "history": "Historique", "close": "← Fermer les paramètres" },
+    "sidebar": { "general": "Général", "api": "API", "presets": "Préréglages", "history": "Historique", "google_translate": "Google Traduction", "close": "← Fermer les paramètres" },
     "general": {
       "title": "Paramètres généraux",
       "desc": "Configurer le comportement de base et les raccourcis.",
@@ -67,7 +68,8 @@
       "user_prompt_template": "Modèle de prompt utilisateur",
       "placeholder_hint": "{{text}} sera remplacé par le texte source."
     },
-    "history": { "title": "Paramètres de l'historique", "max_items": "Nombre max. d'entrées" }
+    "history": { "title": "Paramètres de l'historique", "max_items": "Nombre max. d'entrées" },
+    "google_translate": { "title": "Google Traduction", "desc": "Définir les langues source et cible pour l'onglet Google Traduction.", "source_lang": "Langue source", "target_lang": "Langue cible", "saved": "Enregistré" }
   },
   "history_panel": {
     "title": "Historique", "delete_all": "Tout supprimer", "close": "✕ Fermer",

@@ -22,6 +22,7 @@ export function StatusBar({ modes, mode, tone, availableProviders, activeProvide
         <span className="status-hint">{t('status_bar.hint')}</span>
       </div>
       <div className="status-right">
+        <span className="status-version">{t('app.version')}</span>
         <div className="status-control-group">
           <span className="toolbar-label">{t('status_bar.label_model')}</span>
           {availableProviders.length > 0 ? (

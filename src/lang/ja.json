@@ -1,13 +1,18 @@
 {
   "app": {
     "title": "LLM Translator Desktop",
-    "version": "v0.1.0"
+    "version": "v0.1.3"
   },
   "titlebar": {
     "settings": "設定",
     "minimize": "最小化",
     "maximize": "最大化",
     "close": "閉じる"
+  },
+  "tabs": {
+    "llm": "LLM",
+    "google": "Google翻訳",
+    "chatgpt": "chatGPT翻訳"
   },
   "main": {
     "swap_languages": "言語を入れ替え",
@@ -27,6 +32,7 @@
       "api": "API",
       "presets": "プリセット",
       "history": "履歴",
+      "google_translate": "Google翻訳",
       "close": "← 設定を閉じる"
     },
     "general": {
@@ -108,6 +114,13 @@
     "history": {
       "title": "履歴設定",
       "max_items": "最大保存件数"
+    },
+    "google_translate": {
+      "title": "Google翻訳",
+      "desc": "Google翻訳タブで開く翻訳元言語と翻訳先言語を設定します。",
+      "source_lang": "翻訳元言語",
+      "target_lang": "翻訳先言語",
+      "saved": "保存しました"
     }
   },
   "history_panel": {

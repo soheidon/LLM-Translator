@@ -1,13 +1,18 @@
 {
   "app": {
     "title": "LLM Translator Desktop",
-    "version": "v0.1.0"
+    "version": "v0.1.3"
   },
   "titlebar": {
     "settings": "Settings",
     "minimize": "Minimize",
     "maximize": "Maximize",
     "close": "Close"
+  },
+  "tabs": {
+    "llm": "LLM",
+    "google": "Google Translate",
+    "chatgpt": "chatGPT Translate"
   },
   "main": {
     "swap_languages": "Swap languages",
@@ -27,6 +32,7 @@
       "api": "API",
       "presets": "Presets",
       "history": "History",
+      "google_translate": "Google Translate",
       "close": "← Close Settings"
     },
     "general": {
@@ -108,6 +114,13 @@
     "history": {
       "title": "History Settings",
       "max_items": "Max Items"
+    },
+    "google_translate": {
+      "title": "Google Translate",
+      "desc": "Set the source and target languages for the Google Translate tab.",
+      "source_lang": "Source language",
+      "target_lang": "Target language",
+      "saved": "Saved"
     }
   },
   "history_panel": {

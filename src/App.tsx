@@ -522,20 +522,6 @@ function AppContent({
     }
   };
 
-  if (view === 'settings') {
-    return (
-      <SettingsPanel
-        config={config}
-        onUpdateGeneral={updateGeneral}
-        onUpdateTranslation={updateTranslation}
-        onUpdateShortcut={updateShortcut}
-        onUpdateHistory={updateHistory}
-        onSaveProvider={saveProvider}
-        onClose={() => setView('translate')}
-      />
-    );
-  }
-
   return (
     <div className="app-layout">
       <header className="titlebar" data-tauri-drag-region onMouseDown={() => invoke('start_drag')}>
@@ -558,9 +544,19 @@ function AppContent({
         </div>
       </header>
 
-      <TabBar activeTab={activeTab} onChangeTab={setActiveTab} />
+      {view !== 'settings' && <TabBar activeTab={activeTab} onChangeTab={setActiveTab} />}
 
-      {view === 'translate' ? (
+      {view === 'settings' ? (
+        <SettingsPanel
+          config={config}
+          onUpdateGeneral={updateGeneral}
+          onUpdateTranslation={updateTranslation}
+          onUpdateShortcut={updateShortcut}
+          onUpdateHistory={updateHistory}
+          onSaveProvider={saveProvider}
+          onClose={() => setView('translate')}
+        />
+      ) : view === 'translate' ? (
         activeTab === 'llm' ? (
           <MainTranslate
             config={config}
@@ -595,6 +591,7 @@ function AppContent({
         </div>
       )}
 
+      {view !== 'settings' && (
       <StatusBar
         modes={modes}
         mode={mode}
@@ -610,6 +607,7 @@ function AppContent({
         onDebugChatgptDom={handleChatgptDebugDom}
         defaultProvider={config?.providers?.find((p: any) => p.is_default)}
       />
+      )}
     </div>
   );
 }

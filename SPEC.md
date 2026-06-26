@@ -232,7 +232,7 @@ Windows の低レベルキーボードフック (`SetWindowsHookEx(WH_KEYBOARD_L
 
 ---
 
-## 10. v0.3.1 実装済み機能
+## 10. v0.3.2 実装済み機能
 
 - [x] Windows 10/11 対応
 - [x] Tauri v2 + React + TypeScript + Rust

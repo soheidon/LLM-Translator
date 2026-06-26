@@ -1,5 +1,5 @@
 {
-  "app": { "title": "LLM Translator Desktop", "version": "v0.3.1" },
+  "app": { "title": "LLM Translator Desktop", "version": "v0.3.2" },
   "titlebar": { "settings": "Paramètres", "minimize": "Réduire", "maximize": "Agrandir", "close": "Fermer" },
   "tabs": { "llm": "LLM", "google": "Google Traduction", "chatgpt": "chatGPT Traduction" },
   "main": {
@@ -16,7 +16,7 @@
   },
   "settings": {
     "sidebar": { "general": "Général", "api": "API", "presets": "Préréglages", "history": "Historique", "google_translate": "Google Traduction",
-      "chatgpt_translate": "Traduction chatGPT", "close": "← Fermer les paramètres" },
+      "chatgpt_translate": "Traduction chatGPT", "close": "Fermer les paramètres" },
     "general": {
       "title": "Paramètres généraux",
       "desc": "Configurer le comportement de base et les raccourcis.",

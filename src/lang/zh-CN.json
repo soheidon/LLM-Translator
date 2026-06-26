@@ -1,5 +1,5 @@
 {
-  "app": { "title": "LLM Translator Desktop", "version": "v0.3.1" },
+  "app": { "title": "LLM Translator Desktop", "version": "v0.3.2" },
   "titlebar": { "settings": "设置", "minimize": "最小化", "maximize": "最大化", "close": "关闭" },
   "tabs": { "llm": "LLM", "google": "Google翻译", "chatgpt": "chatGPT翻译" },
   "main": {
@@ -16,7 +16,7 @@
   },
   "settings": {
     "sidebar": { "general": "常规", "api": "API", "presets": "预设", "history": "历史", "google_translate": "Google翻译",
-      "chatgpt_translate": "chatGPT翻译", "close": "← 关闭设置" },
+      "chatgpt_translate": "chatGPT翻译", "close": "关闭设置" },
     "general": {
       "title": "常规设置",
       "desc": "配置应用程序的基本行为和快捷键。",

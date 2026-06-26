@@ -1,7 +1,7 @@
 {
   "app": {
     "title": "LLM Translator Desktop",
-    "version": "v0.3.1"
+    "version": "v0.3.2"
   },
   "titlebar": {
     "settings": "設定",
@@ -34,7 +34,7 @@
       "history": "履歴",
       "google_translate": "Google翻訳",
       "chatgpt_translate": "chatGPT翻訳",
-      "close": "← 設定を閉じる"
+      "close": "設定を閉じる"
     },
     "general": {
       "title": "一般設定",

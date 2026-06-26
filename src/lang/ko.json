@@ -1,5 +1,5 @@
 {
-  "app": { "title": "LLM Translator Desktop", "version": "v0.3.1" },
+  "app": { "title": "LLM Translator Desktop", "version": "v0.3.2" },
   "titlebar": { "settings": "설정", "minimize": "최소화", "maximize": "최대화", "close": "닫기" },
   "tabs": { "llm": "LLM", "google": "Google 번역", "chatgpt": "chatGPT 번역" },
   "main": {
@@ -16,7 +16,7 @@
   },
   "settings": {
     "sidebar": { "general": "일반", "api": "API", "presets": "프리셋", "history": "기록", "google_translate": "Google 번역",
-      "chatgpt_translate": "chatGPT 번역", "close": "← 설정 닫기" },
+      "chatgpt_translate": "chatGPT 번역", "close": "설정 닫기" },
     "general": {
       "title": "일반 설정",
       "desc": "애플리케이션 기본 동작과 단축키를 설정합니다.",

@@ -1,7 +1,7 @@
 {
   "app": {
     "title": "LLM Translator Desktop",
-    "version": "v0.2.0"
+    "version": "v0.3.0"
   },
   "titlebar": {
     "settings": "設定",
@@ -133,7 +133,9 @@
       "title": "chatGPT翻訳",
       "desc": "chatGPT翻訳タブで使用する翻訳元・翻訳先言語を設定します。",
       "source_lang": "翻訳元言語",
-      "target_lang": "翻訳先言語"
+      "target_lang": "翻訳先言語",
+      "debug_tool": "DOM診断ツール",
+      "debug_tool_desc": "有効にするとステータスバーにDOM診断ボタンが表示されます"
     }
   },
   "history_panel": {

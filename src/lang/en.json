@@ -1,7 +1,7 @@
 {
   "app": {
     "title": "LLM Translator Desktop",
-    "version": "v0.2.0"
+    "version": "v0.3.0"
   },
   "titlebar": {
     "settings": "Settings",
@@ -129,7 +129,7 @@
       "debug_tool": "DOM diagnostic tool",
       "debug_tool_desc": "When enabled, shows a DOM diagnostic button in the browser toolbar"
     },
-    "chatgpt_translate": { "title": "chatGPT Translate", "desc": "Set source and target languages for the chatGPT Translate tab.", "source_lang": "Source language", "target_lang": "Target language" }
+    "chatgpt_translate": { "title": "chatGPT Translate", "desc": "Set source and target languages for the chatGPT Translate tab.", "source_lang": "Source language", "target_lang": "Target language", "debug_tool": "DOM debug tool", "debug_tool_desc": "Shows a DOM diagnostic button in the status bar" }
   },
   "history_panel": {
     "title": "History",

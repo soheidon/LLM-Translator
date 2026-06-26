@@ -1,5 +1,5 @@
 {
-  "app": { "title": "LLM Translator Desktop", "version": "v0.2.0" },
+  "app": { "title": "LLM Translator Desktop", "version": "v0.3.0" },
   "titlebar": { "settings": "设置", "minimize": "最小化", "maximize": "最大化", "close": "关闭" },
   "tabs": { "llm": "LLM", "google": "Google翻译", "chatgpt": "chatGPT翻译" },
   "main": {
@@ -70,7 +70,7 @@
     },
     "history": { "title": "历史设置", "max_items": "最大保存条数" },
     "google_translate": { "title": "Google翻译", "desc": "设置Google翻译标签页的源语言和目标语言。", "source_lang": "源语言", "target_lang": "目标语言", "saved": "已保存", "toolbar_mode": "浏览器工具栏", "toolbar_always": "始终显示", "toolbar_hide_on_translate": "翻译页面不显示", "toolbar_never": "始终不显示", "debug_tool": "DOM诊断工具", "debug_tool_desc": "启用后，工具栏中将显示DOM诊断按钮" },
-    "chatgpt_translate": { "title": "chatGPT翻译", "desc": "chatGPT翻訳タブで使用する翻訳元・翻訳先言語を設定します。", "source_lang": "翻訳元言語", "target_lang": "翻訳先言語" }
+    "chatgpt_translate": { "title": "chatGPT翻译", "desc": "chatGPT翻訳タブで使用する翻訳元・翻訳先言語を設定します。", "source_lang": "翻訳元言語", "target_lang": "翻訳先言語", "debug_tool": "DOM診断ツール", "debug_tool_desc": "ステータスバーにDOM診断ボタンを表示" }
   },
   "history_panel": {
     "title": "历史", "delete_all": "全部删除", "close": "✕ 关闭",

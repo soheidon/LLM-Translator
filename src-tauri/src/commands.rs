@@ -204,7 +204,7 @@ pub async fn window_maximize(window: tauri::Window) -> Result<(), String> {
 
 #[tauri::command]
 pub async fn window_close(window: tauri::Window) -> Result<(), String> {
-    window.close().map_err(|e| e.to_string())
+    window.hide().map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -855,8 +855,13 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview) -> Result<(), String> {
       markLoginBlock();
       document.querySelectorAll('[data-testid="signup-button"]').forEach(hide);
 
-      // 3. Bottom suggestion cards — only the buttons themselves
+      // 3. Bottom suggestion cards — hide only the matched interactive elements themselves
+      function normStrict(s) { return (s||'').replace(/\s+/g,'').trim(); }
       const suggestionTexts = [
+        'ビジネス用にする',
+        '5 歳児にもわかるように説明して',
+        '洗練されたビジネス向けのトーンにします。',
+        'とてもやさしい言葉で書き直します。',
         'より自然な表現に',
         'ビジネス向けにする',
         '5歳でもわかるように',
@@ -866,11 +871,15 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview) -> Result<(), String> {
         'Explain it like I am 5',
         'Make it academic'
       ];
+      const strictTexts = suggestionTexts.map(normStrict);
 
-      document.querySelectorAll('button').forEach((button) => {
-        const text = norm(button.textContent);
-        if (suggestionTexts.some((t) => text.includes(t))) {
-          hide(button);
+      document.querySelectorAll('button, [role="button"], a').forEach((el) => {
+        const text = norm(el.textContent);
+        if (text.length > 0 && text.length < 120) {
+          const st = normStrict(text);
+          if (strictTexts.some((t) => st.includes(t))) {
+            el.style.setProperty('display', 'none', 'important');
+          }
         }
       });
 
@@ -1032,6 +1041,78 @@ pub async fn get_chatgpt_translate_url(app: tauri::AppHandle) -> Result<String, 
     use tauri::Manager;
     let w = app.get_webview(CHATGPT_TRANSLATE_LABEL).ok_or("webview not found")?;
     w.url().map(|u| u.to_string()).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn debug_chatgpt_translate_dom(app: tauri::AppHandle) -> Result<String, String> {
+    use tauri::Manager;
+    let w = app.get_webview(CHATGPT_TRANSLATE_LABEL).ok_or("webview not found")?;
+    let js = r#"
+(function(){
+  function norm(s){return(s||'').replace(/\s+/g,' ').trim();}
+  function isVisible(el){
+    var s=el.style;
+    if(s.display==='none'||s.visibility==='hidden')return false;
+    var r=el.getBoundingClientRect();
+    return r.width>0&&r.height>0;
+  }
+  var skipTags={BODY:1,HTML:1,MAIN:1,HEAD:1,SCRIPT:1,STYLE:1,LINK:1,META:1,NOSCRIPT:1};
+  var priorityKeywords=['ビジネスにする','洗練されたビジネス向けのトーンにします','5歳児にもわかるように説明して','とてもやさしい言葉で書き直します','より自然な表現に','ビジネス向けにする','5歳でもわかるように','学術向けにする','Make it more natural','Make it business-friendly','Explain it like I am 5','Make it academic'];
+  var selector='button,[role="button"],a,div,span,[tabindex],textarea,[contenteditable="true"]';
+  var all=document.querySelectorAll(selector);
+  var candidates=[];
+  for(var i=0;i<all.length;i++){
+    var el=all[i];
+    if(skipTags[el.tagName])continue;
+    var text=norm(el.textContent);
+    if(!text)continue;
+    if(text.length>300)continue;
+    if(!isVisible(el))continue;
+    var r=el.getBoundingClientRect();
+    var info={
+      tag:el.tagName,
+      role:el.getAttribute('role')||'',
+      ariaLabel:el.getAttribute('aria-label')||'',
+      className:(typeof el.className==='string'?el.className:'').slice(0,120),
+      id:el.id||'',
+      text:text.slice(0,120),
+      rect:{x:Math.round(r.x),y:Math.round(r.y),w:Math.round(r.width),h:Math.round(r.height)},
+      cursor:el.style.cursor||(el.onclick?'pointer':'')||'',
+      tabIndex:el.tabIndex,
+      parentTag:el.parentElement?el.parentElement.tagName:'',
+      parentClass:el.parentElement?(typeof el.parentElement.className==='string'?el.parentElement.className:'').slice(0,80):'',
+      parentRole:el.parentElement?el.parentElement.getAttribute('role')||'':'',
+      parentText:el.parentElement?norm(el.parentElement.textContent).slice(0,100):''
+    };
+    var priority=0;
+    for(var k=0;k<priorityKeywords.length;k++){
+      if(text.indexOf(priorityKeywords[k])>=0){priority=1;break;}
+    }
+    info.priority=priority;
+    if(priority||(r.width<600&&r.height<500)){
+      candidates.push(info);
+    }
+  }
+  candidates.sort(function(a,b){return b.priority-a.priority||a.tag.localeCompare(b.tag);});
+  candidates=candidates.slice(0,80);
+  var result={location:location.href,candidateCount:candidates.length,candidates:candidates};
+  window.location.hash='__llm_dbg='+encodeURIComponent(JSON.stringify(result));
+})()"#;
+    w.eval(js).map_err(|e| format!("eval failed: {e}"))?;
+    // Wait for hash to propagate to Tauri's URL cache
+    for i in 0..15 {
+        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+        let url = w.url().map_err(|e| e.to_string())?;
+        if let Some(frag) = url.fragment() {
+            if let Some(data) = frag.strip_prefix("__llm_dbg=") {
+                return Ok(data.to_string());
+            }
+        }
+        if i == 14 {
+            return Err("timeout waiting for debug data from ChatGPT webview".into());
+        }
+    }
+    Err("unexpected".into())
 }
 
 #[tauri::command]

@@ -18,6 +18,7 @@ export interface GeneralConfig {
   notification_sound: boolean;
   google_translate_toolbar: string;
   google_translate_debug_tool: boolean;
+  chatgpt_translate_debug_tool: boolean;
 }
 
 export interface ShortcutConfig {

@@ -1,5 +1,5 @@
 {
-  "app": { "title": "LLM Translator Desktop", "version": "v0.2.0" },
+  "app": { "title": "LLM Translator Desktop", "version": "v0.3.0" },
   "titlebar": { "settings": "Configurações", "minimize": "Minimizar", "maximize": "Maximizar", "close": "Fechar" },
   "tabs": { "llm": "LLM", "google": "Google Tradutor", "chatgpt": "chatGPT Tradutor" },
   "main": {
@@ -71,7 +71,7 @@
     },
     "history": { "title": "Configurações do histórico", "max_items": "Máx. itens" },
     "google_translate": { "title": "Google Tradutor", "desc": "Definir os idiomas de origem e destino para a aba do Google Tradutor.", "source_lang": "Idioma de origem", "target_lang": "Idioma de destino", "saved": "Salvo", "toolbar_mode": "Barra de ferramentas", "toolbar_always": "Sempre mostrar", "toolbar_hide_on_translate": "Ocultar na página de tradução", "toolbar_never": "Nunca mostrar", "debug_tool": "Ferramenta diagnóstico DOM", "debug_tool_desc": "Quando ativado, mostra um botão de diagnóstico DOM na barra de ferramentas" },
-    "chatgpt_translate": { "title": "chatGPT Tradutor", "desc": "chatGPT翻訳タブで使用する翻訳元・翻訳先言語を設定します。", "source_lang": "翻訳元言語", "target_lang": "翻訳先言語" }
+    "chatgpt_translate": { "title": "chatGPT Tradutor", "desc": "chatGPT翻訳タブで使用する翻訳元・翻訳先言語を設定します。", "source_lang": "翻訳元言語", "target_lang": "翻訳先言語", "debug_tool": "DOM診断ツール", "debug_tool_desc": "ステータスバーにDOM診断ボタンを表示" }
   },
   "history_panel": {
     "title": "Histórico", "delete_all": "Excluir tudo", "close": "✕ Fechar",

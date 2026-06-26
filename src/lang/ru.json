@@ -1,5 +1,5 @@
 {
-  "app": { "title": "LLM Translator Desktop", "version": "v0.2.0" },
+  "app": { "title": "LLM Translator Desktop", "version": "v0.3.0" },
   "titlebar": { "settings": "Настройки", "minimize": "Свернуть", "maximize": "Развернуть", "close": "Закрыть" },
   "tabs": { "llm": "LLM", "google": "Google Перевод", "chatgpt": "chatGPT Перевод" },
   "main": {
@@ -71,7 +71,7 @@
     },
     "history": { "title": "Настройки истории", "max_items": "Макс. записей" },
     "google_translate": { "title": "Google Переводчик", "desc": "Установить исходный и целевой языки для вкладки Google Переводчика.", "source_lang": "Исходный язык", "target_lang": "Целевой язык", "saved": "Сохранено", "toolbar_mode": "Панель инструментов", "toolbar_always": "Всегда показывать", "toolbar_hide_on_translate": "Скрыть на странице перевода", "toolbar_never": "Не показывать", "debug_tool": "Инструмент диагностики DOM", "debug_tool_desc": "При включении показывает кнопку диагностики DOM на панели инструментов" },
-    "chatgpt_translate": { "title": "chatGPT Переводчик", "desc": "chatGPT翻訳タブで使用する翻訳元・翻訳先言語を設定します。", "source_lang": "翻訳元言語", "target_lang": "翻訳先言語" }
+    "chatgpt_translate": { "title": "chatGPT Переводчик", "desc": "chatGPT翻訳タブで使用する翻訳元・翻訳先言語を設定します。", "source_lang": "翻訳元言語", "target_lang": "翻訳先言語", "debug_tool": "DOM診断ツール", "debug_tool_desc": "ステータスバーにDOM診断ボタンを表示" }
   },
   "history_panel": {
     "title": "История", "delete_all": "Удалить всё", "close": "✕ Закрыть",

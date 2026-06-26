@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "LLMTranslator",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "identifier": "com.soheidon.llm-translator",
   "build": {
     "frontendDist": "../dist",
@@ -27,11 +27,6 @@
     ],
     "security": {
       "csp": null
-    },
-    "trayIcon": {
-      "iconPath": "icons/icon.ico",
-      "iconAsTemplate": true,
-      "tooltip": "LLM Translator Desktop"
     }
   },
   "bundle": {

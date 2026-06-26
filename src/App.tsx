@@ -129,6 +129,7 @@ export default function App() {
   // Listen for Tauri events (shortcut triggers from Rust)
   useEffect(() => {
     const unlistenTranslate = listen('trigger-translate', async () => {
+      console.log('[trigger-translate] received', { activeTab: activeTabRef.current, focusOnTranslate: configRef.current?.general.focus_on_translate });
       setView('translate');
       const c = configRef.current;
       if (c?.general.focus_on_translate) {
@@ -149,51 +150,6 @@ export default function App() {
     return () => {
       unlistenTranslate.then(fn => fn());
       unlistenHistory.then(fn => fn());
-    };
-  }, []);
-
-  // Clipboard polling: external-app copy detection (debounced 600ms)
-  // Double-Ctrl+C is now handled globally by the Rust keyboard hook
-  const lastTranslatedRef = useRef('');
-  const isTranslatingRef = useRef(false);
-  useEffect(() => { isTranslatingRef.current = translation.isTranslating; }, [translation.isTranslating]);
-  useEffect(() => {
-    let lastSeen = '';
-    let debounce: ReturnType<typeof setTimeout> | null = null;
-
-    const interval = setInterval(async () => {
-      try {
-        // Skip clipboard polling when double-Ctrl+C hook is active
-        if (configRef.current?.shortcut.double_copy_enabled) return;
-
-        const text = await readText();
-        if (!text || !text.trim()) return;
-        const trimmed = text.trim();
-        if (trimmed === lastSeen) return;
-
-        lastSeen = trimmed;
-        if (debounce) clearTimeout(debounce);
-        debounce = setTimeout(() => {
-          // Skip if already translating or this text was just translated
-          if (isTranslatingRef.current) return;
-          if (trimmed === lastTranslatedRef.current) return;
-
-          lastTranslatedRef.current = trimmed;
-          const p = configRef.current;
-          if (p?.general.focus_on_translate) {
-            invoke('focus_window').catch(() => {});
-          }
-          setView('translate');
-          routeClipboard(trimmed);
-        }, 600);
-      } catch {
-        // clipboard read error, ignore
-      }
-    }, 400);
-
-    return () => {
-      clearInterval(interval);
-      if (debounce) clearTimeout(debounce);
     };
   }, []);
 
@@ -309,12 +265,15 @@ function HomeIcon() {
   );
 }
 
-function GoogleTranslatePanel({ googleTranslateToolbar, debugTool }: { googleTranslateToolbar: string; debugTool: boolean }) {
+function GoogleTranslatePanel({ debugTool }: { debugTool: boolean }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const toolbarHRef = useRef(0);
   const [ready, setReady] = useState(false);
   const [debugDom, setDebugDom] = useState('');
-  const showToolbar = googleTranslateToolbar === 'always' || debugTool;
-  const toolbarH = showToolbar ? 36 : 0;
+  const [currentUrl, setCurrentUrl] = useState('');
+  const homeUrl = getGoogleTranslateUrl();
+  const isTopPage = currentUrl === '' || currentUrl.startsWith(homeUrl);
+  toolbarHRef.current = isTopPage ? 0 : 36;
 
   const getRect = useCallback(() => {
     if (!containerRef.current) return null;
@@ -328,24 +287,23 @@ function GoogleTranslatePanel({ googleTranslateToolbar, debugTool }: { googleTra
   }, []);
 
   useEffect(() => {
+    const tbh = toolbarHRef;
     const syncPosition = () => {
       const r = getRect();
       if (!r) return;
       invoke('set_google_translate_visible', {
         visible: true,
         x: r.x,
-        y: r.y + toolbarH,
+        y: r.y + tbh.current,
         width: r.width,
-        height: r.height - toolbarH,
+        height: r.height - tbh.current,
       }).catch(() => {});
     };
 
     const rect = getRect();
     if (!rect) return;
 
-    const url = getGoogleTranslateUrl();
-
-    invoke('open_google_translate', { url, ...rect })
+    invoke('open_google_translate', { url: homeUrl, ...rect })
       .then(() => setReady(true))
       .catch(console.error);
 
@@ -355,8 +313,16 @@ function GoogleTranslatePanel({ googleTranslateToolbar, debugTool }: { googleTra
 
     const interval = setInterval(syncPosition, 500);
 
+    const urlInterval = setInterval(async () => {
+      try {
+        const url = await invoke<string>('get_google_translate_url');
+        setCurrentUrl(url);
+      } catch {}
+    }, 1000);
+
     return () => {
       clearInterval(interval);
+      clearInterval(urlInterval);
       invoke('set_google_translate_visible', { visible: false, x: 0, y: 0, width: 0, height: 0 }).catch(() => {});
     };
   }, [getRect]);
@@ -382,7 +348,7 @@ function GoogleTranslatePanel({ googleTranslateToolbar, debugTool }: { googleTra
 
   return (
     <div ref={containerRef} className="translate-container" style={{ background: 'transparent', position: 'relative' }}>
-      {ready && showToolbar && (
+      {ready && !isTopPage && (
         <div className="browser-toolbar">
           <button className="browser-toolbar-btn" onClick={handleBack} aria-label="戻る" title="戻る">
             <BackIcon />
@@ -421,8 +387,11 @@ function GoogleTranslatePanel({ googleTranslateToolbar, debugTool }: { googleTra
 
 function ChatGptTranslatePanel() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const toolbarHRef = useRef(0);
   const [ready, setReady] = useState(false);
-  const toolbarH = 0;
+  const [currentUrl, setCurrentUrl] = useState('');
+  const isTopPage = currentUrl.startsWith(CHATGPT_TRANSLATE_URL) || currentUrl === '';
+  toolbarHRef.current = isTopPage ? 0 : 36;
 
   const getRect = useCallback(() => {
     if (!containerRef.current) return null;
@@ -436,15 +405,16 @@ function ChatGptTranslatePanel() {
   }, []);
 
   useEffect(() => {
+    const tbh = toolbarHRef;
     const syncPosition = () => {
       const r = getRect();
       if (!r) return;
       invoke('set_chatgpt_translate_visible', {
         visible: true,
         x: r.x,
-        y: r.y + toolbarH,
+        y: r.y + tbh.current,
         width: r.width,
-        height: r.height - toolbarH,
+        height: r.height - tbh.current,
       }).catch(() => {});
     };
 
@@ -476,14 +446,39 @@ function ChatGptTranslatePanel() {
 
     const interval = setInterval(syncPosition, 500);
 
+    // Poll URL to detect navigation away from top page
+    const urlInterval = setInterval(async () => {
+      try {
+        const url = await invoke<string>('get_chatgpt_translate_url');
+        setCurrentUrl(url);
+      } catch {}
+    }, 1000);
+
     return () => {
       clearInterval(interval);
+      clearInterval(urlInterval);
       invoke('set_chatgpt_translate_visible', { visible: false, x: 0, y: 0, width: 0, height: 0 }).catch(() => {});
     };
   }, [getRect]);
 
+  const handleReload = () => invoke('chatgpt_translate_reload').catch(console.error);
+  const handleHome = () => {
+    invoke('chatgpt_translate_home', { url: CHATGPT_TRANSLATE_URL }).catch(console.error);
+  };
+
   return (
     <div ref={containerRef} className="translate-container" style={{ background: 'transparent', position: 'relative' }}>
+      {ready && !isTopPage && (
+        <div className="browser-toolbar">
+          <button className="browser-toolbar-btn" onClick={handleReload} aria-label="再読み込み" title="再読み込み">
+            <ReloadIcon />
+          </button>
+          <button className="browser-toolbar-btn" onClick={handleHome} aria-label="chatGPT翻訳へ戻る" title="chatGPT翻訳へ戻る">
+            <HomeIcon />
+          </button>
+          <span style={{ flex: 1 }} />
+        </div>
+      )}
       {!ready && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
           <div className="loading-spinner" />
@@ -501,6 +496,17 @@ function AppContent({
   handleRetranslate,
 }: any) {
   const { t } = useT();
+  const [debugChatgptDom, setDebugChatgptDom] = useState('');
+  const handleChatgptDebugDom = async () => {
+    try {
+      const result = await invoke<string>('debug_chatgpt_translate_dom');
+      console.log('[ChatGPT DOM debug]', result);
+      setDebugChatgptDom(result);
+    } catch (e) {
+      console.error('[ChatGPT DOM debug failed]', e);
+      setDebugChatgptDom('Error: ' + String(e));
+    }
+  };
 
   if (view === 'settings') {
     return (
@@ -550,13 +556,28 @@ function AppContent({
             providerId={activeProviderId}
           />
         ) : activeTab === 'google' ? (
-          <GoogleTranslatePanel googleTranslateToolbar={config.general.google_translate_toolbar} debugTool={config.general.google_translate_debug_tool} />
+          <GoogleTranslatePanel debugTool={config.general.google_translate_debug_tool} />
         ) : (
           <ChatGptTranslatePanel />
         )
       ) : (
         <div className="app-content">
           <HistoryPanel onRetranslate={handleRetranslate} onClose={() => setView('translate')} />
+        </div>
+      )}
+
+      {activeTab === 'chatgpt' && config.general.chatgpt_translate_debug_tool && debugChatgptDom && (
+        <div className="debug-log-panel">
+          <div className="debug-log-header">
+            <span>DOM診断ログ</span>
+            <button className="debug-log-close" onClick={() => setDebugChatgptDom('')}>✕</button>
+          </div>
+          <textarea
+            className="debug-log-textarea"
+            value={debugChatgptDom}
+            readOnly
+            onClick={e => (e.target as HTMLTextAreaElement).select()}
+          />
         </div>
       )}
 
@@ -571,6 +592,8 @@ function AppContent({
         onChangeTone={setTone}
         onChangeProvider={setActiveProviderId}
         onSettings={() => setView('settings')}
+        chatgptDebugEnabled={config.general.chatgpt_translate_debug_tool}
+        onDebugChatgptDom={handleChatgptDebugDom}
       />
     </div>
   );

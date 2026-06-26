@@ -25,6 +25,8 @@ pub struct GeneralConfig {
     pub google_translate_toolbar: String,
     #[serde(default)]
     pub google_translate_debug_tool: bool,
+    #[serde(default)]
+    pub chatgpt_translate_debug_tool: bool,
 }
 
 fn default_toolbar_mode() -> String {
@@ -343,13 +345,14 @@ impl Default for AppConfig {
                 notification_sound: false,
                 google_translate_toolbar: "hide_on_translate".to_string(),
                 google_translate_debug_tool: false,
+                chatgpt_translate_debug_tool: false,
             },
             shortcut: ShortcutConfig {
                 primary: "Ctrl+Shift+C".to_string(),
                 open_window: "Ctrl+Alt+T".to_string(),
                 open_history: "Ctrl+Alt+H".to_string(),
-                double_copy_enabled: false,
-                double_copy_threshold_ms: 800,
+                double_copy_enabled: true,
+                double_copy_threshold_ms: 400,
             },
             providers,
             translation: TranslationConfig {

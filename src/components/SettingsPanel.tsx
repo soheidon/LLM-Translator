@@ -95,9 +95,6 @@ export function SettingsPanel({ config, onUpdateGeneral, onUpdateShortcut, onUpd
       <div className="main-content">
         <header className="top-bar">
           <div />
-          <button className="settings-close-button" onClick={onClose} title={t('settings.sidebar.close')}>
-            <span className="settings-close-icon">×</span>
-          </button>
         </header>
 
         <div className="main-content-body">
@@ -117,7 +114,7 @@ export function SettingsPanel({ config, onUpdateGeneral, onUpdateShortcut, onUpd
             <GoogleTranslateSettings config={config} onUpdateGeneral={onUpdateGeneral} />
           )}
           {tab === 'chatgptTranslate' && (
-            <ChatGptTranslateSettings />
+            <ChatGptTranslateSettings config={config} onUpdateGeneral={onUpdateGeneral} />
           )}
         </div>
       </div>
@@ -1107,7 +1104,7 @@ function loadChatGptTargetLang(): string {
   return CHATGPT_DEFAULT_TARGET;
 }
 
-function ChatGptTranslateSettings() {
+function ChatGptTranslateSettings({ config, onUpdateGeneral }: { config: AppConfig; onUpdateGeneral: (updates: Partial<AppConfig['general']>) => void }) {
   const { t, language } = useT();
   const [sourceLang, setSourceLang] = useState(loadChatGptSourceLang);
   const [targetLang, setTargetLang] = useState(loadChatGptTargetLang);
@@ -1163,6 +1160,18 @@ function ChatGptTranslateSettings() {
                 </option>
               ))}
             </select>
+          </div>
+        </div>
+      </div>
+
+      <div className="settings-group" style={{ marginTop: 24 }}>
+        <div className="settings-row">
+          <div>
+            <div className="settings-label">{t("settings.chatgpt_translate.debug_tool")}</div>
+            <div className="settings-description">{t("settings.chatgpt_translate.debug_tool_desc")}</div>
+          </div>
+          <div className="settings-control">
+            <button className={`toggle ${config.general.chatgpt_translate_debug_tool ? "active" : ""}`} onClick={() => onUpdateGeneral({ chatgpt_translate_debug_tool: !config.general.chatgpt_translate_debug_tool })} />
           </div>
         </div>
       </div>

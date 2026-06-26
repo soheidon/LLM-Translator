@@ -14,9 +14,11 @@ interface Props {
   onChangeTone: (tone: string) => void;
   onChangeProvider: (providerId: string | null) => void;
   onSettings: () => void;
+  chatgptDebugEnabled?: boolean;
+  onDebugChatgptDom?: () => void;
 }
 
-export function StatusBar({ modes, mode, tone, availableProviders, activeProviderId, activeTab, onChangeMode, onChangeTone, onChangeProvider, onSettings }: Props) {
+export function StatusBar({ modes, mode, tone, availableProviders, activeProviderId, activeTab, onChangeMode, onChangeTone, onChangeProvider, onSettings, chatgptDebugEnabled, onDebugChatgptDom }: Props) {
   const { t } = useT();
   const showLlmControls = activeTab === 'llm';
   return (
@@ -26,6 +28,9 @@ export function StatusBar({ modes, mode, tone, availableProviders, activeProvide
       </div>
       <div className="status-right">
         <span className="status-version">{t('app.version')}</span>
+        {activeTab === 'chatgpt' && chatgptDebugEnabled && onDebugChatgptDom && (
+          <button className="google-debug-btn" onClick={onDebugChatgptDom} style={{ marginLeft: 8, fontSize: 11 }}>DOM診断</button>
+        )}
         {showLlmControls && (
           <>
             <div className="status-control-group">
@@ -66,7 +71,6 @@ export function StatusBar({ modes, mode, tone, availableProviders, activeProvide
           </>
         )}
         <button className="settings-button" onClick={onSettings} title={t('titlebar.settings')}>
-          <span className="settings-button-icon">⚙</span>
           <span>{t('titlebar.settings')}</span>
         </button>
       </div>

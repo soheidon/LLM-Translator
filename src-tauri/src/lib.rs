@@ -18,6 +18,14 @@ pub fn run() {
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_store::Builder::default().build())
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            println!("[single-instance] second instance detected, activating existing window");
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.show();
+                let _ = window.unminimize();
+                let _ = window.set_focus();
+            }
+        }))
         .setup(|app| {
             // Load config
             let app_config = config::load_config();
@@ -63,7 +71,10 @@ pub fn run() {
                 cfg
             };
             if shortcut_cfg.double_copy_enabled {
+                println!("[keyboard_hook] double_copy_enabled=true, threshold={}ms → starting global hook", shortcut_cfg.double_copy_threshold_ms);
                 keyboard_hook::start_global_hook(handle.clone(), shortcut_cfg.double_copy_threshold_ms);
+            } else {
+                println!("[keyboard_hook] double_copy_enabled=false → hook not started (enable in settings and restart)");
             }
 
             let handle_clone = handle.clone();
@@ -82,6 +93,7 @@ pub fn run() {
                                 let _ = window.show();
                                 let _ = window.set_focus();
                             }
+                            println!("[trigger-translate] source=global_shortcut shortcut={:?}", shortcut);
                             let _ = window.emit("trigger-translate", ());
                         }
                     }
@@ -130,6 +142,7 @@ pub fn run() {
             commands::get_chatgpt_translate_url,
             commands::set_chatgpt_translate_text,
             commands::set_chatgpt_translate_languages,
+            commands::debug_chatgpt_translate_dom,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

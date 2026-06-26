@@ -308,6 +308,7 @@ function ApiSettings({ providers, onSaveProvider }: {
           <tr>
             <th>{t('settings.api.table_provider')}</th>
             <th>{t('settings.api.table_status')}</th>
+            <th>{t('settings.api.default_badge')}</th>
           </tr>
         </thead>
         <tbody>
@@ -452,14 +453,22 @@ function ProviderRow({ provider, isExpanded, testResult, isTesting, envOk, onTog
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontSize: 12, color: 'var(--color-outline)' }}>{isExpanded ? '▼' : '▶'}</span>
             <strong>{provider.name}</strong>
-            {provider.is_default && <span className="badge badge-active">{t('settings.api.default_badge')}</span>}
           </div>
         </td>
         <td>{statusLabel()}</td>
+        <td style={{ textAlign: 'center' }}>
+          {provider.is_default ? (
+            <span className="badge badge-active">{t('settings.api.default_badge')}</span>
+          ) : (
+            <button className="btn btn-secondary" style={{ fontSize: 11, padding: '2px 8px' }} onClick={(e) => { e.stopPropagation(); onSetDefault(); }}>
+              {t('settings.api.set_default')}
+            </button>
+          )}
+        </td>
       </tr>
       {isExpanded && (
         <tr className="provider-expanded-row">
-          <td colSpan={2}>
+          <td colSpan={3}>
             <div className="provider-panel">
               <div className="provider-grid">
                 {/* Row 1: 環境変数 + APIキー */}
@@ -677,14 +686,6 @@ function ProviderRow({ provider, isExpanded, testResult, isTesting, envOk, onTog
                 <button className="btn btn-secondary" onClick={onTest} disabled={isTesting}>
                   {isTesting ? t('settings.api.status_testing') : t('settings.api.test_connection')}
                 </button>
-                {!provider.is_default && (
-                  <button className="btn btn-secondary" onClick={onSetDefault}>
-                    {t('settings.api.set_default')}
-                  </button>
-                )}
-                {provider.is_default && (
-                  <span className="badge badge-active" style={{ fontSize: 12 }}>{t('settings.api.default_badge')}</span>
-                )}
                 {testResult && (
                   <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13 }}>
                     {testResult.success ? (

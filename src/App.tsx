@@ -272,7 +272,21 @@ function GoogleTranslatePanel({ debugTool }: { debugTool: boolean }) {
   const [debugDom, setDebugDom] = useState('');
   const [currentUrl, setCurrentUrl] = useState('');
   const homeUrl = getGoogleTranslateUrl();
-  const isTopPage = currentUrl === '' || currentUrl.startsWith(homeUrl);
+
+  function isGoogleTranslateHome(url: string): boolean {
+    if (!url) return true;
+    try {
+      const u = new URL(url);
+      return (
+        (u.hostname === 'translate.google.com' || u.hostname === 'translate.google.co.jp') &&
+        (u.pathname === '/' || u.pathname === '')
+      );
+    } catch {
+      return false;
+    }
+  }
+
+  const isTopPage = isGoogleTranslateHome(currentUrl);
   toolbarHRef.current = isTopPage ? 0 : 36;
 
   const getRect = useCallback(() => {
@@ -594,6 +608,7 @@ function AppContent({
         onSettings={() => setView('settings')}
         chatgptDebugEnabled={config.general.chatgpt_translate_debug_tool}
         onDebugChatgptDom={handleChatgptDebugDom}
+        defaultProvider={config?.providers?.find((p: any) => p.is_default)}
       />
     </div>
   );

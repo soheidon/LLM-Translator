@@ -3,6 +3,10 @@ import type { ProviderConfig } from '../types/provider';
 import type { TranslateTab } from './TabBar';
 import { useT } from '../i18n/I18nContext';
 
+function shortModelName(model: string): string {
+  return model.split(/[-\s_]/)[0] || model;
+}
+
 interface Props {
   modes: ModeInfo[];
   mode: string;
@@ -16,11 +20,15 @@ interface Props {
   onSettings: () => void;
   chatgptDebugEnabled?: boolean;
   onDebugChatgptDom?: () => void;
+  defaultProvider?: ProviderConfig;
 }
 
-export function StatusBar({ modes, mode, tone, availableProviders, activeProviderId, activeTab, onChangeMode, onChangeTone, onChangeProvider, onSettings, chatgptDebugEnabled, onDebugChatgptDom }: Props) {
+export function StatusBar({ modes, mode, tone, availableProviders, activeProviderId, activeTab, onChangeMode, onChangeTone, onChangeProvider, onSettings, chatgptDebugEnabled, onDebugChatgptDom, defaultProvider }: Props) {
   const { t } = useT();
   const showLlmControls = activeTab === 'llm';
+  const defaultLabel = activeProviderId === null && defaultProvider
+    ? `${t('status_bar.default_provider')} (${shortModelName(defaultProvider.model || defaultProvider.model_mapping?.default?.model || '')})`
+    : t('status_bar.default_provider');
   return (
     <footer className="status-bar">
       <div className="status-left">
@@ -41,7 +49,7 @@ export function StatusBar({ modes, mode, tone, availableProviders, activeProvide
                   value={activeProviderId ?? ''}
                   onChange={e => onChangeProvider(e.target.value || null)}
                 >
-                  <option value="">{t('status_bar.default_provider')}</option>
+                  <option value="">{defaultLabel}</option>
                   {availableProviders.map(p => (
                     <option key={p.id} value={p.id}>{p.name}</option>
                   ))}

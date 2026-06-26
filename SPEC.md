@@ -232,7 +232,7 @@ Windows の低レベルキーボードフック (`SetWindowsHookEx(WH_KEYBOARD_L
 
 ---
 
-## 10. v0.3.0 実装済み機能
+## 10. v0.3.1 実装済み機能
 
 - [x] Windows 10/11 対応
 - [x] Tauri v2 + React + TypeScript + Rust
@@ -270,10 +270,9 @@ Windows の低レベルキーボードフック (`SetWindowsHookEx(WH_KEYBOARD_L
 - [x] ChatGPT Translate 設定画面（翻訳元・翻訳先言語選択）
 - [x] 各種デバッグログ（発火元特定用）
 - [x] 設定のデフォルト値を最適化（double_copy_enabled 初期 true、threshold 400ms）
-
----
-
-## 11. 将来計画
+- [x] ステータスバーにデフォルトプロバイダのモデル名を短縮表示
+- [x] API設定テーブルに Default 列を追加（行内で Set as Default ボタンも配置）
+- [x] Google翻訳のトップページ判定を hostname + pathname ベースに改善（翻訳後もナビゲーションバー非表示）
 
 ### v0.4
 - macOS 対応検討

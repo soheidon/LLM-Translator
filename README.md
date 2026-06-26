@@ -1,6 +1,6 @@
 # LLM Translator Desktop
 
-DeepL Desktop のように、どのアプリでも Ctrl+C を2回押すだけでクリップボードのテキストを AI 翻訳する Windows デスクトップアプリです。
+DeepL Desktop のように、任意のアプリで選択したテキストを Ctrl+C+C ですばやく翻訳できる Windows デスクトップアプリです。LLM翻訳に加えて、Google翻訳タブやChatGPT翻訳タブを備え、用途に応じて翻訳方法を切り替えられます。
 
 ## 主な機能
 

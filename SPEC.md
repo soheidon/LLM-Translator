@@ -232,7 +232,7 @@ Windows の低レベルキーボードフック (`SetWindowsHookEx(WH_KEYBOARD_L
 
 ---
 
-## 10. v0.3.2 実装済み機能
+## 10. v0.3.3 実装済み機能
 
 - [x] Windows 10/11 対応
 - [x] Tauri v2 + React + TypeScript + Rust
@@ -273,6 +273,8 @@ Windows の低レベルキーボードフック (`SetWindowsHookEx(WH_KEYBOARD_L
 - [x] ステータスバーにデフォルトプロバイダのモデル名を短縮表示
 - [x] API設定テーブルに Default 列を追加（行内で Set as Default ボタンも配置）
 - [x] Google翻訳のトップページ判定を hostname + pathname ベースに改善（翻訳後もナビゲーションバー非表示）
+- [x] 設定画面UI改善（タイトルバー常時表示、タブバー/ステータスバー非表示、←アイコン除去）
+- [x] Windows自動起動（Registry HKCU Run キー、設定トグルでON/OFF、初期値OFF、引用符付きパス）
 
 ### v0.4
 - macOS 対応検討

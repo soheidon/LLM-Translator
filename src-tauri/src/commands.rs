@@ -269,6 +269,53 @@ pub fn start_drag(window: tauri::Window) -> Result<(), String> {
     window.start_dragging().map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+pub fn set_auto_launch(enabled: bool) -> Result<(), String> {
+    set_auto_launch_impl(enabled)
+}
+
+#[cfg(target_os = "windows")]
+fn set_auto_launch_impl(enabled: bool) -> Result<(), String> {
+    use std::io::ErrorKind;
+    use winreg::enums::HKEY_CURRENT_USER;
+    use winreg::RegKey;
+
+    let hkcu = RegKey::predef(HKEY_CURRENT_USER);
+    let run_key = hkcu
+        .open_subkey_with_flags(
+            r"SOFTWARE\Microsoft\Windows\CurrentVersion\Run",
+            winreg::enums::KEY_SET_VALUE | winreg::enums::KEY_QUERY_VALUE,
+        )
+        .map_err(|e| format!("Failed to open Run key: {}", e))?;
+
+    if enabled {
+        let exe_path = std::env::current_exe()
+            .map_err(|e| format!("Failed to get executable path: {}", e))?;
+        let path_str = exe_path.to_string_lossy().to_string();
+        // Quote the path to handle spaces
+        let quoted = format!("\"{}\"", path_str);
+        run_key
+            .set_value("LLMTranslator", &quoted)
+            .map_err(|e| format!("Failed to set Run key: {}", e))?;
+        println!("[auto_launch] enabled: {}", quoted);
+    } else {
+        match run_key.delete_value("LLMTranslator") {
+            Ok(_) => println!("[auto_launch] disabled: Run key removed"),
+            Err(e) if e.kind() == ErrorKind::NotFound => {
+                // Key didn't exist — that's fine
+                println!("[auto_launch] disabled: Run key did not exist");
+            }
+            Err(e) => return Err(format!("Failed to delete Run key: {}", e)),
+        }
+    }
+    Ok(())
+}
+
+#[cfg(not(target_os = "windows"))]
+fn set_auto_launch_impl(_enabled: bool) -> Result<(), String> {
+    Err("Auto launch is only supported on Windows.".to_string())
+}
+
 fn apply_google_translate_cleanup(w: &tauri::Webview) -> Result<(), String> {
     // Uses selectors verified against real Google Translate DOM (2026-06).
     // Hamburger: [aria-label="メインメニュー"] .gb_7c

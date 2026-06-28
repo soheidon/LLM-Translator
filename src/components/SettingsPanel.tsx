@@ -155,6 +155,25 @@ function GeneralSettings({ config, onUpdateGeneral, onUpdateShortcut, onUpdateHi
       <div className="settings-group" style={{ marginTop: 24 }}>
         <div className="settings-row">
           <div>
+            <div className="settings-label">{t('settings.general.auto_launch')}</div>
+            <div className="settings-description">{t('settings.general.auto_launch_desc')}</div>
+          </div>
+          <div className="settings-control">
+            <button className={`toggle ${config.general.auto_launch ? 'active' : ''}`}
+              onClick={async () => {
+                const newVal = !config.general.auto_launch;
+                try {
+                  await invoke('set_auto_launch', { enabled: newVal });
+                  onUpdateGeneral({ auto_launch: newVal });
+                } catch (e) {
+                  console.error('[auto_launch] failed:', e);
+                }
+              }}
+            />
+          </div>
+        </div>
+        <div className="settings-row">
+          <div>
             <div className="settings-label">{t('settings.general.start_minimized')}</div>
             <div className="settings-description">{t('settings.general.start_minimized_desc')}</div>
           </div>

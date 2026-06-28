@@ -1,7 +1,7 @@
 {
   "app": {
     "title": "LLM Translator Desktop",
-    "version": "v0.3.2"
+    "version": "v0.3.3"
   },
   "titlebar": {
     "settings": "設定",
@@ -39,6 +39,8 @@
     "general": {
       "title": "一般設定",
       "desc": "アプリケーションの基本動作とショートカットを設定します。",
+      "auto_launch": "Windows起動時に自動起動",
+      "auto_launch_desc": "Windowsログイン時にLLM Translatorを自動起動します",
       "ui_language": "UI言語",
       "start_minimized": "起動時に最小化",
       "start_minimized_desc": "アプリ起動時にメイン画面を表示せず、トレイに常駐します",

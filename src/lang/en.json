@@ -1,7 +1,7 @@
 {
   "app": {
     "title": "LLM Translator Desktop",
-    "version": "v0.3.2"
+    "version": "v0.3.3"
   },
   "titlebar": {
     "settings": "Settings",
@@ -39,6 +39,8 @@
     "general": {
       "title": "General Settings",
       "desc": "Configure basic application behavior and shortcuts.",
+      "auto_launch": "Launch at Windows Startup",
+      "auto_launch_desc": "Automatically start LLM Translator when you log into Windows.",
       "ui_language": "UI Language",
       "start_minimized": "Start Minimized",
       "start_minimized_desc": "Hide the main window at startup and stay in the system tray.",

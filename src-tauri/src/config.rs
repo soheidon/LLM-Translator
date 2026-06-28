@@ -15,7 +15,10 @@ pub struct AppConfig {
 #[serde(rename_all = "snake_case")]
 pub struct GeneralConfig {
     pub ui_language: String,
+    #[serde(default)]
     pub start_minimized: bool,
+    #[serde(default)]
+    pub auto_launch: bool,
     pub always_on_top: bool,
     pub focus_on_translate: bool,
     pub close_on_escape: bool,
@@ -338,6 +341,7 @@ impl Default for AppConfig {
             general: GeneralConfig {
                 ui_language: "en".to_string(),
                 start_minimized: true,
+                auto_launch: false,
                 always_on_top: true,
                 focus_on_translate: true,
                 close_on_escape: true,

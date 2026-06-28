@@ -11,6 +11,7 @@ export interface AppConfig {
 export interface GeneralConfig {
   ui_language: string;
   start_minimized: boolean;
+  auto_launch: boolean;
   always_on_top: boolean;
   focus_on_translate: boolean;
   close_on_escape: boolean;

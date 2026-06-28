@@ -1,5 +1,5 @@
 {
-  "app": { "title": "LLM Translator Desktop", "version": "v0.3.2" },
+  "app": { "title": "LLM Translator Desktop", "version": "v0.3.3" },
   "titlebar": { "settings": "Configurações", "minimize": "Minimizar", "maximize": "Maximizar", "close": "Fechar" },
   "tabs": { "llm": "LLM", "google": "Google Tradutor", "chatgpt": "chatGPT Tradutor" },
   "main": {
@@ -22,7 +22,7 @@
       "desc": "Configurar o comportamento básico e os atalhos do aplicativo.",
       "ui_language": "Idioma da interface",
       "start_minimized": "Iniciar minimizado",
-      "start_minimized_desc": "Ocultar a janela principal ao iniciar e permanecer na bandeja do sistema.",
+      "start_minimized_desc": "Ocultar a janela principal ao iniciar e permanecer na bandeja do sistema.", "auto_launch": "Iniciar com o Windows", "auto_launch_desc": "Iniciar o LLM Translator automaticamente ao fazer login no Windows.",
       "always_on_top": "Sempre visível",
       "always_on_top_desc": "Manter a janela de tradução acima das outras janelas.",
       "focus_on_translate": "Focar ao traduzir",

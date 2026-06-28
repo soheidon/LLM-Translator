@@ -1,5 +1,5 @@
 {
-  "app": { "title": "LLM Translator Desktop", "version": "v0.3.2" },
+  "app": { "title": "LLM Translator Desktop", "version": "v0.3.3" },
   "titlebar": { "settings": "設定", "minimize": "最小化", "maximize": "最大化", "close": "關閉" },
   "tabs": { "llm": "LLM", "google": "Google翻譯", "chatgpt": "chatGPT翻譯" },
   "main": {
@@ -22,7 +22,7 @@
       "desc": "設定應用程式的基本行為與快捷鍵。",
       "ui_language": "介面語言",
       "start_minimized": "啟動時最小化",
-      "start_minimized_desc": "啟動時不顯示主視窗，常駐於系統匣中。",
+      "start_minimized_desc": "啟動時不顯示主視窗，常駐於系統匣中。", "auto_launch": "Windows 啟動時自動執行", "auto_launch_desc": "登入 Windows 時自動啟動 LLM Translator。",
       "always_on_top": "保持在最上層",
       "always_on_top_desc": "將翻譯視窗保持在其他視窗上方。",
       "focus_on_translate": "翻譯時前置",

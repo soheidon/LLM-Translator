@@ -731,6 +731,22 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview, hide_lp: bool) -> Result<
       a.prompt-card {
         display: none !important;
       }
+
+      /* Hide marketing LP header (variant A) */
+      #contentful-header {
+        display: none !important;
+      }
+
+      /* Override LP header height CSS variable — also on body so calc() picks it up */
+      :root,
+      body {
+        --mkt-header-height: 0px !important;
+      }
+
+      /* Hide app sidebar header by ID (variant B, safer than class wildcard) */
+      #sidebar-header {
+        display: none !important;
+      }
     `;
     document.documentElement.appendChild(style);
   }
@@ -909,6 +925,10 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview, hide_lp: bool) -> Result<
       // 1. Left sidebar — exact ID match only
       document.querySelectorAll('#stage-slideover-sidebar').forEach(hide);
 
+      // Always hide marketing LP header (variant A)
+      var contentfulHeader = document.getElementById('contentful-header');
+      if (contentfulHeader) hide(contentfulHeader);
+
       // 1b. Header navigation (structure-based: ul/nav inside header, not the entire header)
       if (hideLpElements) {
       document.querySelectorAll('header ul, header nav').forEach(hide);
@@ -916,7 +936,7 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview, hide_lp: bool) -> Result<
 
       // 1c. Fallback: hide nav links by text (for environments without <header> tag)
       if (hideLpElements) {
-      var navTexts = ['概要', '機能', '学ぶ', 'Codex', 'ビジネス', '料金', 'ダウンロード'];
+      var navTexts = ['概要', '機能', '学ぶ', 'Codex', 'ビジネス', '料金', 'ダウンロード', '今すぐ試す'];
       document.querySelectorAll('a, button').forEach(function(el) {
         if (navTexts.indexOf(norm(el.textContent)) !== -1) {
           hide(el);
@@ -1006,7 +1026,7 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview, hide_lp: bool) -> Result<
       }
 
       if (hideLpElements) {
-      document.querySelectorAll('[class*="scroll-mt-mkt-header-height"]').forEach(function(el) {
+      document.querySelectorAll('#contentful-header, [class*="scroll-mt-mkt-header-height"], [class*="h-mkt-header-height"], [class*="pt-mkt-header-height"]').forEach(function(el) {
         if (hasTranslationUi(el)) return;
         hide(el);
       });
@@ -1023,25 +1043,32 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview, hide_lp: bool) -> Result<
         }
       });
 
-      // 5b. Hide LP headings (fallback: text-based, div included since the DOM showed it as a DIV)
+      // 5b. Hide LP headings: find heading by text, then walk up to hide LP section structurally
       if (hideLpElements) {
       document.querySelectorAll('h1, h2, div').forEach(function(el) {
         var text = norm(el.textContent);
         if (
           !text.includes('翻訳に ChatGPT を使う理由') &&
           !text.includes('Why use ChatGPT for translation') &&
-          !text.includes('Use ChatGPT for translation')
+          !text.includes('Use ChatGPT for translation') &&
+          !text.includes('仕組み')
         ) {
           return;
         }
 
-        var section =
-          el.closest('[class*="scroll-mt-mkt-header-height"]') ||
-          el.closest('section') ||
-          el.parentElement;
-
-        if (section && !hasTranslationUi(section)) {
-          hide(section);
+        var node = el;
+        while (node && node !== document.body) {
+          if (node.matches('[data-llm-chatgpt-container="true"], [data-llm-chatgpt-form="true"], main')) {
+            break;
+          }
+          if (hasTranslationUi(node)) {
+            break;
+          }
+          if (node.matches('[class*="scroll-mt-mkt-header-height"], section')) {
+            hide(node);
+            break;
+          }
+          node = node.parentElement;
         }
       });
       }
@@ -1321,7 +1348,7 @@ pub async fn debug_chatgpt_translate_html_css(app: tauri::AppHandle) -> Result<S
     history.replaceState(null, '', location.pathname + location.search);
   }
   var targetedHtmlInspect=[];
-  var inspectSelectors=['header','footer','[class*="h-header-height"]','[class*="mkt-header-height"]','[class*="scroll-mt-mkt-header-height"]','[data-llm-chatgpt-login-header]','[data-llm-chatgpt-hidden]'];
+  var inspectSelectors=['header','footer','#contentful-header','#sidebar-header','[class*="h-header-height"]','[class*="mkt-header-height"]','[class*="scroll-mt-mkt-header-height"]','[data-llm-chatgpt-login-header]','[data-llm-chatgpt-hidden]'];
   var seen=new Set();
   for(var s=0;s<inspectSelectors.length&&targetedHtmlInspect.length<20;s++){
     var els=document.querySelectorAll(inspectSelectors[s]);

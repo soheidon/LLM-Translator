@@ -77,7 +77,7 @@ npm run tauri build
 
 ## バージョン
 
-v0.3.3
+v0.3.4
 
 ## ライセンス
 

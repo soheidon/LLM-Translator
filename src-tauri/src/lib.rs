@@ -47,6 +47,23 @@ pub fn run() {
                 }
             }
 
+            // Apply start_minimized from config
+            {
+                let state = app.state::<AppState>();
+                let start_minimized = state.config.lock().unwrap().general.start_minimized;
+                if start_minimized {
+                    if let Some(window) = app.get_webview_window("main") {
+                        if let Err(e) = window.hide() {
+                            eprintln!("[startup] failed to hide main window: {e}");
+                        } else {
+                            println!("[startup] start_minimized=true; main window hidden");
+                        }
+                    } else {
+                        eprintln!("[startup] main window not found for start_minimized");
+                    }
+                }
+            }
+
             // Register global shortcut
             let handle = app.handle().clone();
             let shortcut_config = {

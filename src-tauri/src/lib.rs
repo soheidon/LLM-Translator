@@ -47,8 +47,14 @@ pub fn run() {
                 }
             }
 
-            // Apply start_minimized from config (or hide on auto-start)
+            // Remember main window for tray restore (before it may be hidden)
+            // and apply start_minimized from config (or hide on auto-start)
             {
+                if let Some(window) = app.get_webview_window("main") {
+                    tray::remember_main_window(window.clone());
+                }
+                let startup_labels: Vec<String> = app.webview_windows().keys().map(|k| k.to_string()).collect();
+                println!("[startup] available webview windows after setup: {:?}", startup_labels);
                 let state = app.state::<AppState>();
                 let is_auto_start = std::env::args().any(|a| a == "--auto-start");
                 let should_hide = is_auto_start || state.config.lock().unwrap().general.start_minimized;
@@ -164,6 +170,7 @@ pub fn run() {
             commands::set_chatgpt_translate_text,
             commands::set_chatgpt_translate_languages,
             commands::debug_chatgpt_translate_dom,
+            commands::debug_chatgpt_translate_html_css,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

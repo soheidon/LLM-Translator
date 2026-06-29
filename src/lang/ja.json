@@ -1,7 +1,7 @@
 {
   "app": {
     "title": "LLM Translator Desktop",
-    "version": "v0.3.7"
+    "version": "v0.3.8"
   },
   "titlebar": {
     "settings": "設定",
@@ -136,8 +136,12 @@
       "desc": "chatGPT翻訳タブで使用する翻訳元・翻訳先言語を設定します。",
       "source_lang": "翻訳元言語",
       "target_lang": "翻訳先言語",
+      "hide_lp": "不要なLP要素を非表示",
+      "hide_lp_desc": "ChatGPT翻訳タブでヘッダーナビやマーケティングセクションを非表示にします（再読み込み後に反映）",
       "debug_tool": "DOM診断ツール",
-      "debug_tool_desc": "有効にするとステータスバーにDOM診断ボタンが表示されます"
+      "debug_tool_desc": "有効にすると、ChatGPT翻訳タブにDOM診断ボタンを表示します",
+      "html_css_debug_tool": "HTML+CSS診断ツール",
+      "html_css_debug_tool_desc": "有効にすると、ChatGPT翻訳タブにHTML構造とCSS状態の診断ボタンを表示します"
     }
   },
   "history_panel": {
@@ -160,7 +164,9 @@
     "label_tone": "文体",
     "label_preset": "PRESET",
     "default_provider": "デフォルト",
-    "no_api_key": "APIキー未設定"
+    "no_api_key": "APIキー未設定",
+    "debug_dom": "DOM診断",
+    "debug_html_css": "HTML+CSS診断"
   },
   "languages": {
     "auto": "自動検出",

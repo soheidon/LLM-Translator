@@ -3,7 +3,7 @@ use crate::history::{self, HistoryEntry};
 use crate::providers::{ConnectionTestResult, TranslationRequest, TranslationResponse};
 use crate::translator;
 use std::sync::Mutex;
-use tauri::State;
+use tauri::{Manager, State};
 
 pub struct AppState {
     pub config: Mutex<AppConfig>,
@@ -203,8 +203,14 @@ pub async fn window_maximize(window: tauri::Window) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub async fn window_close(window: tauri::Window) -> Result<(), String> {
-    window.hide().map_err(|e| e.to_string())
+pub async fn window_close(app: tauri::AppHandle, window: tauri::Window) -> Result<(), String> {
+    println!("[window_close] hiding main window (label={})", window.label());
+    let labels: Vec<String> = app.webview_windows().keys().map(|k| k.to_string()).collect();
+    println!("[window_close] available webview windows before hide: {:?}", labels);
+    window.hide().map_err(|e| e.to_string())?;
+    let labels_after: Vec<String> = app.webview_windows().keys().map(|k| k.to_string()).collect();
+    println!("[window_close] available webview windows after hide: {:?}", labels_after);
+    Ok(())
 }
 
 #[tauri::command]
@@ -579,9 +585,9 @@ pub async fn set_google_translate_text(app: tauri::AppHandle, text: String) -> R
 
 const CHATGPT_TRANSLATE_LABEL: &str = "chatgpt-translate";
 
-fn apply_chatgpt_translate_cleanup(w: &tauri::Webview) -> Result<(), String> {
-    let js = r#"
-(function () {
+fn apply_chatgpt_translate_cleanup(w: &tauri::Webview, hide_lp: bool) -> Result<(), String> {
+    let hide_lp_val = if hide_lp { "true" } else { "false" };
+    let js = "(function () {\n  var hideLpElements = ".to_string() + hide_lp_val + ";\n" + r#"
   const STYLE_ID = 'llm-translator-chatgpt-cleanup-style';
   const HIDDEN_ATTR = 'data-llm-chatgpt-hidden';
 
@@ -899,8 +905,24 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview) -> Result<(), String> {
 
   function applyCleanup() {
     try {
+      console.log('[LLM Translator Desktop] cleanup: hide LP elements = ' + hideLpElements);
       // 1. Left sidebar — exact ID match only
       document.querySelectorAll('#stage-slideover-sidebar').forEach(hide);
+
+      // 1b. Header navigation (structure-based: ul/nav inside header, not the entire header)
+      if (hideLpElements) {
+      document.querySelectorAll('header ul, header nav').forEach(hide);
+      }
+
+      // 1c. Fallback: hide nav links by text (for environments without <header> tag)
+      if (hideLpElements) {
+      var navTexts = ['概要', '機能', '学ぶ', 'Codex', 'ビジネス', '料金', 'ダウンロード'];
+      document.querySelectorAll('a, button').forEach(function(el) {
+        if (navTexts.indexOf(norm(el.textContent)) !== -1) {
+          hide(el);
+        }
+      });
+      }
 
       // 2. Login area: collapse header, float login block, hide signup
       markLoginHeader();
@@ -976,6 +998,20 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview) -> Result<(), String> {
 
       console.log('[LLM Translator Desktop] cleanup: newly hidden ' + hiddenCount + ' suggestion cards');
 
+      // 3b. Hide LP/marketing sections (scroll-mt-mkt-header-height container)
+      function hasTranslationUi(el) {
+        return !!el.querySelector(
+          'textarea, input, [contenteditable="true"], [role="combobox"], button[role="combobox"]'
+        );
+      }
+
+      if (hideLpElements) {
+      document.querySelectorAll('[class*="scroll-mt-mkt-header-height"]').forEach(function(el) {
+        if (hasTranslationUi(el)) return;
+        hide(el);
+      });
+      }
+
       // 4. Footer tag only
       document.querySelectorAll('footer').forEach(hide);
 
@@ -986,6 +1022,29 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview) -> Result<(), String> {
           hide(el);
         }
       });
+
+      // 5b. Hide LP headings (fallback: text-based, div included since the DOM showed it as a DIV)
+      if (hideLpElements) {
+      document.querySelectorAll('h1, h2, div').forEach(function(el) {
+        var text = norm(el.textContent);
+        if (
+          !text.includes('翻訳に ChatGPT を使う理由') &&
+          !text.includes('Why use ChatGPT for translation') &&
+          !text.includes('Use ChatGPT for translation')
+        ) {
+          return;
+        }
+
+        var section =
+          el.closest('[class*="scroll-mt-mkt-header-height"]') ||
+          el.closest('section') ||
+          el.parentElement;
+
+        if (section && !hasTranslationUi(section)) {
+          hide(section);
+        }
+      });
+      }
 
       // 6. Mark translate layout with custom attributes for flex expansion
       markLoginHeader();
@@ -1028,6 +1087,9 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview) -> Result<(), String> {
 
 fn schedule_chatgpt_translate_cleanup(app: tauri::AppHandle) {
     use tauri::Manager;
+    let hide_lp = app.state::<AppState>().config.lock()
+        .map(|c| c.general.chatgpt_translate_hide_lp)
+        .unwrap_or(true);
     tauri::async_runtime::spawn(async move {
         let delays = [0_u64, 300, 800, 1500, 3000, 5000, 8000];
         for delay in delays {
@@ -1035,7 +1097,7 @@ fn schedule_chatgpt_translate_cleanup(app: tauri::AppHandle) {
                 tokio::time::sleep(std::time::Duration::from_millis(delay)).await;
             }
             if let Some(w) = app.get_webview(CHATGPT_TRANSLATE_LABEL) {
-                let _ = apply_chatgpt_translate_cleanup(&w);
+                let _ = apply_chatgpt_translate_cleanup(&w, hide_lp);
             }
         }
     });
@@ -1144,6 +1206,9 @@ pub async fn debug_chatgpt_translate_dom(app: tauri::AppHandle) -> Result<String
     let w = app.get_webview(CHATGPT_TRANSLATE_LABEL).ok_or("webview not found")?;
     let js = r#"
 (function(){
+  if (location.hash.startsWith('#__llm_dbg=') || location.hash.startsWith('#__llm_htmlcss=')) {
+    history.replaceState(null, '', location.pathname + location.search);
+  }
   function norm(s){return(s||'').replace(/\s+/g,' ').trim();}
   function isVisible(el){
     var s=el.style;
@@ -1185,7 +1250,8 @@ pub async fn debug_chatgpt_translate_dom(app: tauri::AppHandle) -> Result<String
     }
     info.priority=priority;
     if(priority||(r.width<600&&r.height<500)){
-      candidates.push(info);
+      if(r.width>window.innerWidth*0.8&&r.height>window.innerHeight*0.5){continue;}
+	      candidates.push(info);
     }
   }
   candidates.sort(function(a,b){return b.priority-a.priority||a.tag.localeCompare(b.tag);});
@@ -1224,21 +1290,101 @@ pub async fn debug_chatgpt_translate_dom(app: tauri::AppHandle) -> Result<String
       children:children
     });
   }
-  var result={location:location.href,candidateCount:candidates.length,candidates:candidates,suggestionContainerChildren:suggestionContainerChildren};
+  var cleanLocation = location.origin + location.pathname + location.search;
+  var result={location:cleanLocation,candidateCount:candidates.length,candidates:candidates,suggestionContainerChildren:suggestionContainerChildren};
   window.location.hash='__llm_dbg='+encodeURIComponent(JSON.stringify(result));
 })()"#;
     w.eval(js).map_err(|e| format!("eval failed: {e}"))?;
-    // Wait for hash to propagate to Tauri's URL cache
     for i in 0..15 {
         tokio::time::sleep(std::time::Duration::from_millis(50)).await;
         let url = w.url().map_err(|e| e.to_string())?;
         if let Some(frag) = url.fragment() {
             if let Some(data) = frag.strip_prefix("__llm_dbg=") {
+                let _ = w.eval("if(location.hash.startsWith('#__llm_dbg=')||location.hash.startsWith('#__llm_htmlcss=')){history.replaceState(null,'',location.pathname+location.search);}");
                 return Ok(data.to_string());
             }
         }
         if i == 14 {
             return Err("timeout waiting for debug data from ChatGPT webview".into());
+        }
+    }
+    Err("unexpected".into())
+}
+
+#[tauri::command]
+pub async fn debug_chatgpt_translate_html_css(app: tauri::AppHandle) -> Result<String, String> {
+    use tauri::Manager;
+    let w = app.get_webview(CHATGPT_TRANSLATE_LABEL).ok_or("webview not found")?;
+    let js = r#"
+(function(){
+  if (location.hash.startsWith('#__llm_dbg=') || location.hash.startsWith('#__llm_htmlcss=')) {
+    history.replaceState(null, '', location.pathname + location.search);
+  }
+  var targetedHtmlInspect=[];
+  var inspectSelectors=['header','footer','[class*="h-header-height"]','[class*="mkt-header-height"]','[class*="scroll-mt-mkt-header-height"]','[data-llm-chatgpt-login-header]','[data-llm-chatgpt-hidden]'];
+  var seen=new Set();
+  for(var s=0;s<inspectSelectors.length&&targetedHtmlInspect.length<20;s++){
+    var els=document.querySelectorAll(inspectSelectors[s]);
+    for(var e=0;e<els.length&&targetedHtmlInspect.length<20;e++){
+      var el=els[e];
+      if (seen.has(el)) continue;
+      seen.add(el);
+      var r=el.getBoundingClientRect();
+      var cs=getComputedStyle(el);
+      var children=[];
+      for(var c=0;c<el.children.length;c++){
+        var ch=el.children[c];
+        var cr=ch.getBoundingClientRect();
+        var chs=getComputedStyle(ch);
+        children.push({
+          tag:ch.tagName,
+          className:(typeof ch.className==='string'?ch.className:'').slice(0,120),
+          text:(ch.textContent||'').replace(/\s+/g,' ').trim().slice(0,80),
+          rect:{x:Math.round(cr.x),y:Math.round(cr.y),w:Math.round(cr.width),h:Math.round(cr.height)},
+          display:chs.display,
+          visibility:chs.visibility,
+          childElementCount:ch.childElementCount
+        });
+      }
+      targetedHtmlInspect.push({
+        tag:el.tagName,
+        className:(typeof el.className==='string'?el.className:'').slice(0,200),
+        id:el.id||'',
+        role:el.getAttribute('role')||'',
+        ariaLabel:el.getAttribute('aria-label')||'',
+        textContent:(el.textContent||'').replace(/\s+/g,' ').trim().slice(0,120),
+        outerHTML:(el.outerHTML||'').slice(0,600),
+        rect:{x:Math.round(r.x),y:Math.round(r.y),w:Math.round(r.width),h:Math.round(r.height)},
+        computedStyle:{
+          display:cs.display,
+          visibility:cs.visibility,
+          position:cs.position,
+          zIndex:cs.zIndex,
+          overflow:cs.overflow,
+          width:cs.width,
+          height:cs.height,
+          pointerEvents:cs.pointerEvents
+        },
+        childrenSummary:children
+      });
+    }
+  }
+  var cleanLocation = location.origin + location.pathname + location.search;
+  var result={location:cleanLocation,targetedHtmlInspect:targetedHtmlInspect};
+  window.location.hash='__llm_htmlcss='+encodeURIComponent(JSON.stringify(result));
+})()"#;
+    w.eval(js).map_err(|e| format!("eval failed: {e}"))?;
+    for i in 0..15 {
+        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+        let url = w.url().map_err(|e| e.to_string())?;
+        if let Some(frag) = url.fragment() {
+            if let Some(data) = frag.strip_prefix("__llm_htmlcss=") {
+                let _ = w.eval("if(location.hash.startsWith('#__llm_dbg=')||location.hash.startsWith('#__llm_htmlcss=')){history.replaceState(null,'',location.pathname+location.search);}");
+                return Ok(data.to_string());
+            }
+        }
+        if i == 14 {
+            return Err("timeout waiting for HTML+CSS debug data from ChatGPT webview".into());
         }
     }
     Err("unexpected".into())

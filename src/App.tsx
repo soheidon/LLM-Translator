@@ -521,6 +521,21 @@ function AppContent({
       setDebugChatgptDom('Error: ' + String(e));
     }
   };
+  const [debugChatgptHtmlCss, setDebugChatgptHtmlCss] = useState('');
+  const handleDebugChatgptHtmlCss = async () => {
+    try {
+      const raw = await invoke<string>('debug_chatgpt_translate_html_css');
+      try {
+        console.log('[ChatGPT HTML+CSS debug]', JSON.parse(raw));
+      } catch {
+        console.log('[ChatGPT HTML+CSS debug]', raw);
+      }
+      setDebugChatgptHtmlCss(raw);
+    } catch (e) {
+      console.error('[ChatGPT HTML+CSS debug failed]', e);
+      setDebugChatgptHtmlCss('Error: ' + String(e));
+    }
+  };
 
   return (
     <div className="app-layout">
@@ -576,7 +591,7 @@ function AppContent({
         </div>
       )}
 
-      {activeTab === 'chatgpt' && config.general.chatgpt_translate_debug_tool && debugChatgptDom && (
+      {activeTab === 'chatgpt' && debugChatgptDom && (
         <div className="debug-log-panel">
           <div className="debug-log-header">
             <span>DOM診断ログ</span>
@@ -585,6 +600,21 @@ function AppContent({
           <textarea
             className="debug-log-textarea"
             value={debugChatgptDom}
+            readOnly
+            onClick={e => (e.target as HTMLTextAreaElement).select()}
+          />
+        </div>
+      )}
+
+      {activeTab === 'chatgpt' && debugChatgptHtmlCss && (
+        <div className="debug-log-panel">
+          <div className="debug-log-header">
+            <span>HTML+CSS診断ログ</span>
+            <button className="debug-log-close" onClick={() => setDebugChatgptHtmlCss('')}>✕</button>
+          </div>
+          <textarea
+            className="debug-log-textarea"
+            value={debugChatgptHtmlCss}
             readOnly
             onClick={e => (e.target as HTMLTextAreaElement).select()}
           />
@@ -604,7 +634,9 @@ function AppContent({
         onChangeProvider={setActiveProviderId}
         onSettings={() => setView('settings')}
         chatgptDebugEnabled={config.general.chatgpt_translate_debug_tool}
+        chatgptHtmlCssDebugEnabled={config.general.chatgpt_translate_html_css_debug_tool}
         onDebugChatgptDom={handleChatgptDebugDom}
+        onDebugChatgptHtmlCss={handleDebugChatgptHtmlCss}
         defaultProvider={config?.providers?.find((p: any) => p.is_default)}
       />
       )}

@@ -1,7 +1,7 @@
 {
   "app": {
     "title": "LLM Translator Desktop",
-    "version": "v0.3.7"
+    "version": "v0.3.8"
   },
   "titlebar": {
     "settings": "Settings",
@@ -131,7 +131,7 @@
       "debug_tool": "DOM diagnostic tool",
       "debug_tool_desc": "When enabled, shows a DOM diagnostic button in the browser toolbar"
     },
-    "chatgpt_translate": { "title": "chatGPT Translate", "desc": "Set source and target languages for the chatGPT Translate tab.", "source_lang": "Source language", "target_lang": "Target language", "debug_tool": "DOM debug tool", "debug_tool_desc": "Shows a DOM diagnostic button in the status bar" }
+    "chatgpt_translate": { "title": "chatGPT Translate", "desc": "Set source and target languages for the chatGPT Translate tab.", "source_lang": "Source language", "target_lang": "Target language", "hide_lp": "Hide landing page elements", "hide_lp_desc": "Hide header navigation and marketing sections in the ChatGPT Translate tab (takes effect after reload).", "debug_tool": "DOM diagnostic tool", "debug_tool_desc": "Show a DOM diagnostic button in the ChatGPT Translate tab", "html_css_debug_tool": "HTML+CSS diagnostic tool", "html_css_debug_tool_desc": "Show an HTML structure and computed CSS diagnostic button in the ChatGPT Translate tab" }
   },
   "history_panel": {
     "title": "History",
@@ -153,7 +153,9 @@
     "label_tone": "Tone",
     "label_preset": "PRESET",
     "default_provider": "Default",
-    "no_api_key": "No API Key"
+    "no_api_key": "No API Key",
+    "debug_dom": "DOM diagnostic",
+    "debug_html_css": "HTML+CSS diagnostic"
   },
   "languages": {
     "auto": "Auto Detect",

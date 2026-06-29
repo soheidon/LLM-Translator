@@ -1187,11 +1187,29 @@ function ChatGptTranslateSettings({ config, onUpdateGeneral }: { config: AppConf
       <div className="settings-group" style={{ marginTop: 24 }}>
         <div className="settings-row">
           <div>
+            <div className="settings-label">{t("settings.chatgpt_translate.hide_lp")}</div>
+            <div className="settings-description">{t("settings.chatgpt_translate.hide_lp_desc")}</div>
+          </div>
+          <div className="settings-control">
+            <button className={`toggle ${config.general.chatgpt_translate_hide_lp ? "active" : ""}`} onClick={() => onUpdateGeneral({ chatgpt_translate_hide_lp: !config.general.chatgpt_translate_hide_lp })} />
+          </div>
+        </div>
+        <div className="settings-row">
+          <div>
             <div className="settings-label">{t("settings.chatgpt_translate.debug_tool")}</div>
             <div className="settings-description">{t("settings.chatgpt_translate.debug_tool_desc")}</div>
           </div>
           <div className="settings-control">
             <button className={`toggle ${config.general.chatgpt_translate_debug_tool ? "active" : ""}`} onClick={() => onUpdateGeneral({ chatgpt_translate_debug_tool: !config.general.chatgpt_translate_debug_tool })} />
+          </div>
+        </div>
+        <div className="settings-row">
+          <div>
+            <div className="settings-label">{t("settings.chatgpt_translate.html_css_debug_tool")}</div>
+            <div className="settings-description">{t("settings.chatgpt_translate.html_css_debug_tool_desc")}</div>
+          </div>
+          <div className="settings-control">
+            <button className={`toggle ${config.general.chatgpt_translate_html_css_debug_tool ? "active" : ""}`} onClick={() => onUpdateGeneral({ chatgpt_translate_html_css_debug_tool: !config.general.chatgpt_translate_html_css_debug_tool })} />
           </div>
         </div>
       </div>

@@ -19,11 +19,13 @@ interface Props {
   onChangeProvider: (providerId: string | null) => void;
   onSettings: () => void;
   chatgptDebugEnabled?: boolean;
+  chatgptHtmlCssDebugEnabled?: boolean;
   onDebugChatgptDom?: () => void;
+  onDebugChatgptHtmlCss?: () => void;
   defaultProvider?: ProviderConfig;
 }
 
-export function StatusBar({ modes, mode, tone, availableProviders, activeProviderId, activeTab, onChangeMode, onChangeTone, onChangeProvider, onSettings, chatgptDebugEnabled, onDebugChatgptDom, defaultProvider }: Props) {
+export function StatusBar({ modes, mode, tone, availableProviders, activeProviderId, activeTab, onChangeMode, onChangeTone, onChangeProvider, onSettings, chatgptDebugEnabled, chatgptHtmlCssDebugEnabled, onDebugChatgptDom, onDebugChatgptHtmlCss, defaultProvider }: Props) {
   const { t } = useT();
   const showLlmControls = activeTab === 'llm';
   const defaultLabel = activeProviderId === null && defaultProvider
@@ -37,7 +39,10 @@ export function StatusBar({ modes, mode, tone, availableProviders, activeProvide
       <div className="status-right">
         <span className="status-version">{t('app.version')}</span>
         {activeTab === 'chatgpt' && chatgptDebugEnabled && onDebugChatgptDom && (
-          <button className="google-debug-btn" onClick={onDebugChatgptDom} style={{ marginLeft: 8, fontSize: 11 }}>DOM診断</button>
+          <button className="google-debug-btn" onClick={onDebugChatgptDom} style={{ marginLeft: 8, fontSize: 11 }}>{t("status_bar.debug_dom")}</button>
+        )}
+        {activeTab === 'chatgpt' && chatgptHtmlCssDebugEnabled && onDebugChatgptHtmlCss && (
+          <button className="google-debug-btn" onClick={onDebugChatgptHtmlCss} style={{ marginLeft: 8, fontSize: 11 }}>{t("status_bar.debug_html_css")}</button>
         )}
         {showLlmControls && (
           <>

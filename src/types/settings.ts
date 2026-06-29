@@ -20,6 +20,8 @@ export interface GeneralConfig {
   google_translate_toolbar: string;
   google_translate_debug_tool: boolean;
   chatgpt_translate_debug_tool: boolean;
+  chatgpt_translate_html_css_debug_tool: boolean;
+  chatgpt_translate_hide_lp: boolean;
 }
 
 export interface ShortcutConfig {

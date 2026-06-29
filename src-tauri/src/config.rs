@@ -30,6 +30,14 @@ pub struct GeneralConfig {
     pub google_translate_debug_tool: bool,
     #[serde(default)]
     pub chatgpt_translate_debug_tool: bool,
+    #[serde(default)]
+    pub chatgpt_translate_html_css_debug_tool: bool,
+    #[serde(default = "default_true")]
+    pub chatgpt_translate_hide_lp: bool,
+}
+
+fn default_true() -> bool {
+    true
 }
 
 fn default_toolbar_mode() -> String {
@@ -350,6 +358,8 @@ impl Default for AppConfig {
                 google_translate_toolbar: "hide_on_translate".to_string(),
                 google_translate_debug_tool: false,
                 chatgpt_translate_debug_tool: false,
+                chatgpt_translate_html_css_debug_tool: false,
+                chatgpt_translate_hide_lp: true,
             },
             shortcut: ShortcutConfig {
                 primary: "Ctrl+Shift+C".to_string(),

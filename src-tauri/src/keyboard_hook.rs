@@ -112,14 +112,14 @@ unsafe extern "system" fn keyboard_hook_proc(code: i32, wparam: WPARAM, lparam: 
                 let ctrl_pressed = actual_ctrl;
                 let session = state.ctrl_session_active;
                 let no_other = !any_other_modifier_pressed();
-                let not_repeat = !state.c_is_down;
+                let _not_repeat = !state.c_is_down;
                 let now = Instant::now();
                 #[cfg(debug_assertions)] {
                     let elapsed_str = match state.last_ctrl_c {
                         Some(prev) => format!("{}ms", now.duration_since(prev).as_millis()),
                         None => "-".to_string(),
                     };
-                    println!("[kbhook] C DOWN ctrl={} session={} no_other={} not_repeat={} last_c={} elapsed={}", ctrl_pressed, session, no_other, not_repeat, state.last_ctrl_c.is_some(), elapsed_str);
+                    println!("[kbhook] C DOWN ctrl={} session={} no_other={} not_repeat={} last_c={} elapsed={}", ctrl_pressed, session, no_other, _not_repeat, state.last_ctrl_c.is_some(), elapsed_str);
                 }
 
                 if ctrl_pressed && session && no_other {

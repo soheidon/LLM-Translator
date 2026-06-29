@@ -45,11 +45,11 @@ DeepL Desktop のように、任意のアプリで選択したテキストを Ct
 
 ## インストール
 
-[Releases](https://github.com/soheidon/LLM-Translator/releases) から最新の `LLM-Translator-Desktop-Setup.exe` をダウンロードして実行してください。
+[Releases](https://github.com/soheidon/LLM-Translator/releases) から最新の `LLM-Translator-Desktop-Setup.exe` をダウンロードして実行してください。インストーラー起動時に 11 言語から選択可能です（選択は次回以降記憶されます）。
 
 ## 使い方
 
-1. アプリを起動するとタスクトレイに常駐します
+1. アプリを起動すると翻訳ウィンドウが表示されます（「通常起動時にトレーへ最小化」をONにすると、起動時にトレイ常駐します）
 2. API 設定で使用したいプロバイダの API キーを設定してください（設定 → API）
 3. 任意のアプリで翻訳したいテキストを選択し、Ctrl+C を2回押すと翻訳されます
 4. または Ctrl+Shift+C でも翻訳できます
@@ -77,7 +77,7 @@ npm run tauri build
 
 ## バージョン
 
-v0.3.6
+v0.3.7
 
 ## ライセンス
 

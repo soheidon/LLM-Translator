@@ -1,7 +1,7 @@
 {
   "app": {
     "title": "LLM Translator Desktop",
-    "version": "v0.3.6"
+    "version": "v0.3.7"
   },
   "titlebar": {
     "settings": "Settings",
@@ -42,8 +42,8 @@
       "auto_launch": "Launch at Windows Startup",
       "auto_launch_desc": "Automatically start LLM Translator when you log into Windows.",
       "ui_language": "UI Language",
-      "start_minimized": "Start Minimized",
-      "start_minimized_desc": "Hide the main window at startup and stay in the system tray.",
+      "start_minimized": "Start minimized to tray",
+      "start_minimized_desc": "Hide the main window when launching manually. When auto-started with Windows, the window is always hidden regardless of this setting.",
       "always_on_top": "Always on Top",
       "always_on_top_desc": "Keep the translation window above other windows.",
       "focus_on_translate": "Focus on Translate",

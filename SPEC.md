@@ -77,7 +77,7 @@ Windows の低レベルキーボードフック (`SetWindowsHookEx(WH_KEYBOARD_L
 
 #### 一般設定
 - UI言語（11言語）
-- 起動時に最小化
+- 起動時に最小化（デフォルトOFF: 初回起動時はウィンドウを表示）
 - 常に前面表示
 - 翻訳時に前面表示
 - Esc で閉じる
@@ -289,6 +289,12 @@ Windows の低レベルキーボードフック (`SetWindowsHookEx(WH_KEYBOARD_L
 
 - [x] ChatGPT翻訳サジェストカード非表示を div 型カードにも対応（`button`/`a`/`[role="button"]` に加えて `div` もスキャン、AND条件の親コンテナ除外ガード付き）
 - [x] DOM診断コマンドに子要素ダンプ機能追加（サジェスト文言を含む要素の直下 children を1階層出力）
+
+### v0.3.7
+
+- [x] NSIS インストーラーに言語選択ダイアログを追加（`displayLanguageSelector: true`、11言語対応、選択はレジストリに保存）
+- [x] `start_minimized` デフォルト値を `false` に変更（初回起動時にウィンドウが表示されない問題を修正）
+- [x] 設定画面の「起動時に最小化」ラベルと説明文を改善（通常起動時にトレーへ最小化）
 
 ### v0.4
 - macOS 対応検討

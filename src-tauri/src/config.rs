@@ -340,7 +340,7 @@ impl Default for AppConfig {
         Self {
             general: GeneralConfig {
                 ui_language: "en".to_string(),
-                start_minimized: true,
+                start_minimized: false,
                 auto_launch: false,
                 always_on_top: true,
                 focus_on_translate: true,

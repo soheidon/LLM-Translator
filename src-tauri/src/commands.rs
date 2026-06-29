@@ -598,15 +598,19 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview, hide_lp: bool) -> Result<
       [data-llm-chatgpt-hidden="true"] {
         display: none !important;
       }
+      html,
       body {
-        overflow-x: hidden !important;
+        height: 100vh !important;
+        max-height: 100vh !important;
+        overflow: hidden !important;
       }
 
       /* Flex layout: page fills viewport height (attribute-based for both variant A & B) */
       main[data-llm-chatgpt-container="true"],
       [data-llm-chatgpt-container="true"] {
-        min-height: 100vh !important;
-        height: 100vh !important;
+        min-height: calc(100vh - 44px) !important;
+        height: calc(100vh - 44px) !important;
+        max-height: calc(100vh - 44px) !important;
         max-width: none !important;
         width: 100% !important;
         box-sizing: border-box !important;
@@ -729,8 +733,47 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview, hide_lp: bool) -> Result<
       }
 
       /* Hide marketing LP header (variant A) */
+      /* Slim login-only header bar (variant A: keep login, hide marketing nav) */
       #contentful-header {
+        display: flex !important;
+        height: 44px !important;
+        min-height: 44px !important;
+        max-height: 44px !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        padding: 4px 24px !important;
+        box-sizing: border-box !important;
+        position: relative !important;
+        top: auto !important;
+        z-index: 40 !important;
+        overflow: hidden !important;
+      }
+
+      /* Hide marketing nav/logo inside contentful-header, keep auth area */
+      #contentful-header nav,
+      #contentful-header ul,
+      #contentful-header li,
+      #contentful-header [href*="/overview"],
+      #contentful-header [href*="/features"],
+      #contentful-header [href*="/learn"],
+      #contentful-header [href*="/business"],
+      #contentful-header [href*="/pricing"],
+      #contentful-header [href*="/download"] {
         display: none !important;
+      }
+
+      #contentful-header > div:first-child {
+        display: none !important;
+      }
+
+      #contentful-header [data-testid="signup-button"] {
+        display: none !important;
+      }
+
+      #contentful-header [data-testid="login-button"] {
+        display: inline-flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
       }
 
       /* Override LP header height CSS variable — also on body so calc() picks it up */
@@ -921,9 +964,24 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview, hide_lp: bool) -> Result<
       // 1. Left sidebar — exact ID match only
       document.querySelectorAll('#stage-slideover-sidebar').forEach(hide);
 
-      // Always hide marketing LP header (variant A)
+      // Slim down contentful-header to login-only bar (variant A)
       var contentfulHeader = document.getElementById('contentful-header');
-      if (contentfulHeader) hide(contentfulHeader);
+      if (contentfulHeader) {
+        contentfulHeader.removeAttribute('data-llm-chatgpt-hidden');
+
+        contentfulHeader.querySelectorAll('nav, ul, li').forEach(hide);
+
+        var firstChild = contentfulHeader.firstElementChild;
+        if (firstChild) hide(firstChild);
+
+        contentfulHeader.querySelectorAll('[data-testid="signup-button"]').forEach(hide);
+
+        contentfulHeader.querySelectorAll('[data-testid="login-button"]').forEach(function(btn) {
+          btn.style.display = 'inline-flex';
+          btn.style.visibility = 'visible';
+          btn.style.opacity = '1';
+        });
+      }
 
       // 1b. Header navigation (structure-based: ul/nav inside header, not the entire header)
       if (hideLpElements) {
@@ -1022,7 +1080,8 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview, hide_lp: bool) -> Result<
       }
 
       if (hideLpElements) {
-      document.querySelectorAll('#contentful-header, [class*="scroll-mt-mkt-header-height"], [class*="h-mkt-header-height"], [class*="pt-mkt-header-height"]').forEach(function(el) {
+      document.querySelectorAll('[class*="scroll-mt-mkt-header-height"], [class*="pt-mkt-header-height"]').forEach(function(el) {
+        if (el.id === 'contentful-header') return;
         if (hasTranslationUi(el)) return;
         hide(el);
       });

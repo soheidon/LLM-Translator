@@ -44,6 +44,7 @@
         "type": "embedBootstrapper"
       },
       "nsis": {
+        "displayLanguageSelector": true,
         "installerIcon": "icons/icon.ico",
         "installMode": "currentUser",
         "languages": ["English", "Japanese", "SimpChinese", "TradChinese", "Korean", "French", "German", "Spanish", "Portuguese", "Russian", "Italian"]

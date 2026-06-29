@@ -1,4 +1,4 @@
-[English](README.md) | [日本語](docs/ja/README.md) | [中文(简体)](docs/zh-CN/README.md) | [한국어](docs/ko/README.md) | [Français](docs/fr/README.md) | [Deutsch](docs/de/README.md) | [Español](docs/es/README.md)
+[English](../../README.md) | [日本語](../ja/README.md) | [中文(简体)](../zh-CN/README.md) | [中文(繁體)](../zh-TW/README.md) | [한국어](../ko/README.md) | [Français](../fr/README.md) | [Deutsch](../de/README.md) | [Español](README.md)
 
 # LLM Translator Desktop
 

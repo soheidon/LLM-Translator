@@ -1,4 +1,4 @@
-[English](../../SPEC.md) | [日本語](SPEC.md) | [中文(简体)](../zh-CN/SPEC.md) | [한국어](../ko/SPEC.md) | [Français](../fr/SPEC.md) | [Deutsch](../de/SPEC.md) | [Español](../es/SPEC.md)
+[English](../../SPEC.md) | [日本語](SPEC.md) | [中文(简体)](../zh-CN/SPEC.md) | [中文(繁體)](../zh-TW/SPEC.md) | [한국어](../ko/SPEC.md) | [Français](../fr/SPEC.md) | [Deutsch](../de/SPEC.md) | [Español](../es/SPEC.md)
 
 # LLM Translator Desktop 仕様書
 

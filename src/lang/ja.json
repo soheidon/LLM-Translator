@@ -1,7 +1,7 @@
 {
   "app": {
     "title": "LLM Translator Desktop",
-    "version": "v0.3.8"
+    "version": "v0.4.0"
   },
   "titlebar": {
     "settings": "設定",

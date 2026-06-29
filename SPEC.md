@@ -304,7 +304,17 @@ Windows の低レベルキーボードフック (`SetWindowsHookEx(WH_KEYBOARD_L
 - [x] 診断ログの取得範囲を絞り込み（DOM診断：巨大ページラッパーを除外、HTML+CSS診断：翻訳フォーム本体を除外）
 - [x] システムトレイ復帰の信頼性向上（トレイアイコンの生存期間をアプリ終了まで延長、hide後のWebviewWindowを保持してダブルクリック復帰を保証）
 
-### v0.4
+### v0.4.0
+
+- [x] ChatGPT翻訳タブ：複数DOMバリアント対応 — マーケティングLP（variant A）とアプリ/ログイン版（variant B）の両方で翻訳フォームを適切に表示
+- [x] CSSセレクタを `main#main` から `[data-llm-chatgpt-container="true"]` 属性ベースに変更し、variant A（`id="main"` 無し）でも翻訳UIが画面全体に表示されるよう修正
+- [x] ログインボタン保持 — `#contentful-header` を丸ごと非表示にせず、マーケティング要素のみ非表示にしてログインボタンを残す44pxバーに変形
+- [x] CTA非表示の強化 — 「ChatGPT で翻訳を開始する」「今すぐ試す」等のCTA要素をvariant Aでも検出・非表示化
+- [x] ページ全体のスクロール抑制 — `html, body { overflow: hidden }` によりページレベルのスクロールバーを排除
+- [x] スクロール位置リセット — layout markers設定後にスクロール位置をリセットし、翻訳フォームの画面外への飛び出しを修正
+- [x] LPセクション非表示のバリアント対応 — `#contentful-header` と `[class*="h-mkt-header-height"]` の競合を解消し、安全にLP要素のみ非表示化
+
+### v0.5
 - macOS 対応検討
 - 自動アップデート
 - エクスポート/インポート設定

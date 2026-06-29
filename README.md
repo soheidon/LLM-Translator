@@ -1,88 +1,90 @@
+[English](README.md) | [日本語](docs/ja/README.md) | [中文(简体)](docs/zh-CN/README.md) | [한국어](docs/ko/README.md) | [Français](docs/fr/README.md) | [Deutsch](docs/de/README.md) | [Español](docs/es/README.md)
+
 # LLM Translator Desktop
 
-DeepL Desktop のように、任意のアプリで選択したテキストを Ctrl+C+C ですばやく翻訳できる Windows デスクトップアプリです。LLM翻訳に加えて、Google翻訳タブやChatGPT翻訳タブを備え、用途に応じて翻訳方法を切り替えられます。
+A Windows desktop app for quick translation — just like DeepL Desktop, select text in any app and press Ctrl+C+C to translate instantly. Includes LLM translation, a Google Translate tab, and a ChatGPT Translate tab, letting you switch translation methods depending on your needs.
 
-## 主な機能
+## Features
 
-### 共通仕様
+### Common
 
-* **Ctrl+C+C 翻訳** — 任意のアプリでテキストを選択し、Ctrl+C を2回押すだけで現在のタブに送信して翻訳できます。
-* **グローバルショートカット** — Ctrl+Shift+C などのショートカットで、明示的に翻訳を起動できます。
-* **タスクトレイ常駐** — Xボタンで終了せずシステムトレーに常駐し、ダブルクリックでウィンドウを再表示、右クリックの「終了」で完全終了できます。自動起動時の復帰にも対応し、確実に前面表示されます。
-* **多重起動防止** — 既存インスタンスを再利用し、トレーアイコンの重複を防ぎます。
-* **Windows自動起動** — 設定で有効にすると、Windowsログイン時にLLM Translatorを自動起動できます（初期値OFF）。
-* **履歴管理** — 翻訳履歴の保存、検索、再翻訳に対応します。
-* **タブメモリ** — 最後に選択していたタブを記憶し、次回起動時に復元します。
-* **多言語UI** — 日本語、英語、中国語、韓国語、フランス語、ドイツ語、スペイン語など、複数言語のUIに対応します。
+* **Ctrl+C+C Translation** — Select text in any app and press Ctrl+C twice to send it to the current tab for translation.
+* **Global Shortcut** — Use Ctrl+Shift+C (or a custom shortcut) to explicitly trigger translation.
+* **System Tray** — Closing the window minimizes to the system tray instead of quitting. Double-click the tray icon to restore the window, right-click → "Exit" to fully quit. Window restoration works reliably even after auto-start.
+* **Single Instance** — Reuses the existing instance to prevent duplicate tray icons.
+* **Auto-start with Windows** — Optionally launch LLM Translator when you log into Windows (default: OFF).
+* **History** — Save, search, and re-translate your translation history.
+* **Tab Memory** — Remembers the last selected tab and restores it on next launch.
+* **Multilingual UI** — Supports Japanese, English, Chinese (Simplified/Traditional), Korean, French, German, Spanish, Portuguese, Russian, and Italian.
 
-### LLM翻訳の特徴
+### LLM Translation
 
-* **多様なLLMプロバイダ対応** — OpenAI, Claude, Gemini, DeepSeek, MiMo, Kimi, Qwen, MiniMAX, Ollama などを利用できます。
-* **翻訳プリセット** — ニュース、論文、技術文書、メール、字幕、自然訳、直訳、フォーマル、カジュアルなど、用途に応じた翻訳スタイルを選べます。
-* **文体選択** — 自動、常体、敬体を選択できます。
-* **APIキー安全管理** — APIキーはOSの環境変数を使用し、アプリの設定ファイルには保存しません。
-* **使用モデル表示** — ステータスバーで、現在使用しているプロバイダとモデルを確認できます。
+* **Multiple LLM Providers** — OpenAI, Claude, Gemini, DeepSeek, MiMo, Kimi, Qwen, MiniMAX, Ollama, and more.
+* **Translation Presets** — Choose from News, Academic, Technical, Email, Subtitle, Natural, Literal, Formal, Casual, and Friendly translation styles.
+* **Tone Selection** — Auto, Plain, or Polite tone for Japanese output.
+* **API Key Security** — API keys are stored in OS environment variables, never in app settings files.
+* **Model Display** — See the current provider and model in the status bar.
 
-### Google翻訳タブ
+### Google Translate Tab
 
-* **Google翻訳のWebView埋め込み** — Google翻訳をアプリ内で開き、ブラウザを切り替えずに利用できます。
-* **翻訳元・翻訳先言語の設定** — 設定画面からGoogle翻訳タブのソース言語・ターゲット言語を選択できます。
-* **トップページ判定に応じたナビゲーション表示** — Google翻訳の通常画面では操作バーを隠し、ログイン画面や外部ページなどでは戻る・進む・再読み込み・ホームを表示します。
-* **Ctrl+C+C 連携** — 任意のアプリで選択したテキストを、Google翻訳タブへ送信できます。
+* **Embedded Google Translate** — Use Google Translate inside the app without switching to a browser.
+* **Language Configuration** — Set source and target languages from the settings screen.
+* **Smart Navigation Bar** — Navigation buttons (back, forward, reload, home) appear only when needed (e.g., login pages, external pages), hidden on the normal translate page.
+* **Ctrl+C+C Integration** — Send selected text from any app to the Google Translate tab.
 
-### ChatGPT翻訳タブ
+### ChatGPT Translate Tab
 
-* **ChatGPT WebView埋め込み** — ChatGPTのWeb画面をアプリ内で開き、翻訳用プロンプトを送信できます。
-* **翻訳元・翻訳先言語の設定** — 設定画面からChatGPT翻訳タブのソース言語・ターゲット言語を選択できます。
-* **不要なLP要素の非表示** — 設定からON/OFF可能。ChatGPT画面上部のヘッダーナビやマーケティングセクションを非表示にして、翻訳フォームに集中できます。
-* **複数DOMバリアント対応** — ChatGPTが返すページ構造の差異（マーケティングLP / アプリ版）を自動判定し、両方のバリアントで翻訳フォームを画面全体に表示します。`main#main` の代わりに `data-llm-chatgpt-container` 属性ベースのセレクタを使用し、ログインボタンを保持しつつ不要なマーケティング要素のみを非表示にします。
-* **ページスクロール抑制** — バリアントAで発生していたページ全体のスクロールバーを抑制し、翻訳UIを画面内に収めます。
-* **不要なサジェストカードの非表示** — ChatGPT画面内に表示される不要な提案カード（「ビジネス用にする」「5歳児にもわかるように説明して」「より自然な表現に」など）を自動で非表示にします。`button`/`a`/`[role="button"]` に加え、`div` 型カードにも対応。複数回の遅延再実行とMutationObserverにより、PCやブラウザ環境によるDOM構造の差異を吸収します。
-* **DOM診断ツール / HTML+CSS診断ツール** — ChatGPT翻訳タブのDOM構造やCSS状態を診断するデバッグツールを搭載。設定でON/OFF切替可能。
-* **トップページ以外での操作バー表示** — 必要な場面で再読み込み・ホームなどの操作ボタンを表示します。
-* **Ctrl+C+C 連携** — 任意のアプリで選択したテキストを、ChatGPT翻訳タブへ送信できます。
+* **Embedded ChatGPT** — Open ChatGPT's web interface inside the app and send translation prompts.
+* **Language Configuration** — Set source and target languages from the settings screen.
+* **LP Element Hiding** — Toggle ON/OFF in settings. Hide marketing navigation and sections from the ChatGPT page so you can focus on the translation form.
+* **Multi-Variant DOM Support** — Automatically adapts to different ChatGPT page structures (marketing LP vs. app/login variants). Uses `data-llm-chatgpt-container` attribute-based selectors instead of `main#main`, preserving the login button while hiding only marketing elements.
+* **Page Scroll Suppression** — Eliminates the page-level scrollbar that appeared on variant A, keeping the translation UI contained within the viewport.
+* **Suggestion Card Hiding** — Automatically hides suggestion cards ("Make it more business-like", "Explain like I'm 5", "Make it sound more natural", etc.). Handles `button`, `a`, `[role="button"]`, and `div`-type cards. Multiple delayed retries and a MutationObserver absorb DOM differences across PCs and browser environments.
+* **DOM Diagnostic / HTML+CSS Diagnostic Tools** — Debug tools for inspecting ChatGPT's DOM structure and CSS state. Toggle ON/OFF in settings.
+* **Navigation Bar** — Reload and home buttons appear when not on the top page.
+* **Ctrl+C+C Integration** — Send selected text from any app to the ChatGPT Translate tab.
 
-## 必要環境
+## Requirements
 
 - Windows 10 / Windows 11
-- 各 AI プロバイダの API キー
+- An API key for each AI provider you want to use
 
-## インストール
+## Installation
 
-[Releases](https://github.com/soheidon/LLM-Translator/releases) から最新の `LLM-Translator-Desktop-Setup.exe` をダウンロードして実行してください。インストーラー起動時に 11 言語から選択可能です（選択は次回以降記憶されます）。
+Download the latest `LLM-Translator-Desktop-Setup.exe` from [Releases](https://github.com/soheidon/LLM-Translator/releases) and run it. The installer offers 11 languages to choose from on launch (your selection is remembered for future installs).
 
-## 使い方
+## Usage
 
-1. アプリを起動すると翻訳ウィンドウが表示されます（「通常起動時にトレーへ最小化」をONにすると、起動時にトレイ常駐します）
-2. API 設定で使用したいプロバイダの API キーを設定してください（設定 → API）
-3. 任意のアプリで翻訳したいテキストを選択し、Ctrl+C を2回押すと翻訳されます
-4. または Ctrl+Shift+C でも翻訳できます
-5. メイン画面では手動でテキストを入力・貼り付けして翻訳することもできます
+1. Launch the app — the translation window appears (enable "Start minimized" in settings to start in the tray instead)
+2. Configure your API keys in Settings → API
+3. Select text in any app and press Ctrl+C twice to translate
+4. Alternatively, use Ctrl+Shift+C
+5. You can also type or paste text manually in the main screen
 
-## 開発
+## Development
 
 ```bash
-# 依存関係のインストール
+# Install dependencies
 npm install
 
-# 開発モードで起動
+# Start in development mode
 npm run tauri dev
 
-# ビルド
+# Build
 npm run tauri build
 ```
 
-## 技術スタック
+## Tech Stack
 
-- [Tauri v2](https://tauri.app/) — デスクトップアプリケーションフレームワーク
-- [Rust](https://www.rust-lang.org/) — バックエンド（API通信、キーボードフック、設定管理）
-- [React](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/) — フロントエンド UI
-- [Vite](https://vitejs.dev/) — ビルドツール
+- [Tauri v2](https://tauri.app/) — Desktop application framework
+- [Rust](https://www.rust-lang.org/) — Backend (API communication, keyboard hook, config management)
+- [React](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/) — Frontend UI
+- [Vite](https://vitejs.dev/) — Build tool
 
-## バージョン
+## Version
 
 v0.4.0
 
-## ライセンス
+## License
 
 MIT

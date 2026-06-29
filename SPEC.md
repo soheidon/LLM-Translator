@@ -1,174 +1,175 @@
-# LLM Translator Desktop 仕様書
+[English](SPEC.md) | [日本語](docs/ja/SPEC.md) | [中文(简体)](docs/zh-CN/SPEC.md) | [한국어](docs/ko/SPEC.md) | [Français](docs/fr/SPEC.md) | [Deutsch](docs/de/SPEC.md) | [Español](docs/es/SPEC.md)
 
-## 1. アプリ概要
+# LLM Translator Desktop — Specification
 
-### 1.1 アプリ名
+## 1. Overview
+
+### 1.1 Name
 LLM Translator Desktop
 
-### 1.2 目的
-DeepL Desktop と同様に、ユーザーが任意のアプリ上でテキストを選択し Ctrl+C+C を押すだけで、クリップボード上のテキストを LLM API に送信し、訳文を翻訳ウィンドウに表示する常駐型デスクトップアプリ。
+### 1.2 Purpose
+A resident desktop app, similar to DeepL Desktop, that lets users select text in any application and press Ctrl+C+C to send the clipboard text to an LLM API and display the translation in a translation window.
 
-### 1.3 対応 OS
+### 1.3 Supported OS
 - Windows 10 / Windows 11
-- ※ macOS / Linux は将来対応
+- macOS / Linux — planned for future release
 
 ---
 
-## 2. 基本ユーザーフロー
+## 2. Basic User Flow
 
 ```
-任意のアプリでテキストを選択
+Select text in any app
 ↓
-Ctrl+C を2回押す（または Ctrl+Shift+C）
+Press Ctrl+C twice (or Ctrl+Shift+C)
 ↓
-アプリがクリップボードのテキストを取得
+App reads clipboard text
 ↓
-翻訳 API へ送信
+Sends to translation API
 ↓
-翻訳ウィンドウを表示
+Displays translation window
 ↓
-訳文を読む／コピーする／再翻訳する
+Read / Copy / Re-translate
 ```
 
 ---
 
-## 3. 技術スタック
+## 3. Tech Stack
 
-| レイヤー | 技術 |
+| Layer | Technology |
 |---------|------|
-| デスクトップフレームワーク | Tauri v2 |
-| バックエンド | Rust |
-| フロントエンド | React + TypeScript |
-| ビルドツール | Vite |
-| 主なTauriプラグイン | global-shortcut, clipboard-manager, shell, store, log |
-| HTTP通信 | reqwest（Rust側） |
-| Windows API | SetWindowsHookEx（キーボードフック） |
+| Desktop Framework | Tauri v2 |
+| Backend | Rust |
+| Frontend | React + TypeScript |
+| Build Tool | Vite |
+| Main Tauri Plugins | global-shortcut, clipboard-manager, shell, store, log |
+| HTTP | reqwest (Rust side) |
+| Windows API | SetWindowsHookEx (keyboard hook) |
 
 ---
 
-## 4. 主要機能
+## 4. Core Features
 
-### 4.1 Ctrl+C+C 翻訳
+### 4.1 Ctrl+C+C Translation
 
-Windows の低レベルキーボードフック (`SetWindowsHookEx(WH_KEYBOARD_LL)`) を使用し、OS 全体で Ctrl+C の2回押しを検知する。
-検知後、クリップボードからテキストを読み取り翻訳を開始する。
+Uses a Windows low-level keyboard hook (`SetWindowsHookEx(WH_KEYBOARD_LL)`) to detect double-press of Ctrl+C system-wide. Once detected, reads text from the clipboard and starts translation.
 
-- 判定方式: Ctrl を押しっぱなしの同一セッション内で C を2回押した場合のみ発火
-- Ctrl keyup でセッションリセット（誤発火防止）
-- Shift/Alt/Win 同時押しは判定対象外（Ctrl+Shift+C は global_shortcut 側で処理）
-- Cキー押しっぱなしのリピートは除外
-- 判定時間: デフォルト 400ms（設定で変更可能）
-- 設定で ON/OFF 切替可能（変更後はアプリ再起動が必要）
+- Detection: Only fires on the second C press within the same Ctrl-held session
+- Ctrl keyup resets the session (prevents false triggers)
+- Shift/Alt/Win modifiers excluded (Ctrl+Shift+C is handled by global_shortcut)
+- C key repeat is filtered out
+- Threshold: default 400ms (configurable in settings)
+- Can be toggled ON/OFF in settings (requires app restart)
 
-### 4.2 クリップボード監視
+### 4.2 Clipboard Monitoring
 
-※ v0.3.0 で廃止。Ctrl+C+C 翻訳とグローバルショートカットのみで翻訳を開始する。
+Deprecated in v0.3.0. Translation is triggered only by Ctrl+C+C and global shortcut.
 
-### 4.3 メイン翻訳画面
+### 4.3 Main Translation Screen
 
-- 原文・訳文の左右2ペイン表示
-- 原文ペイン: 直接入力、文字数表示、クリア
-- 訳文ペイン: 再翻訳、コピー
-- 翻訳元言語（自動検出含む）・翻訳先言語の選択
-- 言語入れ替え
-- モデル・文体・プリセット選択
+- Source and translation shown in two side-by-side panes
+- Source pane: direct input, character count, clear
+- Translation pane: re-translate, copy
+- Source language selection (including auto-detect) and target language selection
+- Language swap
+- Model, tone, and preset selection
 
-### 4.4 設定画面
+### 4.4 Settings Screen
 
-#### 一般設定
-- UI言語（11言語）
-- 起動時に最小化（デフォルトOFF: 初回起動時はウィンドウを表示）
-- 常に前面表示
-- 翻訳時に前面表示
-- Esc で閉じる
-- 外側クリックで閉じる
-- Ctrl+C+C クイック翻訳 ON/OFF
-- 代替ショートカット設定
-- 翻訳ウィンドウを開くショートカット
-- 履歴を開くショートカット
-- 翻訳履歴保存 ON/OFF
-- 通知音
+#### General Settings
+- UI language (11 languages)
+- Start minimized (default OFF: window is shown on first launch)
+- Always on top
+- Focus on translate
+- Close on Esc
+- Close on outside click
+- Ctrl+C+C quick translate ON/OFF
+- Alternative shortcut configuration
+- Open translate window shortcut
+- Open history shortcut
+- Translation history save ON/OFF
+- Notification sound
 
-#### API設定
-- 12プロバイダの表形式管理（Provider, Status）
-- プロバイダ展開時の詳細設定: 環境変数名, APIキー, Base URL, 接続テスト
-- 機能役割別モデルマッピング（default, fast）
-- モデルごとの動作モード（thinking, normal）
-- Ollama: ローカルモデル一覧取得・選択
-- Google Translate: Cloud API / Apps Script 両対応
-- DeepL: Free / Pro 両対応
-- 環境変数は `setx` + レジストリフォールバックで読み取り
+#### API Settings
+- 12 providers in table format (Provider, Status)
+- Expanded provider details: environment variable name, API key, Base URL, connection test
+- Role-based model mapping (default, fast)
+- Per-model behavior mode (thinking, normal)
+- Ollama: local model list fetch and selection
+- Google Translate: Cloud API / Apps Script support
+- DeepL: Free / Pro support
+- Environment variables read via `setx` + registry fallback
 
-#### プリセット設定
-- 10種類の組み込みプリセット（ニュース/論文/技術文書/メール/字幕/自然訳/直訳/フォーマル/カジュアル/フレンドリー）
-- 検索、名称・説明・システムプロンプト編集
+#### Preset Settings
+- 10 built-in presets (News/Academic/Technical/Email/Subtitle/Natural/Literal/Formal/Casual/Friendly)
+- Search, name/description/system prompt editing
 
-#### 履歴設定
-- 最大保存件数設定
+#### History Settings
+- Max history entries setting
 
-### 4.5 履歴画面
-- 原文・訳文の左右表示
-- 検索
-- 再翻訳、コピー
-- Load More 追加読み込み
-- 全削除
+### 4.5 History Screen
+- Source and translation shown side-by-side
+- Search
+- Re-translate, copy
+- Load More
+- Delete all
 
-### 4.6 タスクトレイ
-- 常駐アイコンと右クリックメニュー
-- 右クリックメニューは「終了」のみ
-- 左クリックでメインウィンドウを表示
-- Xボタンでウィンドウを閉じるとトレーに最小化（アプリは終了しない）
-- トレー右クリック → 「終了」でアプリ完全終了
-- 多重起動防止: 2回目の起動時は既存インスタンスを前面表示
+### 4.6 System Tray
+- Resident icon with right-click menu
+- Right-click menu: "Exit" only
+- Left-click shows the main window
+- X button minimizes to tray (app does not exit)
+- Right-click tray icon → "Exit" to fully quit
+- Single instance: second launch brings the existing instance to the front
 
 ---
 
-## 5. 対応翻訳プロバイダ
+## 5. Supported Translation Providers
 
-| プロバイダ | API種別 | デフォルトモデル |
+| Provider | API Type | Default Model |
 |-----------|---------|-------------|
 | Google Translate / Cloud | Google Cloud Translation API | google-translate-v2 |
 | DeepL / Free | DeepL API | deepl |
 | DeepL / Pro | DeepL API | deepl |
-| OpenAI / ChatGPT | OpenAI互換 | gpt-5.5 |
-| Gemini / Google | OpenAI互換 | gemini-3.1-pro |
-| Claude / Anthropic | Anthropic互換 | claude-opus-4-8 |
-| MiMo / Xiaomi | OpenAI互換 | mimo-v2.5-pro |
-| DeepSeek / DeepSeek | OpenAI互換 | deepseek-v4-pro |
-| Kimi / Moonshot | OpenAI互換 | kimi-k2.7-code |
-| Qwen / Alibaba | OpenAI互換 | qwen3.7-max |
-| MiniMAX / MiniMAX | OpenAI互換 | MiniMax-M2.7 |
-| Ollama / Local | OpenAI互換（ローカル） | - |
+| OpenAI / ChatGPT | OpenAI-compatible | gpt-5.5 |
+| Gemini / Google | OpenAI-compatible | gemini-3.1-pro |
+| Claude / Anthropic | Anthropic-compatible | claude-opus-4-8 |
+| MiMo / Xiaomi | OpenAI-compatible | mimo-v2.5-pro |
+| DeepSeek / DeepSeek | OpenAI-compatible | deepseek-v4-pro |
+| Kimi / Moonshot | OpenAI-compatible | kimi-k2.7-code |
+| Qwen / Alibaba | OpenAI-compatible | qwen3.7-max |
+| MiniMAX / MiniMAX | OpenAI-compatible | MiniMax-M2.7 |
+| Ollama / Local | OpenAI-compatible (local) | - |
 | Google Translate / Apps Script | Google Apps Script | google-apps-script |
 
 ---
 
-## 6. 対応 UI 言語
+## 6. Supported UI Languages
 
-日本語, English, 中文(简体), 中文(繁體), 한국어, Français, Deutsch, Español, Português, Русский, Italiano
-
----
-
-## 7. セキュリティ
-
-- API キーは OS 環境変数に保存、設定ファイルに含めない
-- フロントエンドに API キーを渡さない（Rust 側で保持）
-- HTTPS 通信（ローカル Ollama のみ HTTP 許可）
-- 履歴保存はユーザーが ON/OFF 可能
+Japanese, English, 中文(简体), 中文(繁體), 한국어, Français, Deutsch, Español, Português, Русский, Italiano
 
 ---
 
-## 8. データ保存
+## 7. Security
+
+- API keys stored in OS environment variables, not in config files
+- API keys never sent to the frontend (held on the Rust side)
+- HTTPS for all communication (HTTP allowed only for local Ollama)
+- History saving is user-toggleable ON/OFF
+
+---
+
+## 8. Data Storage
 
 ```
 %APPDATA%/LLMTranslator/
-├── settings.json    # 設定ファイル
-└── history.jsonl    # 翻訳履歴（JSON Lines）
+├── settings.json    # Settings file
+└── history.jsonl    # Translation history (JSON Lines)
 ```
 
 ---
 
-## 9. ファイル構成
+## 9. File Structure
 
 ```
 ├── index.html
@@ -232,95 +233,96 @@ Windows の低レベルキーボードフック (`SetWindowsHookEx(WH_KEYBOARD_L
 
 ---
 
-## 10. v0.3.4 実装済み機能
+## 10. Changelog
 
-- [x] Windows 10/11 対応
+### v0.3.4
+
+- [x] Windows 10/11 support
 - [x] Tauri v2 + React + TypeScript + Rust
-- [x] タスクトレイ常駐（Xボタンでトレー最小化、右クリック「終了」で完全終了）
-- [x] Ctrl+C+C グローバルキーボードフック（Ctrl押しっぱなしセッション方式、誤発火防止）
-- [x] Ctrl+Shift+C グローバルショートカット
-- [x] 13プロバイダ対応（OpenAI/Claude/Gemini/DeepSeek/MiMo/Kimi/Qwen/MiniMAX/Ollama/DeepL/Google Translate）
-- [x] タブ式翻訳画面（LLM / Google翻訳 / chatGPT翻訳）
-- [x] タブ選択メモリ（最後のタブを localStorage に保存し次回起動時に復元）
-- [x] Google翻訳タブ：Tauri WebView埋め込み、ソース/ターゲット言語設定、ブラウザ操作バー
-- [x] chatGPT翻訳タブ：ChatGPT Translate WebView埋め込み、翻訳元・翻訳先言語の設定画面からの指定
-- [x] chatGPT翻訳ブラウザ操作バー（再読み込み/ホーム、トップページ以外で表示）
-- [x] メイン翻訳画面（2ペイン）
-- [x] 訳文コピー
-- [x] 設定画面（一般/API/プリセット/履歴/Google翻訳/chatGPT翻訳）
-- [x] 11言語UI（日本語・English・中文(簡体/繁体)・한국어・Français・Deutsch・Español・Português・Русский・Italiano）
-- [x] 10種類の翻訳プリセット
-- [x] 3種の文体（自動/常体/敬体）
-- [x] API接続テストと状態表示
-- [x] 履歴保存・検索・再翻訳
-- [x] 環境変数ベースのAPIキー管理
-- [x] 常に前面表示
-- [x] 起動時最小化
-- [x] バージョン表示（ステータスバー）
-- [x] SVGアイコン移行（全サイドバーアイコン・ブラウザ操作バーアイコンをSVGに統一）
-- [x] アプリアイコン表示（タイトルバー・サイドバーにアプリアイコンを表示）
-- [x] 設定画面トップバーの整理（アイコン・タイトルテキスト削除）、右上×廃止
-- [x] 設定ボタンUI改善（黒いカプセル型）、設定を閉じるボタンも統一
-- [x] LLMタブラベル日本語対応（ja.json で "LLM翻訳" に）
-- [x] chatGPT翻訳サジェストカード非表示（DOM診断ツール搭載、設定でON/OFF切替）
-- [x] Ctrl+C+C 誤発火防止（keyboard_hook 全面書き換え：Ctrlセッション方式 + 他修飾キー除外 + Cキーリピート除外）
-- [x] クリップボードポーリング廃止（Ctrl+C 1回での翻訳発火を完全排除）
-- [x] 閉じる＝トレー最小化（window.hide()）、多重起動防止（single instance plugin）
-- [x] システムトレーメニュー簡略化（「終了」のみ）
-- [x] ChatGPT Translate 設定画面（翻訳元・翻訳先言語選択）
-- [x] 各種デバッグログ（発火元特定用）
-- [x] 設定のデフォルト値を最適化（double_copy_enabled 初期 true、threshold 400ms）
-- [x] ステータスバーにデフォルトプロバイダのモデル名を短縮表示
-- [x] API設定テーブルに Default 列を追加（行内で Set as Default ボタンも配置）
-- [x] Google翻訳のトップページ判定を hostname + pathname ベースに改善（翻訳後もナビゲーションバー非表示）
-- [x] 設定画面UI改善（タイトルバー常時表示、タブバー/ステータスバー非表示、←アイコン除去）
-- [x] Windows自動起動（Registry HKCU Run キー、設定トグルでON/OFF、初期値OFF、引用符付きパス）
-- [x] 起動時最小化の実装（`start_minimized` 設定を実際に反映、setup() で window.hide()）
+- [x] System tray (X minimizes to tray, right-click "Exit" to fully quit)
+- [x] Ctrl+C+C global keyboard hook (Ctrl-held session method, false-trigger prevention)
+- [x] Ctrl+Shift+C global shortcut
+- [x] 13 providers (OpenAI/Claude/Gemini/DeepSeek/MiMo/Kimi/Qwen/MiniMAX/Ollama/DeepL/Google Translate)
+- [x] Tabbed translation screen (LLM / Google Translate / ChatGPT Translate)
+- [x] Tab memory (last tab saved to localStorage, restored on next launch)
+- [x] Google Translate tab: Tauri WebView embedding, source/target language settings, browser nav bar
+- [x] ChatGPT Translate tab: WebView embedding, language settings from settings screen
+- [x] ChatGPT Translate nav bar (reload/home, shown outside top page)
+- [x] Main translation screen (2-pane)
+- [x] Translation copy
+- [x] Settings screen (General/API/Presets/History/Google Translate/ChatGPT Translate)
+- [x] 11-language UI
+- [x] 10 translation presets
+- [x] 3 tone options (Auto/Plain/Polite)
+- [x] API connection test and status display
+- [x] History save/search/re-translate
+- [x] Environment variable-based API key management
+- [x] Always on top
+- [x] Start minimized
+- [x] Version display (status bar)
+- [x] SVG icon migration (all sidebar/browser nav bar icons)
+- [x] App icon display (title bar, sidebar)
+- [x] Settings top bar cleanup (icon/title text removed), × button removed
+- [x] Settings button UI improvement (black capsule), close-settings button unified
+- [x] LLM tab label localized for Japanese ("LLM翻訳" in ja.json)
+- [x] ChatGPT suggestion card hiding (with DOM diagnostic tool, toggle ON/OFF in settings)
+- [x] Ctrl+C+C false trigger prevention (keyboard_hook rewrite: Ctrl session + modifier exclusion + key repeat exclusion)
+- [x] Clipboard polling removed (single Ctrl+C no longer triggers translation)
+- [x] Close = tray minimize (window.hide()), single instance prevention
+- [x] System tray menu simplified ("Exit" only)
+- [x] ChatGPT Translate settings screen (source/target language selection)
+- [x] Debug logging (trigger source identification)
+- [x] Default settings optimization (double_copy_enabled default true, threshold 400ms)
+- [x] Status bar shows short default provider model name
+- [x] Default column added to API settings table (with Set as Default button per row)
+- [x] Google Translate top-page detection improved (hostname + pathname based, nav bar hidden after translation)
+- [x] Settings UI improvements (title bar always shown, tab bar/status bar hidden, ← icon removed)
+- [x] Windows auto-start (Registry HKCU Run key, toggle ON/OFF, default OFF, quoted path)
+- [x] Start minimized implementation (`start_minimized` setting enforced, window.hide() in setup())
 
 ### v0.3.5
 
-- [x] ChatGPT翻訳サジェストカード非表示の安定化（遅延スケジュール8秒まで延長、`.prompt-card` CSS 常時非表示）
-- [x] サジェストカード cleanup のデバッグログ追加（新規非表示カード数のみ出力、data属性で重複カウント防止）
-- [x] `--auto-start` フラグによる自動起動と手動起動の分離
-- [x] トレーアイコンダブルクリック復帰の修正（`SetWindowPos` + `SetForegroundWindow` 前面化、Click フォールバック、700ms クールダウン）
-- [x] トレーアイコンイベントログ追加（全イベント種別をログ出力）
+- [x] ChatGPT suggestion card hiding stabilized (delay schedule extended to 8s, `.prompt-card` CSS always hidden)
+- [x] Suggestion card cleanup debug logging (outputs only newly hidden card count, data attribute prevents double counting)
+- [x] `--auto-start` flag to separate auto-start from manual launch
+- [x] Tray icon double-click restoration fix (`SetWindowPos` + `SetForegroundWindow` bring-to-front, Click fallback, 700ms cooldown)
+- [x] Tray icon event logging added (all event types logged)
 
 ### v0.3.6
 
-- [x] ChatGPT翻訳サジェストカード非表示を div 型カードにも対応（`button`/`a`/`[role="button"]` に加えて `div` もスキャン、AND条件の親コンテナ除外ガード付き）
-- [x] DOM診断コマンドに子要素ダンプ機能追加（サジェスト文言を含む要素の直下 children を1階層出力）
+- [x] ChatGPT suggestion card hiding extended to div-type cards (scans `div` in addition to `button`/`a`/`[role="button"]`, with AND-condition parent container exclusion guard)
+- [x] DOM diagnostic command: child element dump added (outputs one level of direct children for elements containing suggestion text)
 
 ### v0.3.7
 
-- [x] NSIS インストーラーに言語選択ダイアログを追加（`displayLanguageSelector: true`、11言語対応、選択はレジストリに保存）
-- [x] `start_minimized` デフォルト値を `false` に変更（初回起動時にウィンドウが表示されない問題を修正）
-- [x] 設定画面の「起動時に最小化」ラベルと説明文を改善（通常起動時にトレーへ最小化）
+- [x] NSIS installer language selection dialog added (`displayLanguageSelector: true`, 11 languages, selection saved to registry)
+- [x] `start_minimized` default changed to `false` (fixes window not appearing on first launch)
+- [x] "Start minimized" label and description improved in settings (minimizes to tray on normal launch)
 
 ### v0.3.8
 
-- [x] ChatGPT翻訳タブ：不要なLP要素（ヘッダーナビ・マーケティングセクション）を非表示にする設定トグル追加
-- [x] ChatGPT翻訳タブ：DOM診断ツール（StatusBarボタンで対話要素の候補を列挙、設定でON/OFF切替）
-- [x] ChatGPT翻訳タブ：HTML+CSS診断ツール（ヘッダー/フッター/LP要素のCSS状態を調査、設定でON/OFF切替）
-- [x] 診断ログの取得範囲を絞り込み（DOM診断：巨大ページラッパーを除外、HTML+CSS診断：翻訳フォーム本体を除外）
-- [x] システムトレイ復帰の信頼性向上（トレイアイコンの生存期間をアプリ終了まで延長、hide後のWebviewWindowを保持してダブルクリック復帰を保証）
+- [x] ChatGPT Translate tab: LP element hiding toggle (header nav, marketing sections)
+- [x] ChatGPT Translate tab: DOM diagnostic tool (StatusBar button to list interactive element candidates, toggle ON/OFF in settings)
+- [x] ChatGPT Translate tab: HTML+CSS diagnostic tool (inspect CSS state of headers/footers/LP elements, toggle ON/OFF in settings)
+- [x] Diagnostic log scope narrowed (DOM: exclude giant page wrappers, HTML+CSS: exclude translation form body)
+- [x] System tray restoration reliability improved (tray icon lifetime extended to app exit, WebviewWindow preserved after hide for guaranteed double-click restoration)
 
 ### v0.4.0
 
-- [x] ChatGPT翻訳タブ：複数DOMバリアント対応 — マーケティングLP（variant A）とアプリ/ログイン版（variant B）の両方で翻訳フォームを適切に表示
-- [x] CSSセレクタを `main#main` から `[data-llm-chatgpt-container="true"]` 属性ベースに変更し、variant A（`id="main"` 無し）でも翻訳UIが画面全体に表示されるよう修正
-- [x] ログインボタン保持 — `#contentful-header` を丸ごと非表示にせず、マーケティング要素のみ非表示にしてログインボタンを残す44pxバーに変形
-- [x] CTA非表示の強化 — 「ChatGPT で翻訳を開始する」「今すぐ試す」等のCTA要素をvariant Aでも検出・非表示化
-- [x] ページ全体のスクロール抑制 — `html, body { overflow: hidden }` によりページレベルのスクロールバーを排除
-- [x] スクロール位置リセット — layout markers設定後にスクロール位置をリセットし、翻訳フォームの画面外への飛び出しを修正
-- [x] LPセクション非表示のバリアント対応 — `#contentful-header` と `[class*="h-mkt-header-height"]` の競合を解消し、安全にLP要素のみ非表示化
+- [x] ChatGPT Translate tab: Multi-variant DOM support — translation form displays correctly on both marketing LP (variant A) and app/login (variant B)
+- [x] CSS selectors changed from `main#main` to `[data-llm-chatgpt-container="true"]` attribute-based, fixing full-height display on variant A (no `id="main"`)
+- [x] Login button preservation — `#contentful-header` reshaped to a 44px slim bar instead of being hidden entirely, keeping the login button while hiding marketing elements
+- [x] Enhanced CTA hiding — "ChatGPT で翻訳を開始する", "Try now", and similar CTAs detected and hidden on variant A
+- [x] Page scroll suppression — `html, body { overflow: hidden }` eliminates page-level scrollbar
+- [x] Scroll position reset — scroll position reset after layout markers to prevent translate form from shifting off-screen
+- [x] LP section hiding variant support — resolved conflict between `#contentful-header` and `[class*="h-mkt-header-height"]` to safely hide only LP elements
 
 ### v0.5
-- macOS 対応検討
-- 自動アップデート
-- エクスポート/インポート設定
+- macOS support (planned)
+- Auto-update
+- Export/import settings
+- OCR translation
+- Glossaries
+- Markdown preservation
+- Multi-engine comparison translation
 
-### v0.5
-- OCR翻訳
-- 用語集
-- Markdown保持
-- 複数エンジン比較翻訳

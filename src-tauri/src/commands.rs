@@ -602,18 +602,26 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview, hide_lp: bool) -> Result<
         overflow-x: hidden !important;
       }
 
-      /* Flex layout: page fills viewport height */
-      main#main {
+      /* Flex layout: page fills viewport height (attribute-based for both variant A & B) */
+      main[data-llm-chatgpt-container="true"],
+      [data-llm-chatgpt-container="true"] {
+        min-height: 100vh !important;
         height: 100vh !important;
-        min-height: 0 !important;
+        max-width: none !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
         display: flex !important;
         flex-direction: column !important;
         overflow: hidden !important;
-        padding-top: 0 !important;
+        padding-top: 4px !important;
+        padding-bottom: 12px !important;
         margin-top: 0 !important;
+        flex: 1 1 auto !important;
+        gap: 12px !important;
       }
 
-      main#main > div {
+      main[data-llm-chatgpt-container="true"] > div,
+      [data-llm-chatgpt-container="true"] > div {
         flex: 1 1 auto !important;
         min-height: 0 !important;
         display: flex !important;
@@ -622,7 +630,7 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview, hide_lp: bool) -> Result<
         margin-top: 0 !important;
       }
 
-      main#main h1 {
+      [data-llm-chatgpt-container="true"] h1 {
         display: none !important;
         margin: 0 !important;
         padding: 0 !important;
@@ -630,18 +638,6 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview, hide_lp: bool) -> Result<
         min-height: 0 !important;
       }
 
-      [data-llm-chatgpt-container="true"] {
-        flex: 1 1 auto !important;
-        min-height: 0 !important;
-        max-width: none !important;
-        width: 100% !important;
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 12px !important;
-        padding-top: 4px !important;
-        padding-bottom: 12px !important;
-        margin-top: 0 !important;
-      }
 
       [data-llm-chatgpt-form="true"] {
         flex: 1 1 auto !important;
@@ -717,11 +713,11 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview, hide_lp: bool) -> Result<
         z-index: 41 !important;
       }
 
-      main#main [data-testid="signup-button"] {
+      [data-llm-chatgpt-container="true"] [data-testid="signup-button"] {
         display: none !important;
       }
 
-      main#main [data-testid="login-button"] {
+      [data-llm-chatgpt-container="true"] [data-testid="login-button"] {
         display: inline-flex !important;
         visibility: visible !important;
         opacity: 1 !important;
@@ -1073,10 +1069,58 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview, hide_lp: bool) -> Result<
       });
       }
 
+      // 5c. Hide CTA elements (variant A: "ChatGPT で翻訳を開始する" etc.)
+      if (hideLpElements) {
+      var ctaTexts = [
+        'ChatGPT で翻訳を開始する',
+        'Start translating with ChatGPT',
+        '今すぐ試す',
+        'Try now'
+      ];
+
+      document.querySelectorAll('[class*="col-span-full"], h1, h2, div, a, button').forEach(function(el) {
+        var text = norm(el.textContent || el.innerText || '');
+        if (!ctaTexts.some(function(t) { return text.includes(t); })) return;
+        if (hasTranslationUi(el)) return;
+
+        var node = el;
+        while (node && node !== document.body) {
+          if (node.matches('[data-llm-chatgpt-container="true"], [data-llm-chatgpt-form="true"], main')) break;
+          if (hasTranslationUi(node)) break;
+
+          if (
+            node.matches('[class*="col-span-full"], section') ||
+            ctaTexts.some(function(t) { return norm(node.textContent || '').includes(t); })
+          ) {
+            hide(node);
+            break;
+          }
+
+          node = node.parentElement;
+        }
+      });
+      }
+
       // 6. Mark translate layout with custom attributes for flex expansion
       markLoginHeader();
       markLoginBlock();
       markTranslateLayout();
+
+      // Reset scroll position after layout markers and CSS-dependent changes
+      try {
+        window.scrollTo(0, 0);
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      } catch (_) {}
+
+      setTimeout(function() {
+        try {
+          markTranslateLayout();
+          window.scrollTo(0, 0);
+          document.documentElement.scrollTop = 0;
+          document.body.scrollTop = 0;
+        } catch (_) {}
+      }, 50);
 
     } catch (e) {
       console.warn('[LLM Translator Desktop] ChatGPT cleanup failed:', e);

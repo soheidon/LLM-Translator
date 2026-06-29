@@ -936,6 +936,44 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview) -> Result<(), String> {
         }
       });
 
+      // Div-based suggestion cards (rendered without button/a/[role=button] on some PCs)
+      function isTranslateUiContainerText(text) {
+        var st = normStrict(text);
+        return (
+          st.includes('言語を検出する') &&
+          st.includes('日本語') &&
+          st.includes('より自然な表現に') &&
+          st.includes('ビジネス用にする')
+        );
+      }
+
+      function shouldSkipDiv(el, text) {
+        var tag = el.tagName;
+        if (tag === 'MAIN' || tag === 'SECTION') return true;
+        if (tag === 'BODY' || tag === 'HTML') return true;
+        if (isTranslateUiContainerText(text)) return true;
+        var hitCount = strictTexts.filter(function(t) {
+          return normStrict(text).includes(t);
+        }).length;
+        if (hitCount >= 3) return true;
+        return false;
+      }
+
+      document.querySelectorAll('div').forEach(function(el) {
+        var text = norm(el.textContent);
+        if (text.length === 0 || text.length > 160) return;
+        var st = normStrict(text);
+        if (!strictTexts.some(function(t) { return st.includes(t); })) return;
+        if (shouldSkipDiv(el, text)) return;
+
+        el.style.setProperty('display', 'none', 'important');
+
+        if (!el.dataset.llmTranslatorHiddenSuggestion) {
+          el.dataset.llmTranslatorHiddenSuggestion = 'true';
+          hiddenCount += 1;
+        }
+      });
+
       console.log('[LLM Translator Desktop] cleanup: newly hidden ' + hiddenCount + ' suggestion cards');
 
       // 4. Footer tag only
@@ -1152,7 +1190,41 @@ pub async fn debug_chatgpt_translate_dom(app: tauri::AppHandle) -> Result<String
   }
   candidates.sort(function(a,b){return b.priority-a.priority||a.tag.localeCompare(b.tag);});
   candidates=candidates.slice(0,80);
-  var result={location:location.href,candidateCount:candidates.length,candidates:candidates};
+  // Child dump: find containers with all 3 suggestion keywords, dump their direct children
+  var suggestionContainerChildren=[];
+  var suggestionKeywords=['より自然な表現に','ビジネス用にする','5歳児にもわかるように説明して'];
+  var allDivs=document.querySelectorAll('div');
+  for(var d=0;d<allDivs.length;d++){
+    var dv=allDivs[d];
+    var dt=norm(dv.textContent);
+    var allMatch=true;
+    for(var m=0;m<suggestionKeywords.length;m++){
+      if(dt.indexOf(suggestionKeywords[m])<0){allMatch=false;break;}
+    }
+    if(!allMatch)continue;
+    var children=[];
+    for(var c=0;c<dv.children.length;c++){
+      var child=dv.children[c];
+      var cr=child.getBoundingClientRect();
+      children.push({
+        tag:child.tagName,
+        className:(typeof child.className==='string'?child.className:'').slice(0,120),
+        text:norm(child.textContent).slice(0,160),
+        rect:{x:Math.round(cr.x),y:Math.round(cr.y),w:Math.round(cr.width),h:Math.round(cr.height)},
+        role:child.getAttribute('role')||'',
+        ariaLabel:child.getAttribute('aria-label')||'',
+        childCount:child.children.length
+      });
+    }
+    suggestionContainerChildren.push({
+      parentTag:dv.tagName,
+      parentClass:(typeof dv.className==='string'?dv.className:'').slice(0,120),
+      parentText:dt.slice(0,160),
+      childCount:children.length,
+      children:children
+    });
+  }
+  var result={location:location.href,candidateCount:candidates.length,candidates:candidates,suggestionContainerChildren:suggestionContainerChildren};
   window.location.hash='__llm_dbg='+encodeURIComponent(JSON.stringify(result));
 })()"#;
     w.eval(js).map_err(|e| format!("eval failed: {e}"))?;

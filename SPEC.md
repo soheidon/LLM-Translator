@@ -282,6 +282,13 @@ Windows の低レベルキーボードフック (`SetWindowsHookEx(WH_KEYBOARD_L
 - [x] ChatGPT翻訳サジェストカード非表示の安定化（遅延スケジュール8秒まで延長、`.prompt-card` CSS 常時非表示）
 - [x] サジェストカード cleanup のデバッグログ追加（新規非表示カード数のみ出力、data属性で重複カウント防止）
 - [x] `--auto-start` フラグによる自動起動と手動起動の分離
+- [x] トレーアイコンダブルクリック復帰の修正（`SetWindowPos` + `SetForegroundWindow` 前面化、Click フォールバック、700ms クールダウン）
+- [x] トレーアイコンイベントログ追加（全イベント種別をログ出力）
+
+### v0.3.6
+
+- [x] ChatGPT翻訳サジェストカード非表示を div 型カードにも対応（`button`/`a`/`[role="button"]` に加えて `div` もスキャン、AND条件の親コンテナ除外ガード付き）
+- [x] DOM診断コマンドに子要素ダンプ機能追加（サジェスト文言を含む要素の直下 children を1階層出力）
 
 ### v0.4
 - macOS 対応検討

@@ -47,14 +47,17 @@ pub fn run() {
                 }
             }
 
-            // Apply start_minimized from config
+            // Apply start_minimized from config (or hide on auto-start)
             {
                 let state = app.state::<AppState>();
-                let start_minimized = state.config.lock().unwrap().general.start_minimized;
-                if start_minimized {
+                let is_auto_start = std::env::args().any(|a| a == "--auto-start");
+                let should_hide = is_auto_start || state.config.lock().unwrap().general.start_minimized;
+                if should_hide {
                     if let Some(window) = app.get_webview_window("main") {
                         if let Err(e) = window.hide() {
                             eprintln!("[startup] failed to hide main window: {e}");
+                        } else if is_auto_start {
+                            println!("[startup] auto-start detected; main window hidden");
                         } else {
                             println!("[startup] start_minimized=true; main window hidden");
                         }

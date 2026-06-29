@@ -277,6 +277,12 @@ Windows の低レベルキーボードフック (`SetWindowsHookEx(WH_KEYBOARD_L
 - [x] Windows自動起動（Registry HKCU Run キー、設定トグルでON/OFF、初期値OFF、引用符付きパス）
 - [x] 起動時最小化の実装（`start_minimized` 設定を実際に反映、setup() で window.hide()）
 
+### v0.3.5
+
+- [x] ChatGPT翻訳サジェストカード非表示の安定化（遅延スケジュール8秒まで延長、`.prompt-card` CSS 常時非表示）
+- [x] サジェストカード cleanup のデバッグログ追加（新規非表示カード数のみ出力、data属性で重複カウント防止）
+- [x] `--auto-start` フラグによる自動起動と手動起動の分離
+
 ### v0.4
 - macOS 対応検討
 - 自動アップデート

@@ -292,8 +292,8 @@ fn set_auto_launch_impl(enabled: bool) -> Result<(), String> {
         let exe_path = std::env::current_exe()
             .map_err(|e| format!("Failed to get executable path: {}", e))?;
         let path_str = exe_path.to_string_lossy().to_string();
-        // Quote the path to handle spaces
-        let quoted = format!("\"{}\"", path_str);
+        // Quote the path to handle spaces, add --auto-start flag for detection
+        let quoted = format!("\"{}\" --auto-start", path_str);
         run_key
             .set_value("LLMTranslator", &quoted)
             .map_err(|e| format!("Failed to set Run key: {}", e))?;
@@ -720,6 +720,11 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview) -> Result<(), String> {
         visibility: visible !important;
         opacity: 1 !important;
       }
+
+      .prompt-card,
+      a.prompt-card {
+        display: none !important;
+      }
     `;
     document.documentElement.appendChild(style);
   }
@@ -905,30 +910,33 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview) -> Result<(), String> {
       // 3. Bottom suggestion cards — hide only the matched interactive elements themselves
       function normStrict(s) { return (s||'').replace(/\s+/g,'').trim(); }
       const suggestionTexts = [
-        'ビジネス用にする',
-        '5 歳児にもわかるように説明して',
-        '洗練されたビジネス向けのトーンにします。',
-        'とてもやさしい言葉で書き直します。',
         'より自然な表現に',
-        'ビジネス向けにする',
-        '5歳でもわかるように',
-        '学術向けにする',
-        'Make it more natural',
-        'Make it business-friendly',
-        'Explain it like I am 5',
-        'Make it academic'
+        '自然でなめらかな表現にします。',
+        'ビジネス用にする',
+        '洗練されたビジネス向けのトーンにします。',
+        '5 歳児にもわかるように説明して',
+        '5歳児にもわかるように説明して',
+        'とてもやさしい言葉で書き直します。'
       ];
       const strictTexts = suggestionTexts.map(normStrict);
 
+      var hiddenCount = 0;
+
       document.querySelectorAll('button, [role="button"], a').forEach((el) => {
         const text = norm(el.textContent);
-        if (text.length > 0 && text.length < 120) {
-          const st = normStrict(text);
-          if (strictTexts.some((t) => st.includes(t))) {
-            el.style.setProperty('display', 'none', 'important');
-          }
+        if (text.length === 0 || text.length >= 120) return;
+        const st = normStrict(text);
+        if (!strictTexts.some((t) => st.includes(t))) return;
+
+        el.style.setProperty('display', 'none', 'important');
+
+        if (!el.dataset.llmTranslatorHiddenSuggestion) {
+          el.dataset.llmTranslatorHiddenSuggestion = 'true';
+          hiddenCount += 1;
         }
       });
+
+      console.log('[LLM Translator Desktop] cleanup: newly hidden ' + hiddenCount + ' suggestion cards');
 
       // 4. Footer tag only
       document.querySelectorAll('footer').forEach(hide);
@@ -971,6 +979,8 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview) -> Result<(), String> {
       characterData: true,
       attributes: true
     });
+
+    console.log('[LLM Translator Desktop] cleanup: CSS injected, observer installed');
   }
 })();
 "#;
@@ -981,7 +991,7 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview) -> Result<(), String> {
 fn schedule_chatgpt_translate_cleanup(app: tauri::AppHandle) {
     use tauri::Manager;
     tauri::async_runtime::spawn(async move {
-        let delays = [0_u64, 500, 1500, 3000];
+        let delays = [0_u64, 300, 800, 1500, 3000, 5000, 8000];
         for delay in delays {
             if delay > 0 {
                 tokio::time::sleep(std::time::Duration::from_millis(delay)).await;

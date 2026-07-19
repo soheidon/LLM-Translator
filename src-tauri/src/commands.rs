@@ -605,6 +605,21 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview, hide_lp: bool) -> Result<
         overflow: hidden !important;
       }
 
+      /* Outer wrapper: remove Tailwind padding/max-width from parent of container */
+      [data-llm-chatgpt-outer="true"] {
+        padding: 0 !important;
+        margin: 0 !important;
+        max-width: none !important;
+        width: 100% !important;
+        min-height: calc(100vh - 44px) !important;
+        height: calc(100vh - 44px) !important;
+        max-height: calc(100vh - 44px) !important;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
+      }
+
       /* Flex layout: page fills viewport height (attribute-based for both variant A & B) */
       main[data-llm-chatgpt-container="true"],
       [data-llm-chatgpt-container="true"] {
@@ -796,6 +811,7 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview, hide_lp: bool) -> Result<
 
   function hide(el) {
     if (!el) return;
+    if (el.getAttribute(HIDDEN_ATTR) === 'true') return;
     el.setAttribute(HIDDEN_ATTR, 'true');
   }
 
@@ -907,7 +923,15 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview, hide_lp: bool) -> Result<
 
     var container = form ? form.parentElement : null;
     if (container) {
-      container.setAttribute('data-llm-chatgpt-container', 'true');
+      if (container.getAttribute('data-llm-chatgpt-container') !== 'true') {
+        container.setAttribute('data-llm-chatgpt-container', 'true');
+      }
+
+      // Mark outer wrapper (parent of container) to remove Tailwind padding/max-width
+      if (container.parentElement &&
+          container.parentElement.getAttribute('data-llm-chatgpt-outer') !== 'true') {
+        container.parentElement.setAttribute('data-llm-chatgpt-outer', 'true');
+      }
     }
 
   }
@@ -958,11 +982,34 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview, hide_lp: bool) -> Result<
     }
   }
 
+  var debugCleanup = false;
+  function cleanupLog(msg) {
+    if (debugCleanup) console.log('[LLM Translator Desktop] ' + msg);
+  }
+
   function applyCleanup() {
     try {
-      console.log('[LLM Translator Desktop] cleanup: hide LP elements = ' + hideLpElements);
+      cleanupLog('applyCleanup start');
+      cleanupLog('cleanup: hide LP elements = ' + hideLpElements);
       // 1. Left sidebar — exact ID match only
       document.querySelectorAll('#stage-slideover-sidebar').forEach(hide);
+
+      // 1d. Hide ChatGPT app shell sidebar (aside/nav with sidebar-like content)
+      cleanupLog('app shell sidebar cleanup step');
+      document.querySelectorAll('aside, [id*="sidebar"], [class*="sidebar"], nav').forEach(function(el) {
+        var text = norm(el.textContent || el.innerText || '');
+
+        var looksLikeChatGptSidebar =
+          text.includes('新しいチャット') ||
+          text.includes('Deep research') ||
+          text.includes('プランと料金を見る') ||
+          text.includes('自分に合った回答を得る');
+
+        if (!looksLikeChatGptSidebar) return;
+        if (hasTranslationUi(el)) return;
+
+        hide(el);
+      });
 
       // Slim down contentful-header to login-only bar (variant A)
       var contentfulHeader = document.getElementById('contentful-header');
@@ -1002,6 +1049,37 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview, hide_lp: bool) -> Result<
       markLoginHeader();
       markLoginBlock();
       document.querySelectorAll('[data-testid="signup-button"]').forEach(hide);
+
+      // 2a. Hide signup buttons/links by text (app shell variant), preserve login buttons
+      cleanupLog('signup cleanup step');
+      document.querySelectorAll('button, a').forEach(function(el) {
+        var text = norm(el.textContent || el.innerText || '');
+
+        var isSignup =
+          text === '無料でサインアップ' ||
+          text === 'Sign up for free' ||
+          text === 'Sign Up' ||
+          text === 'Signup' ||
+          text === '無料登録' ||
+          text === '新規登録' ||
+          text === '登録する' ||
+          text === 'アカウント作成' ||
+          (text.includes('サインアップ') && !text.includes('ログイン')) ||
+          (text.includes('Sign up') && !text.includes('Log in'));
+
+        if (!isSignup) return;
+
+        // Preserve: element is dominated by login content
+        var dominatedByLogin =
+          (norm(el.textContent || '').indexOf('ログイン') !== -1 ||
+           norm(el.textContent || '').indexOf('Log in') !== -1) &&
+          !norm(el.textContent || '').match(/(無料で|無料|Sign up|サインアップ|アカウント作成|会員登録)/);
+
+        if (dominatedByLogin) return;
+        if (hasTranslationUi(el)) return;
+
+        hide(el);
+      });
 
       // 3. Bottom suggestion cards — hide only the matched interactive elements themselves
       function normStrict(s) { return (s||'').replace(/\s+/g,'').trim(); }
@@ -1070,7 +1148,26 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview, hide_lp: bool) -> Result<
         }
       });
 
-      console.log('[LLM Translator Desktop] cleanup: newly hidden ' + hiddenCount + ' suggestion cards');
+      // 3a. Hide suggestion card parent sections (app shell variant)
+      cleanupLog('suggestion parent cleanup step');
+      document.querySelectorAll('section, div').forEach(function(el) {
+        var rect = el.getBoundingClientRect();
+        if (rect.height < 40 || rect.height > 220) return;
+
+        var text = norm(el.textContent || '');
+        var st = normStrict(text);
+        var matchCount = suggestionTexts.filter(function(t) {
+          return st.includes(normStrict(t));
+        }).length;
+
+        if (matchCount < 1) return;
+        if (hasTranslationUi(el)) return;
+        if (el.querySelector('[data-llm-chatgpt-form="true"]')) return;
+
+        hide(el);
+      });
+
+      cleanupLog('cleanup: newly hidden ' + hiddenCount + ' suggestion cards');
 
       // 3b. Hide LP/marketing sections (scroll-mt-mkt-header-height container)
       function hasTranslationUi(el) {
@@ -1096,6 +1193,23 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview, hide_lp: bool) -> Result<
         if (text.includes('ChatGPT') && (text.includes('翻訳') || text.includes('Translate'))) {
           hide(el);
         }
+      });
+
+      // 5a. Hide translate hero section (contains heading + description, variant B/new app layout)
+      cleanupLog('hero cleanup step');
+      document.querySelectorAll('section, header').forEach(function(section) {
+        var text = norm(section.textContent || section.innerText || '');
+
+        var isTranslateHero =
+          text.includes('ChatGPT を使用して翻訳') ||
+          text.includes('元の意味やトーン、意図を保って翻訳します') ||
+          text.includes('Translate with ChatGPT') ||
+          text.includes('Preserve the original meaning');
+
+        if (!isTranslateHero) return;
+        if (hasTranslationUi(section)) return;
+
+        hide(section);
       });
 
       // 5b. Hide LP headings: find heading by text, then walk up to hide LP section structurally
@@ -1196,18 +1310,26 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview, hide_lp: bool) -> Result<
       if (timer) return;
       timer = setTimeout(() => {
         timer = null;
-        applyCleanup();
+        observer.disconnect();
+        try {
+          applyCleanup();
+        } catch (e) {
+          console.warn('[LLM Translator Desktop] applyCleanup failed', e);
+        } finally {
+          observer.observe(document.documentElement, {
+            childList: true,
+            subtree: true
+          });
+        }
       }, 200);
     });
 
     observer.observe(document.documentElement, {
       childList: true,
-      subtree: true,
-      characterData: true,
-      attributes: true
+      subtree: true
     });
 
-    console.log('[LLM Translator Desktop] cleanup: CSS injected, observer installed');
+    cleanupLog('cleanup: CSS injected, observer installed');
   }
 })();
 "#;
@@ -1536,7 +1658,7 @@ pub async fn set_chatgpt_translate_languages(app: tauri::AppHandle, source_label
     let w = app.get_webview(CHATGPT_TRANSLATE_LABEL).ok_or("webview not found")?;
     let sl = serde_json::to_string(&source_label).map_err(|e| e.to_string())?;
     let tl = serde_json::to_string(&target_label).map_err(|e| e.to_string())?;
-    let js = format!(r#"(function(){{var sl={sl};var tl={tl};function n(s){{return(s||'').replace(/\s+/g,' ').trim();}}function g(){{return Array.from(document.querySelectorAll('button[role="combobox"]'));}}function f(l){{var cs=Array.from(document.querySelectorAll('[role="option"],[role="menuitem"]'));return cs.find(function(el){{return n(el.textContent)===l;}});}}function s(b,l){{if(!b)return false;var c=n(b.textContent);if(c===l||c.indexOf(l)>=0)return true;b.click();setTimeout(function(){{var o=f(l);if(o)o.click();}},200);return false;}}function t(){{var bs=g();if(bs.length<2)return false;var so=s(bs[0],sl);var to=s(bs[1],tl);return so&&to;}}if(t())return;var c=0;var m=40;var iv=setInterval(function(){{c++;if(t()||c>=m)clearInterval(iv);}},250);}})();"#);
+    let js = format!(r#"(function(){{var sl={sl};var tl={tl};function n(s){{return(s||'').replace(/\s+/g,' ').trim();}}function getSourceButton(){{return Array.from(document.querySelectorAll('button[aria-label]')).find(function(b){{var a=b.getAttribute('aria-label')||'';return a.includes('翻訳元の言語')||a.includes('Source language');}});}}function getTargetButton(){{return Array.from(document.querySelectorAll('button[aria-label]')).find(function(b){{var a=b.getAttribute('aria-label')||'';return a.includes('翻訳先の言語')||a.includes('Target language');}});}}function findOption(label){{var options=Array.from(document.querySelectorAll('button[role="option"],[role="option"],[role="menuitem"]'));return options.find(function(el){{return n(el.textContent||el.innerText)===label;}});}}function selectLanguage(button,label){{if(!button)return false;var current=n(button.textContent||button.innerText);var aria=button.getAttribute('aria-label')||'';if(current===label||aria.includes(label))return true;button.click();setTimeout(function(){{var option=findOption(label);if(option)option.click();}},250);return false;}}function applyLanguages(){{var sourceButton=getSourceButton();var targetButton=getTargetButton();if(!sourceButton||!targetButton)return false;var sourceOk=selectLanguage(sourceButton,sl);var targetOk=selectLanguage(targetButton,tl);return sourceOk&&targetOk;}}if(applyLanguages())return;var c=0;var m=40;var iv=setInterval(function(){{c++;var sb=getSourceButton();var tb=getTargetButton();var sOk=sb&&(n(sb.textContent||sb.innerText)===(sl)||((sb.getAttribute('aria-label')||'').includes(sl)));var tOk=tb&&(n(tb.textContent||tb.innerText)===(tl)||((tb.getAttribute('aria-label')||'').includes(tl)));if(sOk&&tOk){{clearInterval(iv);return;}}applyLanguages();if(c>=m){{clearInterval(iv);}}}},250);}})();"#);
     w.eval(&js).map_err(|e| e.to_string())
 }
 

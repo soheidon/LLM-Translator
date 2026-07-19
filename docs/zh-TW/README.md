@@ -81,10 +81,6 @@ npm run tauri build
 - [React](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/) — 前端 UI
 - [Vite](https://vitejs.dev/) — 建置工具
 
-## 版本
-
-v0.4.0
-
 ## 授權條款
 
-MIT
+[MIT](../../LICENSE)

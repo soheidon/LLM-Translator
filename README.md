@@ -81,10 +81,6 @@ npm run tauri build
 - [React](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/) — Frontend UI
 - [Vite](https://vitejs.dev/) — Build tool
 
-## Version
-
-v0.4.0
-
 ## License
 
-MIT
+[MIT](LICENSE)

@@ -1,10 +1,26 @@
 import type { ModeInfo } from '../types/translation';
 import type { ProviderConfig } from '../types/provider';
 import type { TranslateTab } from './TabBar';
+import type { ModelRole } from '../types/model';
 import { useT } from '../i18n/I18nContext';
 
-function shortModelName(model: string): string {
-  return model.split(/[-\s_]/)[0] || model;
+function providerShortName(provider: ProviderConfig): string {
+  const shortNames: Record<string, string> = {
+    google_translate: 'Google',
+    google_translate_apps_script: 'Google',
+    deepl_free: 'DeepL',
+    deepl_pro: 'DeepL',
+    openai: 'OpenAI',
+    gemini: 'Gemini',
+    anthropic: 'Claude',
+    ollama: 'Ollama',
+    mimo: 'MiMo',
+    deepseek: 'DeepSeek',
+    moonshot: 'Kimi',
+    qwen: 'Qwen',
+    minimax: 'MiniMAX',
+  };
+  return shortNames[provider.id] ?? provider.name.split('/')[0].trim();
 }
 
 interface Props {
@@ -13,10 +29,12 @@ interface Props {
   tone: string;
   availableProviders: ProviderConfig[];
   activeProviderId: string | null;
+  activeModelRole: ModelRole;
   activeTab: TranslateTab;
   onChangeMode: (mode: string) => void;
   onChangeTone: (tone: string) => void;
   onChangeProvider: (providerId: string | null) => void;
+  onChangeModelRole: (role: ModelRole) => void;
   onSettings: () => void;
   chatgptDebugEnabled?: boolean;
   chatgptHtmlCssDebugEnabled?: boolean;
@@ -25,12 +43,19 @@ interface Props {
   defaultProvider?: ProviderConfig;
 }
 
-export function StatusBar({ modes, mode, tone, availableProviders, activeProviderId, activeTab, onChangeMode, onChangeTone, onChangeProvider, onSettings, chatgptDebugEnabled, chatgptHtmlCssDebugEnabled, onDebugChatgptDom, onDebugChatgptHtmlCss, defaultProvider }: Props) {
+export function StatusBar({ modes, mode, tone, availableProviders, activeProviderId, activeModelRole, activeTab, onChangeMode, onChangeTone, onChangeProvider, onChangeModelRole, onSettings, chatgptDebugEnabled, chatgptHtmlCssDebugEnabled, onDebugChatgptDom, onDebugChatgptHtmlCss, defaultProvider }: Props) {
   const { t } = useT();
   const showLlmControls = activeTab === 'llm';
-  const defaultLabel = activeProviderId === null && defaultProvider
-    ? `${t('status_bar.default_provider')} (${shortModelName(defaultProvider.model || defaultProvider.model_mapping?.default?.model || '')})`
+
+  const effectiveProvider = activeProviderId
+    ? availableProviders.find(p => p.id === activeProviderId)
+    : defaultProvider;
+  const hasFastModel = !!effectiveProvider?.model_mapping?.fast?.model?.trim();
+
+  const defaultLabel = defaultProvider
+    ? `${t('status_bar.default_provider')} (${providerShortName(defaultProvider)})`
     : t('status_bar.default_provider');
+
   return (
     <footer className="status-bar">
       <div className="status-left">
@@ -47,23 +72,33 @@ export function StatusBar({ modes, mode, tone, availableProviders, activeProvide
         {showLlmControls && (
           <>
             <div className="status-control-group">
-              <span className="toolbar-label">{t('status_bar.label_model')}</span>
               {availableProviders.length > 0 ? (
                 <select
-                  className="select model-select"
+                  className="select provider-select"
                   value={activeProviderId ?? ''}
                   onChange={e => onChangeProvider(e.target.value || null)}
                 >
                   <option value="">{defaultLabel}</option>
                   {availableProviders.map(p => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
+                    <option key={p.id} value={p.id}>{providerShortName(p)}</option>
                   ))}
                 </select>
               ) : (
-                <select className="select model-select" value="" disabled>
+                <select className="select provider-select" value="" disabled>
                   <option value="">{t('status_bar.no_api_key')}</option>
                 </select>
               )}
+            </div>
+            <div className="status-control-group">
+              <span className="toolbar-label">MODEL:</span>
+              <select
+                className="select model-role-select"
+                value={activeModelRole}
+                onChange={e => onChangeModelRole(e.target.value as ModelRole)}
+              >
+                <option value="default">{t('status_bar.model_quality')}</option>
+                <option value="fast" disabled={!hasFastModel}>{t('status_bar.model_fast')}</option>
+              </select>
             </div>
             <div className="status-control-group">
               <span className="toolbar-label">{t('status_bar.label_tone')}</span>

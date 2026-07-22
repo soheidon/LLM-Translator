@@ -1,5 +1,5 @@
 {
-  "app": { "title": "LLM Translator Desktop", "version": "v0.4.0" },
+  "app": { "title": "LLM Translator Desktop", "version": "v0.4.2" },
   "titlebar": { "settings": "Einstellungen", "minimize": "Minimieren", "maximize": "Maximieren", "close": "Schließen" },
   "tabs": { "llm": "LLM", "google": "Google Übersetzung", "chatgpt": "chatGPT Übersetzung" },
   "main": {
@@ -22,7 +22,7 @@
       "desc": "Grundeinstellungen und Tastenkombinationen konfigurieren.",
       "ui_language": "UI-Sprache",
       "start_minimized": "Minimiert starten",
-      "start_minimized_desc": "Hauptfenster beim Start verstecken und im Infobereich bleiben.", "auto_launch": "Beim Windows-Start ausführen", "auto_launch_desc": "LLM Translator automatisch beim Windows-Login starten.",
+      "start_minimized_desc": "Hauptfenster beim Start verstecken und im Infobereich bleiben.", "auto_launch": "Beim Windows-Start ausführen", , "auto_launch_error": "Fehler beim Aktualisieren der Autostart-Einstellung",
       "always_on_top": "Immer im Vordergrund",
       "always_on_top_desc": "Übersetzungsfenster über anderen Fenstern halten.",
       "focus_on_translate": "Fokus bei Übersetzung",
@@ -82,8 +82,8 @@
   },
   "status_bar": {
     "hint": "Strg+C+C zum Übersetzen",
-    "label_model": "MODELL", "label_tone": "Ton", "label_preset": "VOREINSTELLUNG",
-    "default_provider": "Standard", "no_api_key": "Kein API-Schlüssel"
+    "label_provider": "ANBIETER:", "label_model": "MODELL", "label_tone": "Ton", "label_preset": "VOREINSTELLUNG",
+    "default_provider": "Standard", "model_quality": "Hohe Qualität", "model_fast": "Schnell", "no_api_key": "Kein API-Schlüssel"
   },
   "languages": { "auto": "Auto-Erkennung", "en": "English", "ja": "日本語", "zh": "中文", "ko": "한국어", "fr": "Français", "de": "Deutsch", "es": "Español", "pt": "Português", "ru": "Русский", "it": "Italiano" },
   "modes": { "news": "Nachrichtenübersetzung", "academic": "Akademische Übersetzung", "technical": "Technische Übersetzung", "email": "E-Mail-Übersetzung", "subtitle": "Untertitel-Übersetzung", "natural": "Natürlich", "literal": "Wörtlich", "formal": "Formell", "casual": "Lässig", "friendly": "Freundlich" },

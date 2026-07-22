@@ -1,7 +1,7 @@
 {
   "app": {
     "title": "LLM Translator Desktop",
-    "version": "v0.4.0"
+    "version": "v0.4.2"
   },
   "titlebar": {
     "settings": "Settings",
@@ -41,6 +41,7 @@
       "desc": "Configure basic application behavior and shortcuts.",
       "auto_launch": "Launch at Windows Startup",
       "auto_launch_desc": "Automatically start LLM Translator when you log into Windows.",
+      "auto_launch_error": "Failed to update the auto-launch setting",
       "ui_language": "UI Language",
       "start_minimized": "Start minimized to tray",
       "start_minimized_desc": "Hide the main window when launching manually. When auto-started with Windows, the window is always hidden regardless of this setting.",
@@ -149,10 +150,13 @@
   },
   "status_bar": {
     "hint": "Ctrl+C+C to translate",
+    "label_provider": "PROVIDER:",
     "label_model": "MODEL",
     "label_tone": "Tone",
     "label_preset": "PRESET",
     "default_provider": "Default",
+    "model_quality": "High quality",
+    "model_fast": "Fast",
     "no_api_key": "No API Key",
     "debug_dom": "DOM diagnostic",
     "debug_html_css": "HTML+CSS diagnostic"

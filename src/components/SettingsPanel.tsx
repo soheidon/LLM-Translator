@@ -36,7 +36,28 @@ function ChatIcon() { return <SidebarIcon><path d="M6 7a3 3 0 0 1 3-3h6a3 3 0 0 
 
 export function SettingsPanel({ config, onUpdateGeneral, onUpdateShortcut, onUpdateHistory, onSaveProvider, onClose }: Props) {
   const [tab, setTab] = useState<SettingsTab>('general');
+  const [autoLaunchSynced, setAutoLaunchSynced] = useState(false);
   const { t } = useT();
+
+  // Sync config.general.auto_launch with real registry state
+  useEffect(() => {
+    let cancelled = false;
+    invoke<boolean>('get_auto_launch_status')
+      .then((actualStatus) => {
+        if (cancelled) return;
+        if (!autoLaunchSynced && actualStatus !== config.general.auto_launch) {
+          onUpdateGeneral({ auto_launch: actualStatus });
+        }
+        setAutoLaunchSynced(true);
+      })
+      .catch((e) => {
+        if (!cancelled) {
+          console.error('[auto_launch] failed to read registry status:', e);
+          setAutoLaunchSynced(true);
+        }
+      });
+    return () => { cancelled = true; };
+  }, []);
 
   return (
     <div className="app-shell">
@@ -167,6 +188,7 @@ function GeneralSettings({ config, onUpdateGeneral, onUpdateShortcut, onUpdateHi
                   onUpdateGeneral({ auto_launch: newVal });
                 } catch (e) {
                   console.error('[auto_launch] failed:', e);
+                  alert(`${t('settings.general.auto_launch_error')}\n\n${String(e)}`);
                 }
               }}
             />

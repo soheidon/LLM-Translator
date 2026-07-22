@@ -4,6 +4,7 @@ import { LanguageSelector } from './LanguageSelector';
 import { useT } from '../i18n/I18nContext';
 import type { AppConfig } from '../types/settings';
 import type { TranslationState } from '../types/translation';
+import type { ModelRole } from '../types/model';
 
 interface Props {
   config: AppConfig;
@@ -16,22 +17,16 @@ interface Props {
   mode: string;
   tone: string;
   providerId: string | null;
+  modelRole: ModelRole;
 }
 
-export function MainTranslate({ config, translation, mode, tone, providerId }: Props) {
+export function MainTranslate({ config, translation, mode, tone, providerId, modelRole }: Props) {
   const { t } = useT();
   const { sourceText, translatedText, isTranslating, error, setSourceText, translate, clear } = translation;
 
   const [sourceLang, setSourceLang] = useState(config.translation.source_lang);
   const [targetLang, setTargetLang] = useState(config.translation.target_lang);
   const [copyFeedback, setCopyFeedback] = useState(false);
-
-  const resolveModel = (pid: string | null): string | undefined => {
-    if (!pid) return undefined;
-    const p = config.providers.find(p => p.id === pid);
-    if (!p) return undefined;
-    return p.model || p.model_mapping?.default?.model || undefined;
-  };
 
   useEffect(() => {
     setSourceLang(config.translation.source_lang);
@@ -41,8 +36,8 @@ export function MainTranslate({ config, translation, mode, tone, providerId }: P
   // Debounced auto-translate on text change
   const translateRef = useRef(translate);
   translateRef.current = translate;
-  const paramsRef = useRef({ sourceLang, targetLang, mode, tone, providerId });
-  paramsRef.current = { sourceLang, targetLang, mode, tone, providerId };
+  const paramsRef = useRef({ sourceLang, targetLang, mode, tone, providerId, modelRole });
+  paramsRef.current = { sourceLang, targetLang, mode, tone, providerId, modelRole };
   const isTranslatingRef = useRef(isTranslating);
   isTranslatingRef.current = isTranslating;
 
@@ -60,7 +55,7 @@ export function MainTranslate({ config, translation, mode, tone, providerId }: P
         mode: p.mode,
         tone: p.tone,
         provider_id: p.providerId || undefined,
-        model: resolveModel(p.providerId),
+        model_role: p.modelRole,
       });
     }, 600);
     return () => {
@@ -77,9 +72,9 @@ export function MainTranslate({ config, translation, mode, tone, providerId }: P
       mode,
       tone,
       provider_id: providerId || undefined,
-      model: resolveModel(providerId),
+      model_role: modelRole,
     });
-  }, [sourceText, sourceLang, targetLang, mode, tone, providerId, translate]);
+  }, [sourceText, sourceLang, targetLang, mode, tone, providerId, modelRole, translate]);
 
   const handleSwapLanguages = useCallback(() => {
     if (sourceLang === 'auto') return;

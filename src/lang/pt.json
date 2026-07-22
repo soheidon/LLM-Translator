@@ -1,5 +1,5 @@
 {
-  "app": { "title": "LLM Translator Desktop", "version": "v0.4.0" },
+  "app": { "title": "LLM Translator Desktop", "version": "v0.4.2" },
   "titlebar": { "settings": "Configurações", "minimize": "Minimizar", "maximize": "Maximizar", "close": "Fechar" },
   "tabs": { "llm": "LLM", "google": "Google Tradutor", "chatgpt": "chatGPT Tradutor" },
   "main": {
@@ -22,7 +22,7 @@
       "desc": "Configurar o comportamento básico e os atalhos do aplicativo.",
       "ui_language": "Idioma da interface",
       "start_minimized": "Iniciar minimizado",
-      "start_minimized_desc": "Ocultar a janela principal ao iniciar e permanecer na bandeja do sistema.", "auto_launch": "Iniciar com o Windows", "auto_launch_desc": "Iniciar o LLM Translator automaticamente ao fazer login no Windows.",
+      "start_minimized_desc": "Ocultar a janela principal ao iniciar e permanecer na bandeja do sistema.", "auto_launch": "Iniciar com o Windows", , "auto_launch_error": "Falha ao atualizar a configuração de início automático",
       "always_on_top": "Sempre visível",
       "always_on_top_desc": "Manter a janela de tradução acima das outras janelas.",
       "focus_on_translate": "Focar ao traduzir",
@@ -82,8 +82,8 @@
   },
   "status_bar": {
     "hint": "Ctrl+C+C para traduzir",
-    "label_model": "MODELO", "label_tone": "Tom", "label_preset": "PREDEFINIÇÃO",
-    "default_provider": "Padrão", "no_api_key": "Sem chave API"
+    "label_provider": "PROVEDOR:", "label_model": "MODELO", "label_tone": "Tom", "label_preset": "PREDEFINIÇÃO",
+    "default_provider": "Padrão", "model_quality": "Alta qualidade", "model_fast": "Rápido", "no_api_key": "Sem chave API"
   },
   "languages": { "auto": "Detecção automática", "en": "English", "ja": "日本語", "zh": "中文", "ko": "한국어", "fr": "Français", "de": "Deutsch", "es": "Español", "pt": "Português", "ru": "Русский", "it": "Italiano" },
   "modes": { "news": "Tradução de notícias", "academic": "Tradução acadêmica", "technical": "Tradução técnica", "email": "Tradução de e-mail", "subtitle": "Tradução de legendas", "natural": "Natural", "literal": "Literal", "formal": "Formal", "casual": "Informal", "friendly": "Amigável" },

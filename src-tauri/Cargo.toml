@@ -1,8 +1,8 @@
 [package]
 name = "llm-translator"
-version = "0.4.1"
+version = "0.4.2"
 description = "DeepL-style clipboard translator using LLM APIs"
-authors = ["soheidon"]
+authors = ["Sohei Ide"]
 license = "MIT"
 repository = ""
 edition = "2021"

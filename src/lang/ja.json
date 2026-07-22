@@ -1,7 +1,7 @@
 {
   "app": {
     "title": "LLM Translator Desktop",
-    "version": "v0.4.0"
+    "version": "v0.4.2"
   },
   "titlebar": {
     "settings": "設定",
@@ -41,6 +41,7 @@
       "desc": "アプリケーションの基本動作とショートカットを設定します。",
       "auto_launch": "Windows起動時に自動起動",
       "auto_launch_desc": "Windowsログイン時にLLM Translatorを自動起動します",
+      "auto_launch_error": "自動起動の設定に失敗しました",
       "ui_language": "UI言語",
       "start_minimized": "通常起動時にトレーへ最小化",
       "start_minimized_desc": "手動でアプリを起動したときに、ウィンドウを表示せずトレーに常駐します。Windows自動起動時はこの設定に関係なくトレーに常駐します。",
@@ -160,10 +161,13 @@
   },
   "status_bar": {
     "hint": "Ctrl+C+C で翻訳",
+    "label_provider": "PROVIDER:",
     "label_model": "MODEL",
     "label_tone": "文体",
     "label_preset": "PRESET",
     "default_provider": "デフォルト",
+    "model_quality": "高品質",
+    "model_fast": "高速",
     "no_api_key": "APIキー未設定",
     "debug_dom": "DOM診断",
     "debug_html_css": "HTML+CSS診断"

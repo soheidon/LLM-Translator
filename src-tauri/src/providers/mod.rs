@@ -15,6 +15,7 @@ pub struct TranslationRequest {
     pub preset_id: Option<String>,
     pub provider: String,
     pub model: String,
+    pub model_mode: String,
     pub temperature: f32,
     pub max_tokens: Option<u32>,
     pub system_prompt: Option<String>,

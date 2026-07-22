@@ -24,6 +24,7 @@ A Windows desktop app for quick translation — just like DeepL Desktop, select 
 * **Tone Selection** — Auto, Plain, or Polite tone for Japanese output.
 * **API Key Security** — API keys are stored in OS environment variables, never in app settings files.
 * **Model Display** — See the current provider and model in the status bar.
+* **Quality / Speed Model Selection** — Switch between high-quality and fast models per provider from the status bar. The model ID and thinking/normal mode are resolved automatically from each provider's model mapping configuration.
 
 ### Google Translate Tab
 

@@ -317,6 +317,25 @@ Japanese, English, 中文(简体), 中文(繁體), 한국어, Français, Deutsch
 - [x] Scroll position reset — scroll position reset after layout markers to prevent translate form from shifting off-screen
 - [x] LP section hiding variant support — resolved conflict between `#contentful-header` and `[class*="h-mkt-header-height"]` to safely hide only LP elements
 
+### v0.4.1
+
+- [x] ChatGPT Translate tab: App shell variant support — sidebar, hero section, suggestion cards, and signup button hiding added for the new ChatGPT layout
+- [x] MutationObserver stabilization — disconnect/re-observe pattern prevents infinite re-execution loops
+- [x] `hide()` function made idempotent with `data-llm-chatgpt-hidden` attribute
+- [x] `debugCleanup` flag added to suppress cleanup logs by default
+- [x] ChatGPT source/target language selector fix — changed from `button[role="combobox"]` to `button[aria-label]` based search
+- [x] Publisher name change: "soheidon" → "Sohei Ide" in Cargo.toml, package.json, tauri.conf.json
+
+### v0.4.2
+
+- [x] Quality/Speed model selection — status bar MODEL select lets users switch between high-quality and fast models per provider
+- [x] Rust-side model resolution — `model_role` parameter resolves model ID and thinking/normal mode from each provider's `model_mapping` configuration
+- [x] Three translation paths supported: manual translate button, debounced auto-translate, and Ctrl+C+C clipboard translate
+- [x] Auto-reset to default when provider has no fast model mapping
+- [x] `model_mode` metadata (thinking/normal) tracked in TranslationRequest for future provider-specific API extensions
+- [x] Provider short names in status bar — MiMo, Google, DeepL, OpenAI, Gemini, Claude, etc. displayed compactly
+- [x] Shared `ModelRole` type extracted to `src/types/model.ts`
+
 ### v0.5
 - macOS support (planned)
 - Auto-update

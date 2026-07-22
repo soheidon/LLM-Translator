@@ -25,6 +25,7 @@ export function useTranslationState() {
     preset_id?: string;
     provider_id?: string;
     model?: string;
+    model_role?: 'default' | 'fast';
     system_prompt?: string;
   }) => {
     const text = params.text ?? state.sourceText;
@@ -45,6 +46,7 @@ export function useTranslationState() {
         presetId: params.preset_id || null,
         providerId: params.provider_id || null,
         model: params.model || null,
+        modelRole: params.model_role || null,
         systemPrompt: params.system_prompt || null,
       });
 
@@ -73,6 +75,7 @@ export function useTranslationState() {
     preset_id?: string;
     provider_id?: string;
     model?: string;
+    model_role?: 'default' | 'fast';
   }) => {
     try {
       const text = await readText();

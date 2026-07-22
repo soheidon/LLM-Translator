@@ -1,5 +1,5 @@
 {
-  "app": { "title": "LLM Translator Desktop", "version": "v0.4.0" },
+  "app": { "title": "LLM Translator Desktop", "version": "v0.4.2" },
   "titlebar": { "settings": "Impostazioni", "minimize": "Riduci a icona", "maximize": "Ingrandisci", "close": "Chiudi" },
   "tabs": { "llm": "LLM", "google": "Google Traduzione", "chatgpt": "chatGPT Traduzione" },
   "main": {
@@ -22,7 +22,7 @@
       "desc": "Configura il comportamento di base e le scorciatoie.",
       "ui_language": "Lingua interfaccia",
       "start_minimized": "Avvia ridotto a icona",
-      "start_minimized_desc": "Nascondi la finestra principale all'avvio e rimani nella barra delle applicazioni.", "auto_launch": "Avvia all'avvio di Windows", "auto_launch_desc": "Avvia automaticamente LLM Translator all'accesso a Windows.",
+      "start_minimized_desc": "Nascondi la finestra principale all'avvio e rimani nella barra delle applicazioni.", "auto_launch": "Avvia all'avvio di Windows", , "auto_launch_error": "Impossibile aggiornare l'impostazione di avvio automatico",
       "always_on_top": "Sempre in primo piano",
       "always_on_top_desc": "Mantieni la finestra di traduzione sopra le altre finestre.",
       "focus_on_translate": "Metti a fuoco alla traduzione",
@@ -82,8 +82,8 @@
   },
   "status_bar": {
     "hint": "Ctrl+C+C per tradurre",
-    "label_model": "MODELLO", "label_tone": "Tono", "label_preset": "PREIMPOSTAZIONE",
-    "default_provider": "Predefinito", "no_api_key": "Nessuna chiave API"
+    "label_provider": "PROVIDER:", "label_model": "MODELLO", "label_tone": "Tono", "label_preset": "PREIMPOSTAZIONE",
+    "default_provider": "Predefinito", "model_quality": "Alta qualità", "model_fast": "Veloce", "no_api_key": "Nessuna chiave API"
   },
   "languages": { "auto": "Rilevamento auto", "en": "English", "ja": "日本語", "zh": "中文", "ko": "한국어", "fr": "Français", "de": "Deutsch", "es": "Español", "pt": "Português", "ru": "Русский", "it": "Italiano" },
   "modes": { "news": "Traduzione giornalistica", "academic": "Traduzione accademica", "technical": "Traduzione tecnica", "email": "Traduzione email", "subtitle": "Traduzione sottotitoli", "natural": "Naturale", "literal": "Letterale", "formal": "Formale", "casual": "Informale", "friendly": "Amichevole" },

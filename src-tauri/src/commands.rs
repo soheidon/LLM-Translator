@@ -54,6 +54,7 @@ pub async fn translate(
     preset_id: Option<String>,
     provider_id: Option<String>,
     model: Option<String>,
+    model_role: Option<String>,
     system_prompt: Option<String>,
 ) -> Result<TranslationResponse, String> {
     let config = state.config.lock().unwrap().clone();
@@ -66,18 +67,52 @@ pub async fn translate(
             .ok_or_else(|| "No default provider configured".to_string())?
     };
 
-    let model_id = model
-        .filter(|m| !m.is_empty())
+    let explicit_model = model.filter(|m| !m.trim().is_empty());
+
+    let requested_role = match model_role.as_deref() {
+        Some("fast") => "fast",
+        _ => "default",
+    };
+
+    let selected_mapping = provider_config
+        .model_mapping
+        .get(requested_role)
+        .filter(|role| !role.model.trim().is_empty())
         .or_else(|| {
-            if !provider_config.model.is_empty() {
-                Some(provider_config.model.clone())
+            provider_config
+                .model_mapping
+                .get("default")
+                .filter(|role| !role.model.trim().is_empty())
+        });
+
+    let model_id = explicit_model
+        .clone()
+        .or_else(|| selected_mapping.map(|role| role.model.clone()))
+        .or_else(|| {
+            if provider_config.model.trim().is_empty() {
+                None
             } else {
-                provider_config.model_mapping.get("default").and_then(|r| {
-                    if !r.model.is_empty() { Some(r.model.clone()) } else { None }
-                })
+                Some(provider_config.model.clone())
             }
         })
         .ok_or_else(|| "errors.no_model_configured".to_string())?;
+
+    let model_mode = if explicit_model.is_some() {
+        "normal".to_string()
+    } else {
+        selected_mapping
+            .map(|role| match role.mode.trim() {
+                "thinking" => "thinking".to_string(),
+                _ => "normal".to_string(),
+            })
+            .unwrap_or_else(|| "normal".to_string())
+    };
+
+    #[cfg(debug_assertions)]
+    println!(
+        "[translate] provider={} role={} model={} mode={}",
+        provider_config.id, requested_role, model_id, model_mode,
+    );
 
     let request = TranslationRequest {
         text: text.clone(),
@@ -88,6 +123,7 @@ pub async fn translate(
         preset_id: preset_id.clone(),
         provider: provider_config.name.clone(),
         model: model_id,
+        model_mode,
         temperature: provider_config.temperature,
         max_tokens: provider_config.max_tokens,
         system_prompt,
@@ -320,6 +356,42 @@ fn set_auto_launch_impl(enabled: bool) -> Result<(), String> {
 #[cfg(not(target_os = "windows"))]
 fn set_auto_launch_impl(_enabled: bool) -> Result<(), String> {
     Err("Auto launch is only supported on Windows.".to_string())
+}
+
+#[tauri::command]
+pub fn get_auto_launch_status() -> Result<bool, String> {
+    get_auto_launch_status_impl()
+}
+
+#[cfg(target_os = "windows")]
+fn get_auto_launch_status_impl() -> Result<bool, String> {
+    use std::io::ErrorKind;
+    use winreg::enums::{HKEY_CURRENT_USER, KEY_READ};
+    use winreg::RegKey;
+
+    let hkcu = RegKey::predef(HKEY_CURRENT_USER);
+    let run_key = hkcu
+        .open_subkey_with_flags(
+            r"SOFTWARE\Microsoft\Windows\CurrentVersion\Run",
+            KEY_READ,
+        )
+        .map_err(|e| format!("Failed to open Run key: {}", e))?;
+
+    match run_key.get_value::<String, _>("LLMTranslator") {
+        Ok(value) => {
+            let exe_path = std::env::current_exe()
+                .map_err(|e| format!("Failed to get executable path: {}", e))?;
+            let expected = format!("\"{}\" --auto-start", exe_path.to_string_lossy());
+            Ok(value == expected)
+        }
+        Err(e) if e.kind() == ErrorKind::NotFound => Ok(false),
+        Err(e) => Err(format!("Failed to read Run value: {}", e)),
+    }
+}
+
+#[cfg(not(target_os = "windows"))]
+fn get_auto_launch_status_impl() -> Result<bool, String> {
+    Ok(false)
 }
 
 fn apply_google_translate_cleanup(w: &tauri::Webview) -> Result<(), String> {

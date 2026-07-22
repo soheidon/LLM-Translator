@@ -1,5 +1,5 @@
 {
-  "app": { "title": "LLM Translator Desktop", "version": "v0.4.0" },
+  "app": { "title": "LLM Translator Desktop", "version": "v0.4.2" },
   "titlebar": { "settings": "设置", "minimize": "最小化", "maximize": "最大化", "close": "关闭" },
   "tabs": { "llm": "LLM", "google": "Google翻译", "chatgpt": "chatGPT翻译" },
   "main": {
@@ -22,7 +22,7 @@
       "desc": "配置应用程序的基本行为和快捷键。",
       "ui_language": "界面语言",
       "start_minimized": "启动时最小化",
-      "start_minimized_desc": "启动时不显示主窗口，驻留在系统托盘中。", "auto_launch": "Windows 启动时自动运行", "auto_launch_desc": "登录 Windows 时自动启动 LLM Translator。",
+      "start_minimized_desc": "启动时不显示主窗口，驻留在系统托盘中。", "auto_launch": "Windows 启动时自动运行", , "auto_launch_error": "自动启动设置更新失败",
       "always_on_top": "始终置顶",
       "always_on_top_desc": "将翻译窗口保持在其他窗口上方。",
       "focus_on_translate": "翻译时前置",
@@ -81,8 +81,8 @@
   },
   "status_bar": {
     "hint": "Ctrl+C+C 翻译",
-    "label_model": "MODEL", "label_tone": "语体", "label_preset": "PRESET",
-    "default_provider": "默认", "no_api_key": "未设置 API 密钥"
+    "label_provider": "PROVIDER:", "label_model": "MODEL", "label_tone": "语体", "label_preset": "PRESET",
+    "default_provider": "默认", "model_quality": "高品质", "model_fast": "快速", "no_api_key": "未设置 API 密钥"
   },
   "languages": { "auto": "自动检测", "en": "English", "ja": "日本語", "zh": "中文", "ko": "한국어", "fr": "Français", "de": "Deutsch", "es": "Español", "pt": "Português", "ru": "Русский", "it": "Italiano" },
   "modes": { "news": "新闻翻译", "academic": "学术翻译", "technical": "技术文档翻译", "email": "邮件翻译", "subtitle": "字幕翻译", "natural": "自然翻译", "literal": "直译", "formal": "正式翻译", "casual": "随意翻译", "friendly": "亲切翻译" },

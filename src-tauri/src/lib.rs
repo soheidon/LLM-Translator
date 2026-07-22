@@ -151,6 +151,7 @@ pub fn run() {
             commands::set_always_on_top,
             commands::start_drag,
             commands::set_auto_launch,
+            commands::get_auto_launch_status,
             commands::open_google_translate,
             commands::set_google_translate_visible,
             commands::google_translate_back,

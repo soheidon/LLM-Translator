@@ -17,6 +17,7 @@ import { AppIcon } from './components/AppIcon';
 import './styles/app.css';
 
 type View = 'translate' | 'settings' | 'history';
+import type { ModelRole } from './types/model';
 
 const TAB_STORAGE_KEY = 'llm-translator:last-active-tab';
 const VALID_TABS: readonly TranslateTab[] = ['llm', 'google', 'chatgpt'];
@@ -47,6 +48,13 @@ export default function App() {
   const [tone, setTone] = useState('auto');
   const [activeProviderId, setActiveProviderId] = useState<string | null>(null);
   const [enabledProviderIds, setEnabledProviderIds] = useState<Set<string>>(new Set());
+  const [activeModelRole, setActiveModelRole] = useState<ModelRole>('default');
+  const activeModelRoleRef = useRef<ModelRole>('default');
+
+  const handleChangeModelRole = useCallback((role: ModelRole) => {
+    activeModelRoleRef.current = role;
+    setActiveModelRole(role);
+  }, []);
 
   useEffect(() => {
     invoke<ModeInfo[]>('get_modes').then(setModes).catch(console.error);
@@ -77,13 +85,16 @@ export default function App() {
 
   const availableProviders = config?.providers.filter(p => enabledProviderIds.has(p.id)) ?? [];
 
-  // Resolve model from active provider config
-  const resolveModel = useCallback((pid: string | null): string | undefined => {
-    if (!pid || !config) return undefined;
-    const p = config.providers.find(p => p.id === pid);
-    if (!p) return undefined;
-    return p.model || p.model_mapping?.default?.model || undefined;
-  }, [config]);
+  const effectiveProvider = activeProviderId
+    ? availableProviders.find(p => p.id === activeProviderId)
+    : config?.providers.find(p => p.is_default);
+  const hasFastModel = !!effectiveProvider?.model_mapping?.fast?.model?.trim();
+
+  useEffect(() => {
+    if (activeModelRole === 'fast' && !hasFastModel) {
+      handleChangeModelRole('default');
+    }
+  }, [activeModelRole, hasFastModel, handleChangeModelRole]);
 
   // Stable refs for values used in long-lived effects (avoid re-registration on every render)
   const translateRef = useRef(translation);
@@ -92,8 +103,6 @@ export default function App() {
   configRef.current = config;
   const activeProviderIdRef = useRef(activeProviderId);
   activeProviderIdRef.current = activeProviderId;
-  const resolveModelRef = useRef(resolveModel);
-  resolveModelRef.current = resolveModel;
   const activeTabRef = useRef(activeTab);
   activeTabRef.current = activeTab;
 
@@ -122,7 +131,7 @@ export default function App() {
       tone: c?.translation.tone || 'auto',
       preset_id: c?.translation.preset_id,
       provider_id: activeProviderIdRef.current || undefined,
-      model: resolveModelRef.current(activeProviderIdRef.current),
+      model_role: activeModelRoleRef.current,
     });
   }, []);
 
@@ -205,6 +214,8 @@ export default function App() {
         tone={tone}
         availableProviders={availableProviders}
         activeProviderId={activeProviderId}
+        activeModelRole={activeModelRole}
+        onChangeModelRole={handleChangeModelRole}
         setMode={setMode}
         setTone={setTone}
         setActiveProviderId={setActiveProviderId}
@@ -505,6 +516,7 @@ function ChatGptTranslatePanel() {
 function AppContent({
   view, setView, activeTab, setActiveTab, config, translation,
   modes, mode, tone, availableProviders, activeProviderId,
+  activeModelRole, onChangeModelRole,
   setMode, setTone, setActiveProviderId,
   updateGeneral, updateTranslation, updateShortcut, updateHistory, saveProvider,
   handleRetranslate,
@@ -579,6 +591,7 @@ function AppContent({
             mode={mode}
             tone={tone}
             providerId={activeProviderId}
+            modelRole={activeModelRole}
           />
         ) : activeTab === 'google' ? (
           <GoogleTranslatePanel debugTool={config.general.google_translate_debug_tool} />
@@ -628,10 +641,12 @@ function AppContent({
         tone={tone}
         availableProviders={availableProviders}
         activeProviderId={activeProviderId}
+        activeModelRole={activeModelRole}
         activeTab={activeTab}
         onChangeMode={setMode}
         onChangeTone={setTone}
         onChangeProvider={setActiveProviderId}
+        onChangeModelRole={onChangeModelRole}
         onSettings={() => setView('settings')}
         chatgptDebugEnabled={config.general.chatgpt_translate_debug_tool}
         chatgptHtmlCssDebugEnabled={config.general.chatgpt_translate_html_css_debug_tool}

@@ -22,7 +22,7 @@
       "desc": "애플리케이션 기본 동작과 단축키를 설정합니다.",
       "ui_language": "UI 언어",
       "start_minimized": "시작 시 최소화",
-      "start_minimized_desc": "시작 시 메인 창을 표시하지 않고 시스템 트레이에 상주합니다.", "auto_launch": "Windows 시작 시 실행", , "auto_launch_error": "자동 시작 설정 업데이트에 실패했습니다",
+      "start_minimized_desc": "시작 시 메인 창을 표시하지 않고 시스템 트레이에 상주합니다.", "auto_launch": "Windows 시작 시 실행", "auto_launch_error": "자동 시작 설정 업데이트에 실패했습니다",
       "always_on_top": "항상 위에 표시",
       "always_on_top_desc": "번역 창을 다른 창보다 위에 표시합니다.",
       "focus_on_translate": "번역 시 전면 표시",

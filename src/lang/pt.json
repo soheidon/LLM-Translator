@@ -22,7 +22,7 @@
       "desc": "Configurar o comportamento básico e os atalhos do aplicativo.",
       "ui_language": "Idioma da interface",
       "start_minimized": "Iniciar minimizado",
-      "start_minimized_desc": "Ocultar a janela principal ao iniciar e permanecer na bandeja do sistema.", "auto_launch": "Iniciar com o Windows", , "auto_launch_error": "Falha ao atualizar a configuração de início automático",
+      "start_minimized_desc": "Ocultar a janela principal ao iniciar e permanecer na bandeja do sistema.", "auto_launch": "Iniciar com o Windows", "auto_launch_error": "Falha ao atualizar a configuração de início automático",
       "always_on_top": "Sempre visível",
       "always_on_top_desc": "Manter a janela de tradução acima das outras janelas.",
       "focus_on_translate": "Focar ao traduzir",

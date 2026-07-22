@@ -22,7 +22,7 @@
       "desc": "配置应用程序的基本行为和快捷键。",
       "ui_language": "界面语言",
       "start_minimized": "启动时最小化",
-      "start_minimized_desc": "启动时不显示主窗口，驻留在系统托盘中。", "auto_launch": "Windows 启动时自动运行", , "auto_launch_error": "自动启动设置更新失败",
+      "start_minimized_desc": "启动时不显示主窗口，驻留在系统托盘中。", "auto_launch": "Windows 启动时自动运行", "auto_launch_error": "自动启动设置更新失败",
       "always_on_top": "始终置顶",
       "always_on_top_desc": "将翻译窗口保持在其他窗口上方。",
       "focus_on_translate": "翻译时前置",

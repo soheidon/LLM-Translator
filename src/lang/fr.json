@@ -22,7 +22,7 @@
       "desc": "Configurer le comportement de base et les raccourcis.",
       "ui_language": "Langue de l'interface",
       "start_minimized": "Démarrer minimisé",
-      "start_minimized_desc": "Masquer la fenêtre principale au démarrage et rester dans la barre d'état.", "auto_launch": "Lancer au démarrage de Windows", , "auto_launch_error": "Échec de la configuration du démarrage automatique",
+      "start_minimized_desc": "Masquer la fenêtre principale au démarrage et rester dans la barre d'état.", "auto_launch": "Lancer au démarrage de Windows", "auto_launch_error": "Échec de la configuration du démarrage automatique",
       "always_on_top": "Toujours au premier plan",
       "always_on_top_desc": "Garder la fenêtre de traduction au-dessus des autres fenêtres.",
       "focus_on_translate": "Focus lors de la traduction",

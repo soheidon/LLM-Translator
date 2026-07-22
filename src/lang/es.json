@@ -22,7 +22,7 @@
       "desc": "Configurar el comportamiento básico y los atajos de teclado.",
       "ui_language": "Idioma de la interfaz",
       "start_minimized": "Iniciar minimizado",
-      "start_minimized_desc": "Ocultar la ventana principal al iniciar y permanecer en la bandeja del sistema.", "auto_launch": "Iniciar con Windows", , "auto_launch_error": "Error al actualizar la configuración de inicio automático",
+      "start_minimized_desc": "Ocultar la ventana principal al iniciar y permanecer en la bandeja del sistema.", "auto_launch": "Iniciar con Windows", "auto_launch_error": "Error al actualizar la configuración de inicio automático",
       "always_on_top": "Siempre visible",
       "always_on_top_desc": "Mantener la ventana de traducción por encima de otras ventanas.",
       "focus_on_translate": "Enfocar al traducir",

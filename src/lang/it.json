@@ -22,7 +22,7 @@
       "desc": "Configura il comportamento di base e le scorciatoie.",
       "ui_language": "Lingua interfaccia",
       "start_minimized": "Avvia ridotto a icona",
-      "start_minimized_desc": "Nascondi la finestra principale all'avvio e rimani nella barra delle applicazioni.", "auto_launch": "Avvia all'avvio di Windows", , "auto_launch_error": "Impossibile aggiornare l'impostazione di avvio automatico",
+      "start_minimized_desc": "Nascondi la finestra principale all'avvio e rimani nella barra delle applicazioni.", "auto_launch": "Avvia all'avvio di Windows", "auto_launch_error": "Impossibile aggiornare l'impostazione di avvio automatico",
       "always_on_top": "Sempre in primo piano",
       "always_on_top_desc": "Mantieni la finestra di traduzione sopra le altre finestre.",
       "focus_on_translate": "Metti a fuoco alla traduzione",

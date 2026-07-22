@@ -22,7 +22,7 @@
       "desc": "Grundeinstellungen und Tastenkombinationen konfigurieren.",
       "ui_language": "UI-Sprache",
       "start_minimized": "Minimiert starten",
-      "start_minimized_desc": "Hauptfenster beim Start verstecken und im Infobereich bleiben.", "auto_launch": "Beim Windows-Start ausführen", , "auto_launch_error": "Fehler beim Aktualisieren der Autostart-Einstellung",
+      "start_minimized_desc": "Hauptfenster beim Start verstecken und im Infobereich bleiben.", "auto_launch": "Beim Windows-Start ausführen", "auto_launch_error": "Fehler beim Aktualisieren der Autostart-Einstellung",
       "always_on_top": "Immer im Vordergrund",
       "always_on_top_desc": "Übersetzungsfenster über anderen Fenstern halten.",
       "focus_on_translate": "Fokus bei Übersetzung",

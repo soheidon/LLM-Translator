@@ -1,7 +1,7 @@
 {
   "app": {
     "title": "LLM Translator Desktop",
-    "version": "v0.4.2"
+    "version": "v0.4.3"
   },
   "titlebar": {
     "settings": "設定",
@@ -142,7 +142,9 @@
       "debug_tool": "DOM診断ツール",
       "debug_tool_desc": "有効にすると、ChatGPT翻訳タブにDOM診断ボタンを表示します",
       "html_css_debug_tool": "HTML+CSS診断ツール",
-      "html_css_debug_tool_desc": "有効にすると、ChatGPT翻訳タブにHTML構造とCSS状態の診断ボタンを表示します"
+      "html_css_debug_tool_desc": "有効にすると、ChatGPT翻訳タブにHTML構造とCSS状態の診断ボタンを表示します",
+      "console_log": "ChatGPTコンソールログ",
+      "console_log_desc": "有効にすると、ChatGPT翻訳タブのコンソール情報を記録します"
     }
   },
   "history_panel": {
@@ -170,7 +172,14 @@
     "model_fast": "高速",
     "no_api_key": "APIキー未設定",
     "debug_dom": "DOM診断",
-    "debug_html_css": "HTML+CSS診断"
+    "debug_html_css": "HTML+CSS診断",
+    "copy_console_log": "コンソールログをコピー",
+    "copy_lang_log": "言語ログをコピー",
+    "msg_console_copied": "件のコンソールログをコピーしました",
+    "msg_console_empty": "コピーするログがありません",
+    "msg_log_copied": "件の言語ログをコピーしました",
+    "msg_log_empty": "言語ログがありません",
+    "msg_failed": "処理に失敗しました"
   },
   "languages": {
     "auto": "自動検出",

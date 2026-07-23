@@ -1,7 +1,7 @@
 {
   "app": {
     "title": "LLM Translator Desktop",
-    "version": "v0.4.2"
+    "version": "v0.4.3"
   },
   "titlebar": {
     "settings": "Settings",
@@ -132,7 +132,7 @@
       "debug_tool": "DOM diagnostic tool",
       "debug_tool_desc": "When enabled, shows a DOM diagnostic button in the browser toolbar"
     },
-    "chatgpt_translate": { "title": "chatGPT Translate", "desc": "Set source and target languages for the chatGPT Translate tab.", "source_lang": "Source language", "target_lang": "Target language", "hide_lp": "Hide landing page elements", "hide_lp_desc": "Hide header navigation and marketing sections in the ChatGPT Translate tab (takes effect after reload).", "debug_tool": "DOM diagnostic tool", "debug_tool_desc": "Show a DOM diagnostic button in the ChatGPT Translate tab", "html_css_debug_tool": "HTML+CSS diagnostic tool", "html_css_debug_tool_desc": "Show an HTML structure and computed CSS diagnostic button in the ChatGPT Translate tab" }
+    "chatgpt_translate": { "title": "chatGPT Translate", "desc": "Set source and target languages for the chatGPT Translate tab.", "source_lang": "Source language", "target_lang": "Target language", "hide_lp": "Hide landing page elements", "hide_lp_desc": "Hide header navigation and marketing sections in the ChatGPT Translate tab (takes effect after reload).", "debug_tool": "DOM diagnostic tool", "debug_tool_desc": "Show a DOM diagnostic button in the ChatGPT Translate tab", "html_css_debug_tool": "HTML+CSS diagnostic tool", "html_css_debug_tool_desc": "Show an HTML structure and computed CSS diagnostic button in the ChatGPT Translate tab", "console_log": "ChatGPT console log", "console_log_desc": "Record console information from the ChatGPT Translate tab" }
   },
   "history_panel": {
     "title": "History",
@@ -159,7 +159,14 @@
     "model_fast": "Fast",
     "no_api_key": "No API Key",
     "debug_dom": "DOM diagnostic",
-    "debug_html_css": "HTML+CSS diagnostic"
+    "debug_html_css": "HTML+CSS diagnostic",
+    "copy_console_log": "Copy console log",
+    "copy_lang_log": "Copy language log",
+    "msg_console_copied": "console entries copied",
+    "msg_console_empty": "No console log entries",
+    "msg_log_copied": "language log entries copied",
+    "msg_log_empty": "No language log entries",
+    "msg_failed": "Failed"
   },
   "languages": {
     "auto": "Auto Detect",

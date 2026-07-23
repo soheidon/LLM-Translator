@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "LLMTranslator",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "identifier": "com.soheidon.llm-translator",
   "build": {
     "frontendDist": "../dist",
@@ -45,7 +45,7 @@
         "type": "embedBootstrapper"
       },
       "nsis": {
-        "displayLanguageSelector": true,
+        "displayLanguageSelector": false,
         "installerIcon": "icons/icon.ico",
         "installMode": "currentUser",
         "languages": ["English", "Japanese", "SimpChinese", "TradChinese", "Korean", "French", "German", "Spanish", "Portuguese", "Russian", "Italian"]

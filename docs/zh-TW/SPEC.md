@@ -190,7 +190,8 @@ LLM Translator Desktop
 │   │   ├── TabBar.tsx
 │   │   └── ToneSelector.tsx
 │   ├── data/
-│   │   └── googleTranslateLanguages.ts
+│   │   ├── googleTranslateLanguages.ts
+│   │   └── chatgptTranslateLanguages.ts
 │   ├── hooks/
 │   │   ├── useSettings.ts
 │   │   └── useTranslationState.ts
@@ -316,6 +317,18 @@ LLM Translator Desktop
 - [x] 頁面捲軸抑制 — `html, body { overflow: hidden }` 消除頁面層級捲軸
 - [x] 捲軸位置重置 — 版面標記後重置捲軸位置，防止翻譯表單移出畫面
 - [x] LP 區塊隱藏變體支援 — 解決 `#contentful-header` 與 `[class*="h-mkt-header-height"]` 的衝突，安全地僅隱藏 LP 元素
+
+### v0.4.3
+
+- [x] ChatGPT 翻譯：47 種語言支援（含中文 3 路拆分、葡萄牙語 2 路拆分）
+- [x] ChatGPT 翻譯：雙語別名比對（日文 + 英文語言名稱）
+- [x] ChatGPT 翻譯：啟動時從已儲存設定自動套用語言
+- [x] ChatGPT 翻譯：設定畫面語言選擇器擴展至 47 種語言
+- [x] ChatGPT 翻譯：主控台記錄與語言偵錯記錄（sessionStorage 環形緩衝區，狀態列複製）
+- [x] 剪貼簿：從 `navigator.clipboard` 遷移至 Tauri v2 `clipboard-manager` 外掛
+- [x] DOM/HTML+CSS 診斷按鈕改為切換行為
+- [x] 移除不必要的清除指令
+- [x] 修正 9 個語言 JSON 檔案中的雙逗號問題
 
 ### v0.5
 - macOS 支援（計劃中）

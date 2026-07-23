@@ -172,6 +172,9 @@ pub fn run() {
             commands::set_chatgpt_translate_languages,
             commands::debug_chatgpt_translate_dom,
             commands::debug_chatgpt_translate_html_css,
+            commands::set_chatgpt_console_log_enabled,
+            commands::get_chatgpt_translate_console_log,
+            commands::get_language_debug_log,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

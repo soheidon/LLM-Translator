@@ -190,7 +190,8 @@ Japanese, English, 中文(简体), 中文(繁體), 한국어, Français, Deutsch
 │   │   ├── TabBar.tsx
 │   │   └── ToneSelector.tsx
 │   ├── data/
-│   │   └── googleTranslateLanguages.ts
+│   │   ├── googleTranslateLanguages.ts
+│   │   └── chatgptTranslateLanguages.ts
 │   ├── hooks/
 │   │   ├── useSettings.ts
 │   │   └── useTranslationState.ts
@@ -316,6 +317,18 @@ Japanese, English, 中文(简体), 中文(繁體), 한국어, Français, Deutsch
 - [x] Suppression du défilement de page — `html, body { overflow: hidden }` élimine la barre de défilement au niveau de la page
 - [x] Réinitialisation de la position de défilement — réinitialisation de la position de défilement après les marqueurs de mise en page pour empêcher le formulaire de traduction de sortir de l'écran
 - [x] Support des variantes de masquage des sections LP — résolution du conflit entre `#contentful-header` et `[class*="h-mkt-header-height"]` pour masquer en toute sécurité uniquement les éléments LP
+
+### v0.4.3
+
+- [x] ChatGPT Translate : support de 47 langues (incluant la séparation du chinois en 3 et du portugais en 2)
+- [x] ChatGPT Translate : correspondance d'alias bilingue (noms de langues en japonais + anglais)
+- [x] ChatGPT Translate : application automatique des langues au lancement depuis les paramètres sauvegardés
+- [x] ChatGPT Translate : sélecteur de langues de l'écran des paramètres étendu à 47 langues
+- [x] ChatGPT Translate : journaux console et de débogage des langues (tampon circulaire sessionStorage, copie depuis la barre d'état)
+- [x] Presse-papiers : migration de `navigator.clipboard` vers le plugin Tauri v2 `clipboard-manager`
+- [x] Boutons de diagnostic DOM/HTML+CSS changés en comportement bascule
+- [x] Suppression des commandes de vidage inutiles
+- [x] Correction de la double virgule dans 9 fichiers JSON de langues
 
 ### v0.5
 - Support macOS (prévu)

@@ -36,7 +36,9 @@ A Windows desktop app for quick translation — just like DeepL Desktop, select 
 ### ChatGPT Translate Tab
 
 * **Embedded ChatGPT** — Open ChatGPT's web interface inside the app and send translation prompts.
-* **Language Configuration** — Set source and target languages from the settings screen.
+* **47-Language Support** — Choose from 47 languages including Chinese (Simplified/Traditional/Hong Kong) and Portuguese (Brazil/Portugal). Language names are matched in both Japanese and English.
+* **Auto Language Apply** — Saved source and target languages are automatically applied to the ChatGPT page on launch.
+* **Language / Console Debug Logs** — Built-in diagnostic logs for language selection and console output, copyable from the status bar. Toggle ON/OFF in settings.
 * **LP Element Hiding** — Toggle ON/OFF in settings. Hide marketing navigation and sections from the ChatGPT page so you can focus on the translation form.
 * **Multi-Variant DOM Support** — Automatically adapts to different ChatGPT page structures (marketing LP vs. app/login variants). Uses `data-llm-chatgpt-container` attribute-based selectors instead of `main#main`, preserving the login button while hiding only marketing elements.
 * **Page Scroll Suppression** — Eliminates the page-level scrollbar that appeared on variant A, keeping the translation UI contained within the viewport.

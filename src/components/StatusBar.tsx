@@ -38,12 +38,16 @@ interface Props {
   onSettings: () => void;
   chatgptDebugEnabled?: boolean;
   chatgptHtmlCssDebugEnabled?: boolean;
+  chatgptConsoleLogEnabled?: boolean;
   onDebugChatgptDom?: () => void;
   onDebugChatgptHtmlCss?: () => void;
+  onCopyConsoleLog?: () => void;
+  onCopyLanguageLog?: () => void;
+  debugMessage?: string;
   defaultProvider?: ProviderConfig;
 }
 
-export function StatusBar({ modes, mode, tone, availableProviders, activeProviderId, activeModelRole, activeTab, onChangeMode, onChangeTone, onChangeProvider, onChangeModelRole, onSettings, chatgptDebugEnabled, chatgptHtmlCssDebugEnabled, onDebugChatgptDom, onDebugChatgptHtmlCss, defaultProvider }: Props) {
+export function StatusBar({ modes, mode, tone, availableProviders, activeProviderId, activeModelRole, activeTab, onChangeMode, onChangeTone, onChangeProvider, onChangeModelRole, onSettings, chatgptDebugEnabled, chatgptHtmlCssDebugEnabled, chatgptConsoleLogEnabled, onDebugChatgptDom, onDebugChatgptHtmlCss, onCopyConsoleLog, onCopyLanguageLog, debugMessage, defaultProvider }: Props) {
   const { t } = useT();
   const showLlmControls = activeTab === 'llm';
 
@@ -68,6 +72,15 @@ export function StatusBar({ modes, mode, tone, availableProviders, activeProvide
         )}
         {activeTab === 'chatgpt' && chatgptHtmlCssDebugEnabled && onDebugChatgptHtmlCss && (
           <button className="google-debug-btn" onClick={onDebugChatgptHtmlCss} style={{ marginLeft: 8, fontSize: 11 }}>{t("status_bar.debug_html_css")}</button>
+        )}
+        {activeTab === 'chatgpt' && chatgptConsoleLogEnabled && onCopyConsoleLog && (
+          <button className="google-debug-btn" onClick={onCopyConsoleLog} style={{ marginLeft: 8, fontSize: 11 }}>{t("status_bar.copy_console_log")}</button>
+        )}
+        {activeTab === 'chatgpt' && chatgptConsoleLogEnabled && onCopyLanguageLog && (
+          <button className="google-debug-btn" onClick={onCopyLanguageLog} style={{ marginLeft: 8, fontSize: 11 }}>{t("status_bar.copy_lang_log")}</button>
+        )}
+        {activeTab === 'chatgpt' && debugMessage && (
+          <span style={{ marginLeft: 8, fontSize: 11, color: 'var(--color-text-secondary, #999)' }}>{debugMessage}</span>
         )}
         {showLlmControls && (
           <>

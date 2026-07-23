@@ -35,7 +35,9 @@ Eine Windows-Desktop-App für schnelle Übersetzungen — genau wie DeepL Deskto
 ### ChatGPT Translate-Tab
 
 * **Eingebetteter ChatGPT** — Öffnen Sie die ChatGPT-Weboberfläche innerhalb der App und senden Sie Übersetzungs-Prompts.
-* **Sprachkonfiguration** — Legen Sie Quell- und Zielsprache im Einstellungsbildschirm fest.
+* **47-Sprachen-Unterstützung** — Wählen Sie aus 47 Sprachen, darunter Chinesisch (Vereinfacht/Traditionell/Hongkong) und Portugiesisch (Brasilien/Portugal). Sprachnamen werden sowohl auf Japanisch als auch auf Englisch erkannt.
+* **Automatische Sprachanwendung** — Gespeicherte Quell- und Zielsprachen werden beim Start automatisch auf die ChatGPT-Seite angewendet.
+* **Sprach-/Konsolen-Debugprotokolle** — Integrierte Diagnoseprotokolle für Sprachauswahl und Konsolenausgabe, kopierbar über die Statusleiste. Ein/Aus in den Einstellungen.
 * **LP-Elemente ausblenden** — Ein/Aus in den Einstellungen. Blendet Marketing-Navigation und -Abschnitte von der ChatGPT-Seite aus, damit Sie sich auf das Übersetzungsformular konzentrieren können.
 * **Multi-Varianten-DOM-Unterstützung** — Passt sich automatisch an verschiedene ChatGPT-Seitenstrukturen an (Marketing-LP vs. App/Login-Varianten). Verwendet `data-llm-chatgpt-container`-attributbasierte Selektoren anstelle von `main#main`, sodass der Login-Button erhalten bleibt und nur Marketing-Elemente ausgeblendet werden.
 * **Seiten-Scroll-Unterdrückung** — Entfernt die Seiten-Scrollleiste, die bei Variante A auftrat, und hält die Übersetzungs-UI innerhalb des Viewports.

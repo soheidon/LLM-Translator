@@ -1125,25 +1125,29 @@ function GoogleTranslateSettings({ config, onUpdateGeneral }: {
 }
 
 // --- ChatGPT Translate Settings ---
+import { CHATGPT_LANGUAGES, CHATGPT_AUTO_LANGUAGE, getChatgptLanguage, resolveChatgptSourceLanguage, resolveChatgptTargetLanguage } from '../data/chatgptTranslateLanguages';
+
 const CHATGPT_SOURCE_KEY = 'chatgptTranslateSourceLang';
 const CHATGPT_TARGET_KEY = 'chatgptTranslateTargetLang';
-const CHATGPT_DEFAULT_SOURCE = 'auto';
-const CHATGPT_DEFAULT_TARGET = 'ja';
 
 function loadChatGptSourceLang(): string {
   try {
     const saved = localStorage.getItem(CHATGPT_SOURCE_KEY);
-    if (saved && GOOGLE_TRANSLATE_LANGUAGES.some(l => l.code === saved)) return saved;
+    const resolved = resolveChatgptSourceLanguage(saved);
+    if (resolved !== saved) localStorage.setItem(CHATGPT_SOURCE_KEY, resolved);
+    return resolved;
   } catch { /* storage unavailable */ }
-  return CHATGPT_DEFAULT_SOURCE;
+  return 'auto';
 }
 
 function loadChatGptTargetLang(): string {
   try {
     const saved = localStorage.getItem(CHATGPT_TARGET_KEY);
-    if (saved && saved !== 'auto' && GOOGLE_TRANSLATE_LANGUAGES.some(l => l.code === saved)) return saved;
+    const resolved = resolveChatgptTargetLanguage(saved);
+    if (resolved !== saved) localStorage.setItem(CHATGPT_TARGET_KEY, resolved);
+    return resolved;
   } catch { /* storage unavailable */ }
-  return CHATGPT_DEFAULT_TARGET;
+  return 'ja';
 }
 
 function ChatGptTranslateSettings({ config, onUpdateGeneral }: { config: AppConfig; onUpdateGeneral: (updates: Partial<AppConfig['general']>) => void }) {
@@ -1153,18 +1157,30 @@ function ChatGptTranslateSettings({ config, onUpdateGeneral }: { config: AppConf
 
   const isJapanese = language.startsWith('ja');
 
-  const sourceLangs = GOOGLE_TRANSLATE_LANGUAGES;
-  const targetLangs = GOOGLE_TRANSLATE_LANGUAGES.filter(l => l.code !== 'auto');
+  const sourceLangs = [CHATGPT_AUTO_LANGUAGE, ...CHATGPT_LANGUAGES];
+  const targetLangs = CHATGPT_LANGUAGES;
 
   const handleSourceChange = (code: string) => {
     setSourceLang(code);
     try { localStorage.setItem(CHATGPT_SOURCE_KEY, code); } catch {}
+    applyChatgptLanguageSettings(code, targetLang);
   };
 
   const handleTargetChange = (code: string) => {
     setTargetLang(code);
     try { localStorage.setItem(CHATGPT_TARGET_KEY, code); } catch {}
+    applyChatgptLanguageSettings(sourceLang, code);
   };
+
+  function applyChatgptLanguageSettings(sourceCode: string, targetCode: string) {
+    const srcLangObj = getChatgptLanguage(sourceCode);
+    const tgtLangObj = getChatgptLanguage(targetCode);
+    const sourceLabel = srcLangObj?.nameJa || '言語を検出する';
+    const sourceLabelEn = srcLangObj?.nameEn || 'Detect language';
+    const targetLabel = tgtLangObj?.nameJa || '日本語';
+    const targetLabelEn = tgtLangObj?.nameEn || 'Japanese';
+    invoke('set_chatgpt_translate_languages', { sourceLabel, targetLabel, sourceLabelEn, targetLabelEn }).catch(() => {});
+  }
 
   return (
     <div className="settings-section">
@@ -1232,6 +1248,19 @@ function ChatGptTranslateSettings({ config, onUpdateGeneral }: { config: AppConf
           </div>
           <div className="settings-control">
             <button className={`toggle ${config.general.chatgpt_translate_html_css_debug_tool ? "active" : ""}`} onClick={() => onUpdateGeneral({ chatgpt_translate_html_css_debug_tool: !config.general.chatgpt_translate_html_css_debug_tool })} />
+          </div>
+        </div>
+        <div className="settings-row">
+          <div>
+            <div className="settings-label">{t("settings.chatgpt_translate.console_log")}</div>
+            <div className="settings-description">{t("settings.chatgpt_translate.console_log_desc")}</div>
+          </div>
+          <div className="settings-control">
+            <button className={`toggle ${config.general.chatgpt_translate_console_log_enabled ? "active" : ""}`} onClick={() => {
+              const next = !config.general.chatgpt_translate_console_log_enabled;
+              onUpdateGeneral({ chatgpt_translate_console_log_enabled: next });
+              invoke('set_chatgpt_console_log_enabled', { enabled: next }).catch(() => {});
+            }} />
           </div>
         </div>
       </div>

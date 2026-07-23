@@ -190,7 +190,8 @@ Japanese, English, 中文(简体), 中文(繁體), 한국어, Français, Deutsch
 │   │   ├── TabBar.tsx
 │   │   └── ToneSelector.tsx
 │   ├── data/
-│   │   └── googleTranslateLanguages.ts
+│   │   ├── googleTranslateLanguages.ts
+│   │   └── chatgptTranslateLanguages.ts
 │   ├── hooks/
 │   │   ├── useSettings.ts
 │   │   └── useTranslationState.ts
@@ -316,6 +317,18 @@ Japanese, English, 中文(简体), 中文(繁體), 한국어, Français, Deutsch
 - [x] 페이지 스크롤 억제 — `html, body { overflow: hidden }`으로 페이지 수준 스크롤바 제거
 - [x] 스크롤 위치 리셋 — 레이아웃 마커 후 스크롤 위치를 리셋하여 번역 폼이 화면 밖으로 밀리는 것 방지
 - [x] LP 섹션 숨기기 변형 지원 — `#contentful-header`와 `[class*="h-mkt-header-height"]` 간 충돌을 해결하여 LP 요소만 안전하게 숨김
+
+### v0.4.3
+
+- [x] ChatGPT Translate: 47개 언어 지원 (중국어 3방향 분할, 포르투갈어 2방향 분할 포함)
+- [x] ChatGPT Translate: 이중 언어 별칭 매칭 (일본어 + 영어 언어 이름)
+- [x] ChatGPT Translate: 저장된 설정에서 실행 시 언어 자동 적용
+- [x] ChatGPT Translate: 설정 화면 언어 선택기 47개 언어로 확장
+- [x] ChatGPT Translate: 콘솔 로그 및 언어 디버그 로그 (sessionStorage 링 버퍼, 상태 표시줄 복사)
+- [x] 클립보드: `navigator.clipboard`에서 Tauri v2 `clipboard-manager` 플러그인으로 마이그레이션
+- [x] DOM/HTML+CSS 진단 버튼을 토글 동작으로 변경
+- [x] 불필요한 지우기 명령 제거
+- [x] 9개 언어 JSON 파일의 이중 쉼표 수정
 
 ### v0.5
 - macOS 지원 (계획)

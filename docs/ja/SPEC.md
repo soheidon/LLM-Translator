@@ -191,7 +191,8 @@ Windows の低レベルキーボードフック (`SetWindowsHookEx(WH_KEYBOARD_L
 │   │   ├── TabBar.tsx
 │   │   └── ToneSelector.tsx
 │   ├── data/
-│   │   └── googleTranslateLanguages.ts
+│   │   ├── googleTranslateLanguages.ts
+│   │   └── chatgptTranslateLanguages.ts
 │   ├── hooks/
 │   │   ├── useSettings.ts
 │   │   └── useTranslationState.ts
@@ -317,6 +318,18 @@ Windows の低レベルキーボードフック (`SetWindowsHookEx(WH_KEYBOARD_L
 - [x] ページ全体のスクロール抑制 — `html, body { overflow: hidden }` によりページレベルのスクロールバーを排除
 - [x] スクロール位置リセット — layout markers設定後にスクロール位置をリセットし、翻訳フォームの画面外への飛び出しを修正
 - [x] LPセクション非表示のバリアント対応 — `#contentful-header` と `[class*="h-mkt-header-height"]` の競合を解消し、安全にLP要素のみ非表示化
+
+### v0.4.3
+
+- [x] ChatGPT翻訳：47言語対応（中国語3分割、ポルトガル語2分割を含む）
+- [x] ChatGPT翻訳：二言語エイリアスマッチング（日本語＋英語の言語名）
+- [x] ChatGPT翻訳：起動時に保存済み設定から言語を自動適用
+- [x] ChatGPT翻訳：設定画面の言語セレクタを47言語に拡張
+- [x] ChatGPT翻訳：コンソールログ・言語デバッグログ（sessionStorageリングバッファ、ステータスバーコピー）
+- [x] クリップボード：`navigator.clipboard` から Tauri v2 `clipboard-manager` プラグインへ移行
+- [x] DOM/HTML+CSS診断ボタンをトグル動作に変更
+- [x] 不要なクリアコマンドを削除
+- [x] 9つの言語JSONファイルの二重カンマを修正
 
 ### v0.5
 - macOS 対応検討

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
-import { readText } from '@tauri-apps/plugin-clipboard-manager';
+import { readText, writeText } from '@tauri-apps/plugin-clipboard-manager';
 import { MainTranslate } from './components/MainTranslate';
 import { SettingsPanel } from './components/SettingsPanel';
 import { HistoryPanel } from './components/HistoryPanel';
@@ -12,7 +12,7 @@ import { useTranslationState } from './hooks/useTranslationState';
 import { I18nProvider, useT } from './i18n/I18nContext';
 import type { LanguageCode } from './lang';
 import type { HistoryEntry, ModeInfo } from './types/translation';
-import { GOOGLE_TRANSLATE_LANGUAGES } from './data/googleTranslateLanguages';
+import { getChatgptLanguage, resolveChatgptSourceLanguage, resolveChatgptTargetLanguage } from './data/chatgptTranslateLanguages';
 import { AppIcon } from './components/AppIcon';
 import './styles/app.css';
 
@@ -410,7 +410,7 @@ function GoogleTranslatePanel({ debugTool }: { debugTool: boolean }) {
   );
 }
 
-function ChatGptTranslatePanel() {
+function ChatGptTranslatePanel({ consoleLogEnabled }: { consoleLogEnabled?: boolean }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const toolbarHRef = useRef(0);
   const [ready, setReady] = useState(false);
@@ -431,6 +431,7 @@ function ChatGptTranslatePanel() {
 
   useEffect(() => {
     const tbh = toolbarHRef;
+
     const syncPosition = () => {
       const r = getRect();
       if (!r) return;
@@ -446,24 +447,43 @@ function ChatGptTranslatePanel() {
     const rect = getRect();
     if (!rect) return;
 
+    // Resolve saved language codes BEFORE opening webview — reject unsupported languages early
+    const savedSourceCode = (() => {
+      try { return localStorage.getItem('chatgptTranslateSourceLang'); }
+      catch { return null; }
+    })();
+    const savedTargetCode = (() => {
+      try { return localStorage.getItem('chatgptTranslateTargetLang'); }
+      catch { return null; }
+    })();
+    const sourceCode = resolveChatgptSourceLanguage(savedSourceCode);
+    const targetCode = resolveChatgptTargetLanguage(savedTargetCode);
+    if (sourceCode !== savedSourceCode) {
+      try { localStorage.setItem('chatgptTranslateSourceLang', sourceCode); } catch {}
+    }
+    if (targetCode !== savedTargetCode) {
+      try { localStorage.setItem('chatgptTranslateTargetLang', targetCode); } catch {}
+    }
+    const sourceLang = getChatgptLanguage(sourceCode);
+    const targetLang = getChatgptLanguage(targetCode);
+    const sourceLabel = sourceLang?.nameJa || '言語を検出する';
+    const sourceLabelEn = sourceLang?.nameEn || 'Detect language';
+    const targetLabel = targetLang?.nameJa || '日本語';
+    const targetLabelEn = targetLang?.nameEn || 'Japanese';
+
     invoke('open_chatgpt_translate', { url: CHATGPT_TRANSLATE_URL, ...rect })
       .then(() => {
-        setReady(true);
-        const sourceCode = (() => {
-          try { return localStorage.getItem('chatgptTranslateSourceLang') || 'auto'; }
-          catch { return 'auto'; }
-        })();
-        const targetCode = (() => {
-          try { return localStorage.getItem('chatgptTranslateTargetLang') || 'ja'; }
-          catch { return 'ja'; }
-        })();
-        const sourceLang = GOOGLE_TRANSLATE_LANGUAGES.find(l => l.code === sourceCode);
-        const targetLang = GOOGLE_TRANSLATE_LANGUAGES.find(l => l.code === targetCode);
-        const sourceLabel = sourceCode === 'auto' ? '言語を検出する' : (sourceLang?.nameJa || '言語を検出する');
-        const targetLabel = targetLang?.nameJa || '日本語';
-        return invoke('set_chatgpt_translate_languages', { sourceLabel, targetLabel });
+        console.log('[ChatGPT Lang Invoke]', { sourceCode, targetCode, sourceLabel, targetLabel, sourceLabelEn, targetLabelEn, timestamp: new Date().toISOString() });
+        return invoke('set_chatgpt_translate_languages', { sourceLabel, targetLabel, sourceLabelEn, targetLabelEn });
       })
-      .catch(console.error);
+      .then(() => {
+        console.log('[ChatGPT Lang Invoke] success');
+        if (consoleLogEnabled) {
+          return invoke('set_chatgpt_console_log_enabled', { enabled: true });
+        }
+      })
+      .then(() => setReady(true))
+      .catch((e) => { console.error('[ChatGPT Lang Invoke] failed', e); setReady(true); });
 
     requestAnimationFrame(() => {
       requestAnimationFrame(syncPosition);
@@ -471,7 +491,6 @@ function ChatGptTranslatePanel() {
 
     const interval = setInterval(syncPosition, 500);
 
-    // Poll URL to detect navigation away from top page
     const urlInterval = setInterval(async () => {
       try {
         const url = await invoke<string>('get_chatgpt_translate_url');
@@ -524,6 +543,7 @@ function AppContent({
   const { t } = useT();
   const [debugChatgptDom, setDebugChatgptDom] = useState('');
   const handleChatgptDebugDom = async () => {
+    if (debugChatgptDom) { setDebugChatgptDom(''); return; }
     try {
       const result = await invoke<string>('debug_chatgpt_translate_dom');
       console.log('[ChatGPT DOM debug]', result);
@@ -535,6 +555,7 @@ function AppContent({
   };
   const [debugChatgptHtmlCss, setDebugChatgptHtmlCss] = useState('');
   const handleDebugChatgptHtmlCss = async () => {
+    if (debugChatgptHtmlCss) { setDebugChatgptHtmlCss(''); return; }
     try {
       const raw = await invoke<string>('debug_chatgpt_translate_html_css');
       try {
@@ -546,6 +567,94 @@ function AppContent({
     } catch (e) {
       console.error('[ChatGPT HTML+CSS debug failed]', e);
       setDebugChatgptHtmlCss('Error: ' + String(e));
+    }
+  };
+  const [debugMessage, setDebugMessage] = useState('');
+  const debugTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showDebugMessage = (msg: string) => {
+    setDebugMessage(msg);
+    if (debugTimerRef.current) clearTimeout(debugTimerRef.current);
+    debugTimerRef.current = setTimeout(() => setDebugMessage(''), 3000);
+  };
+  const handleCopyConsoleLog = async () => {
+    try {
+      const raw = await invoke<string>('get_chatgpt_translate_console_log');
+      const decoded = decodeURIComponent(raw);
+      const result = JSON.parse(decoded);
+      console.log('[ConsoleLogDiagnostic]', result);
+
+      const entries = Array.isArray(result) ? result : result?.entries;
+
+      if (!Array.isArray(entries)) {
+        await writeText(JSON.stringify(result, null, 2));
+        showDebugMessage('コンソールログ診断をコピーしました（ログ配列なし）');
+        return;
+      }
+
+      if (entries.length === 0) {
+        await writeText(JSON.stringify(result, null, 2));
+        showDebugMessage('コンソールログ診断をコピーしました（0件）');
+        return;
+      }
+
+      await writeText(JSON.stringify({
+        diagnostic: {
+          href: result.href,
+          hasWindowProperty: result.hasWindowProperty,
+          windowIsArray: result.windowIsArray,
+          windowLength: result.windowLength,
+          hasSessionStorageValue: result.hasSessionStorageValue,
+          sessionStorageIsArray: result.sessionStorageIsArray,
+          sessionStorageLength: result.sessionStorageLength,
+          sessionStorageError: result.sessionStorageError,
+        },
+        entries,
+      }, null, 2));
+      showDebugMessage(`${entries.length} ${t('status_bar.msg_console_copied') || 'console entries copied'}`);
+    } catch (e) {
+      console.error('[CopyConsoleLog] failed', e);
+      showDebugMessage(t('status_bar.msg_failed') || 'Failed');
+    }
+  };
+  const handleCopyLanguageLog = async () => {
+    try {
+      const raw = await invoke<string>('get_language_debug_log');
+      const decoded = decodeURIComponent(raw);
+      const result = JSON.parse(decoded);
+      console.log('[LanguageLogDiagnostic]', result);
+
+      const entries = Array.isArray(result) ? result : result?.entries;
+
+      if (!Array.isArray(entries)) {
+        await writeText(JSON.stringify(result, null, 2));
+        showDebugMessage('言語ログ診断をコピーしました（ログ配列なし）');
+        return;
+      }
+
+      if (entries.length === 0) {
+        await writeText(JSON.stringify(result, null, 2));
+        showDebugMessage('言語ログ診断をコピーしました（0件）');
+        return;
+      }
+
+      await writeText(JSON.stringify({
+        diagnostic: {
+          href: result.href,
+          readyState: result.readyState,
+          hasWindowProperty: result.hasWindowProperty,
+          windowIsArray: result.windowIsArray,
+          windowLength: result.windowLength,
+          hasSessionStorageValue: result.hasSessionStorageValue,
+          sessionStorageIsArray: result.sessionStorageIsArray,
+          sessionStorageLength: result.sessionStorageLength,
+          sessionStorageError: result.sessionStorageError,
+        },
+        entries,
+      }, null, 2));
+      showDebugMessage(`${entries.length} 件の言語ログをコピーしました`);
+    } catch (e) {
+      console.error('[CopyLanguageLog] failed', e);
+      showDebugMessage(t('status_bar.msg_failed') || 'Failed');
     }
   };
 
@@ -596,7 +705,7 @@ function AppContent({
         ) : activeTab === 'google' ? (
           <GoogleTranslatePanel debugTool={config.general.google_translate_debug_tool} />
         ) : (
-          <ChatGptTranslatePanel />
+          <ChatGptTranslatePanel consoleLogEnabled={config.general.chatgpt_translate_console_log_enabled} />
         )
       ) : (
         <div className="app-content">
@@ -650,8 +759,12 @@ function AppContent({
         onSettings={() => setView('settings')}
         chatgptDebugEnabled={config.general.chatgpt_translate_debug_tool}
         chatgptHtmlCssDebugEnabled={config.general.chatgpt_translate_html_css_debug_tool}
+        chatgptConsoleLogEnabled={config.general.chatgpt_translate_console_log_enabled}
         onDebugChatgptDom={handleChatgptDebugDom}
         onDebugChatgptHtmlCss={handleDebugChatgptHtmlCss}
+        onCopyConsoleLog={handleCopyConsoleLog}
+        onCopyLanguageLog={handleCopyLanguageLog}
+        debugMessage={debugMessage}
         defaultProvider={config?.providers?.find((p: any) => p.is_default)}
       />
       )}

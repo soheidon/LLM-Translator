@@ -190,7 +190,8 @@ LLM Translator Desktop
 │   │   ├── TabBar.tsx
 │   │   └── ToneSelector.tsx
 │   ├── data/
-│   │   └── googleTranslateLanguages.ts
+│   │   ├── googleTranslateLanguages.ts
+│   │   └── chatgptTranslateLanguages.ts
 │   ├── hooks/
 │   │   ├── useSettings.ts
 │   │   └── useTranslationState.ts
@@ -316,6 +317,18 @@ LLM Translator Desktop
 - [x] 页面滚动抑制——`html, body { overflow: hidden }` 消除页面级滚动条
 - [x] 滚动位置重置——布局标记后重置滚动位置，防止翻译表单偏移出屏幕
 - [x] LP 区块隐藏变体支持——解决 `#contentful-header` 与 `[class*="h-mkt-header-height"]` 之间的冲突，安全地仅隐藏 LP 元素
+
+### v0.4.3
+
+- [x] ChatGPT 翻译：47 种语言支持（含中文 3 路拆分、葡萄牙语 2 路拆分）
+- [x] ChatGPT 翻译：双语别名匹配（日语 + 英语语言名称）
+- [x] ChatGPT 翻译：启动时从已保存设置自动应用语言
+- [x] ChatGPT 翻译：设置界面语言选择器扩展至 47 种语言
+- [x] ChatGPT 翻译：控制台日志和语言调试日志（sessionStorage 环形缓冲区，状态栏复制）
+- [x] 剪贴板：从 `navigator.clipboard` 迁移至 Tauri v2 `clipboard-manager` 插件
+- [x] DOM/HTML+CSS 诊断按钮改为切换行为
+- [x] 移除不必要的清空命令
+- [x] 修复 9 个语言 JSON 文件中的双逗号问题
 
 ### v0.5
 - macOS 支持（计划中）

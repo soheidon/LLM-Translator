@@ -35,7 +35,9 @@ Une application de bureau Windows pour la traduction rapide — comme DeepL Desk
 ### Onglet ChatGPT Translate
 
 * **ChatGPT intégré** — Ouvrez l'interface web de ChatGPT dans l'application et envoyez des invites de traduction.
-* **Configuration des langues** — Définissez les langues source et cible depuis l'écran des paramètres.
+* **Support de 47 langues** — Choisissez parmi 47 langues, dont le chinois (simplifié/traditionnel/Hong Kong) et le portugais (Brésil/Portugal). Les noms de langues sont reconnus en japonais et en anglais.
+* **Application automatique des langues** — Les langues source et cible enregistrées sont automatiquement appliquées à la page ChatGPT au lancement.
+* **Journaux de débogage langue / console** — Journaux de diagnostic intégrés pour la sélection de langue et la sortie console, copiables depuis la barre d'état. Activez/Désactivez dans les paramètres.
 * **Masquage des éléments LP** — Activez/Désactivez dans les paramètres. Masquez la navigation marketing et les sections de la page ChatGPT pour vous concentrer sur le formulaire de traduction.
 * **Support DOM multi-variantes** — S'adapte automatiquement aux différentes structures de page ChatGPT (LP marketing vs. variantes app/connexion). Utilise des sélecteurs basés sur l'attribut `data-llm-chatgpt-container` au lieu de `main#main`, préservant le bouton de connexion tout en masquant uniquement les éléments marketing.
 * **Suppression du défilement de page** — Élimine la barre de défilement au niveau de la page qui apparaissait sur la variante A, gardant l'interface de traduction contenue dans la fenêtre.

@@ -190,7 +190,8 @@ Japanese, English, 中文(简体), 中文(繁體), 한국어, Français, Deutsch
 │   │   ├── TabBar.tsx
 │   │   └── ToneSelector.tsx
 │   ├── data/
-│   │   └── googleTranslateLanguages.ts
+│   │   ├── googleTranslateLanguages.ts
+│   │   └── chatgptTranslateLanguages.ts
 │   ├── hooks/
 │   │   ├── useSettings.ts
 │   │   └── useTranslationState.ts
@@ -335,6 +336,18 @@ Japanese, English, 中文(简体), 中文(繁體), 한국어, Français, Deutsch
 - [x] `model_mode` metadata (thinking/normal) tracked in TranslationRequest for future provider-specific API extensions
 - [x] Provider short names in status bar — MiMo, Google, DeepL, OpenAI, Gemini, Claude, etc. displayed compactly
 - [x] Shared `ModelRole` type extracted to `src/types/model.ts`
+
+### v0.4.3
+
+- [x] ChatGPT Translate: 47-language support (including Chinese 3-way split, Portuguese 2-way split)
+- [x] ChatGPT Translate: bilingual alias matching (Japanese + English language names)
+- [x] ChatGPT Translate: automatic language apply on launch from saved settings
+- [x] ChatGPT Translate: settings screen language selector expanded to 47 languages
+- [x] ChatGPT Translate: console log and language debug log (sessionStorage ring buffer, status bar copy)
+- [x] Clipboard: migrated from `navigator.clipboard` to Tauri v2 `clipboard-manager` plugin
+- [x] DOM/HTML+CSS diagnostic buttons changed to toggle behavior
+- [x] Removed unnecessary clear commands
+- [x] Fixed double comma in 9 language JSON files
 
 ### v0.5
 - macOS support (planned)

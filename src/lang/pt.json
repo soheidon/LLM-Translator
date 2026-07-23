@@ -1,5 +1,5 @@
 {
-  "app": { "title": "LLM Translator Desktop", "version": "v0.4.2" },
+  "app": { "title": "LLM Translator Desktop", "version": "v0.4.3" },
   "titlebar": { "settings": "Configurações", "minimize": "Minimizar", "maximize": "Maximizar", "close": "Fechar" },
   "tabs": { "llm": "LLM", "google": "Google Tradutor", "chatgpt": "chatGPT Tradutor" },
   "main": {

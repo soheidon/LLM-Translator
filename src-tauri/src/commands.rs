@@ -677,12 +677,22 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview, hide_lp: bool) -> Result<
         overflow: hidden !important;
       }
 
+      /* Unconstrain ancestor wrappers above outer (Tailwind max-w-* / mx-auto) */
+      [data-llm-chatgpt-width-wrapper="true"] {
+        width: 100% !important;
+        max-width: none !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+      }
+
       /* Outer wrapper: remove Tailwind padding/max-width from parent of container */
       [data-llm-chatgpt-outer="true"] {
         padding: 0 !important;
         margin: 0 !important;
-        max-width: none !important;
-        width: 100% !important;
+        width: min(80vw, 1600px) !important;
+        max-width: min(80vw, 1600px) !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
         min-height: calc(100vh - 44px) !important;
         height: calc(100vh - 44px) !important;
         max-height: calc(100vh - 44px) !important;
@@ -698,8 +708,8 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview, hide_lp: bool) -> Result<
         min-height: calc(100vh - 44px) !important;
         height: calc(100vh - 44px) !important;
         max-height: calc(100vh - 44px) !important;
-        max-width: none !important;
         width: 100% !important;
+        max-width: none !important;
         box-sizing: border-box !important;
         display: flex !important;
         flex-direction: column !important;
@@ -731,6 +741,8 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview, hide_lp: bool) -> Result<
 
 
       [data-llm-chatgpt-form="true"] {
+        width: 100% !important;
+        max-width: none !important;
         flex: 1 1 auto !important;
         min-height: 0 !important;
         display: flex !important;
@@ -873,6 +885,13 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview, hide_lp: bool) -> Result<
       #sidebar-header {
         display: none !important;
       }
+
+      @media (max-width: 1100px) {
+        [data-llm-chatgpt-outer="true"] {
+          width: calc(100vw - 32px) !important;
+          max-width: calc(100vw - 32px) !important;
+        }
+      }
     `;
     document.documentElement.appendChild(style);
   }
@@ -946,21 +965,44 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview, hide_lp: bool) -> Result<
   }
 
   function markLanguageRow() {
-    var comboButtons = Array.from(document.querySelectorAll('button[role="combobox"]'))
-      .filter(function(button) {
-        var text = (button.textContent || '').replace(/\s+/g, ' ').trim();
-        return text.length > 0;
-      });
+    function getLanguageCandidates() {
+      var combos = Array.from(document.querySelectorAll('button[role="combobox"]'))
+        .filter(function(button) {
+          return (button.textContent || '').replace(/\s+/g, ' ').trim().length > 0;
+        });
+      if (combos.length === 2) return combos;
 
-    if (comboButtons.length < 2) return;
+      var root =
+        document.querySelector('[data-llm-chatgpt-form="true"]') ||
+        document.querySelector('[data-llm-chatgpt-container="true"]') ||
+        document;
+      var fallback = Array.from(root.querySelectorAll('button.interactive-button.interactive-button-secondary'))
+        .filter(function(b) {
+          var r = b.getBoundingClientRect();
+          var s = window.getComputedStyle(b);
+          if (!(r.width > 0 && r.height > 0 && s.display !== 'none' && s.visibility !== 'hidden')) return false;
+          var span = b.querySelector('span.truncate');
+          return !!(span && (span.textContent || '').replace(/\s+/g, ' ').trim().length > 0);
+        })
+        .sort(function(a, b) { return a.getBoundingClientRect().left - b.getBoundingClientRect().left; });
+      return fallback;
+    }
 
-    var row = closestCommonAncestor(comboButtons[0], comboButtons[1]);
+    var buttons = getLanguageCandidates();
+    if (buttons.length !== 2) return;
+
+    var row = closestCommonAncestor(buttons[0], buttons[1]);
     if (!row) return;
 
     row.setAttribute('data-llm-chatgpt-language-row', 'true');
   }
 
   function markTranslateLayout() {
+    // Clear stale width-wrapper attributes from previous DOM structure
+    document.querySelectorAll('[data-llm-chatgpt-width-wrapper="true"]').forEach(function(el) {
+      el.removeAttribute('data-llm-chatgpt-width-wrapper');
+    });
+
     var textareas = Array.from(document.querySelectorAll('textarea'));
     if (textareas.length < 2) return;
 
@@ -1000,9 +1042,24 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview, hide_lp: bool) -> Result<
       }
 
       // Mark outer wrapper (parent of container) to remove Tailwind padding/max-width
-      if (container.parentElement &&
-          container.parentElement.getAttribute('data-llm-chatgpt-outer') !== 'true') {
-        container.parentElement.setAttribute('data-llm-chatgpt-outer', 'true');
+      var outer = container.parentElement;
+      if (outer && outer.getAttribute('data-llm-chatgpt-outer') !== 'true') {
+        outer.setAttribute('data-llm-chatgpt-outer', 'true');
+      }
+
+      // Walk up to 3 ancestor levels above outer to unconstrain Tailwind max-w-* / mx-auto
+      if (outer) {
+        var ancestor = outer.parentElement;
+        for (var i = 0; ancestor && i < 3; i += 1) {
+          if (
+            ancestor !== document.body &&
+            ancestor !== document.documentElement &&
+            ancestor.contains(container)
+          ) {
+            ancestor.setAttribute('data-llm-chatgpt-width-wrapper', 'true');
+          }
+          ancestor = ancestor.parentElement;
+        }
       }
     }
 
@@ -1244,7 +1301,7 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview, hide_lp: bool) -> Result<
       // 3b. Hide LP/marketing sections (scroll-mt-mkt-header-height container)
       function hasTranslationUi(el) {
         return !!el.querySelector(
-          'textarea, input, [contenteditable="true"], [role="combobox"], button[role="combobox"]'
+          'textarea, input, [contenteditable="true"], [role="combobox"], button[role="combobox"], button.interactive-button.interactive-button-secondary'
         );
       }
 
@@ -1350,6 +1407,7 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview, hide_lp: bool) -> Result<
       markLoginHeader();
       markLoginBlock();
       markTranslateLayout();
+      markLanguageRow();
 
       // Reset scroll position after layout markers and CSS-dependent changes
       try {
@@ -1361,6 +1419,7 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview, hide_lp: bool) -> Result<
       setTimeout(function() {
         try {
           markTranslateLayout();
+          markLanguageRow();
           window.scrollTo(0, 0);
           document.documentElement.scrollTop = 0;
           document.body.scrollTop = 0;
@@ -1433,7 +1492,6 @@ pub async fn open_chatgpt_translate(app: tauri::AppHandle, url: String, x: f64, 
     let label = CHATGPT_TRANSLATE_LABEL;
     let parsed_url: Url = url.parse().map_err(|e| format!("invalid url: {}", e))?;
     if let Some(w) = app.get_webview(label) {
-        let _ = w.navigate(parsed_url);
         let _ = w.set_position(Position::Logical(tauri::LogicalPosition { x, y }));
         let _ = w.set_size(Size::Logical(tauri::LogicalSize { width, height }));
         let _ = w.show();
@@ -1452,6 +1510,7 @@ pub async fn open_chatgpt_translate(app: tauri::AppHandle, url: String, x: f64, 
         .transparent(true)
         .auto_resize()
         .data_directory(data_dir);
+
 
     main_window
         .add_child(
@@ -1715,6 +1774,157 @@ pub async fn debug_chatgpt_translate_html_css(app: tauri::AppHandle) -> Result<S
 }
 
 #[tauri::command]
+pub async fn set_chatgpt_console_log_enabled(app: tauri::AppHandle, enabled: bool) -> Result<(), String> {
+    use tauri::Manager;
+    let w = app.get_webview(CHATGPT_TRANSLATE_LABEL).ok_or("webview not found")?;
+    let flag = if enabled { "true" } else { "false" };
+    let js = format!(r#"(function(){{
+  window.__llmChatgptConsoleLogEnabled = {flag};
+  if (window.__llmChatgptConsolePatched) return;
+  window.__llmChatgptConsolePatched = true;
+  var CONSOLE_LOG_KEY = '__llmChatgptConsoleLog';
+  function readConsoleLogs() {{
+    try {{ var raw = sessionStorage.getItem(CONSOLE_LOG_KEY); var parsed = raw ? JSON.parse(raw) : []; return Array.isArray(parsed) ? parsed : []; }}
+    catch(e) {{ return []; }}
+  }}
+  function writeConsoleLogs(entries) {{
+    try {{ sessionStorage.setItem(CONSOLE_LOG_KEY, JSON.stringify(entries)); }} catch(e) {{}}
+    window.__llmChatgptConsoleLog = entries;
+  }}
+  window.__llmChatgptConsoleLog = readConsoleLogs();
+  function safeSerialize(v) {{
+    if (v === null || v === undefined) return v;
+    if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') return v;
+    if (v instanceof Error) return {{ name: v.name, message: v.message, stack: v.stack }};
+    if (typeof v === 'function') return '[Function]';
+    if (v instanceof HTMLElement) return '<' + v.tagName.toLowerCase() + '>';
+    try {{ return JSON.parse(JSON.stringify(v)); }}
+    catch(e) {{ return '[Unserializable: ' + e.message + ']'; }}
+  }}
+  function appendConsoleEntry(entry) {{
+    if (!window.__llmChatgptConsoleLogEnabled) return;
+    var log = readConsoleLogs();
+    log.push(entry);
+    if (log.length > 500) log.splice(0, log.length - 500);
+    writeConsoleLogs(log);
+  }}
+  ['log','warn','error','info','debug'].forEach(function(level) {{
+    var orig = console[level].bind(console);
+    console[level] = function() {{
+      var args = Array.prototype.slice.call(arguments);
+      appendConsoleEntry({{ ts: new Date().toISOString(), level: level, source: 'console', args: args.map(safeSerialize) }});
+      orig.apply(console, args);
+    }};
+  }});
+  window.addEventListener('error', function(ev) {{
+    appendConsoleEntry({{ ts: new Date().toISOString(), level: 'error', source: 'window.onerror', args: [ev.message, ev.filename, ev.lineno, ev.colno, ev.error ? ev.error.stack : ''] }});
+  }});
+  window.addEventListener('unhandledrejection', function(ev) {{
+    var reason = ev.reason;
+    appendConsoleEntry({{ ts: new Date().toISOString(), level: 'error', source: 'unhandledrejection', args: [reason instanceof Error ? {{ name: reason.name, message: reason.message, stack: reason.stack }} : safeSerialize(reason)] }});
+  }});
+}})()"#);
+    w.eval(&js).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn get_chatgpt_translate_console_log(app: tauri::AppHandle) -> Result<String, String> {
+    use tauri::Manager;
+    let w = app.get_webview(CHATGPT_TRANSLATE_LABEL).ok_or("webview not found")?;
+    let js = r#"(function(){
+  if (location.hash.startsWith('#__llm_consolelog=')) {
+    history.replaceState(null, '', location.pathname + location.search);
+  }
+  var windowValue = window.__llmChatgptConsoleLog;
+  var storageRaw = null;
+  var storageParsed = null;
+  var storageError = null;
+  try {
+    storageRaw = sessionStorage.getItem('__llmChatgptConsoleLog');
+    storageParsed = storageRaw ? JSON.parse(storageRaw) : null;
+  } catch (e) { storageError = String(e); }
+  var result = {
+    href: location.href,
+    hasWindowProperty: Object.prototype.hasOwnProperty.call(window, '__llmChatgptConsoleLog'),
+    windowValueType: typeof windowValue,
+    windowIsArray: Array.isArray(windowValue),
+    windowLength: Array.isArray(windowValue) ? windowValue.length : null,
+    hasSessionStorageValue: storageRaw !== null,
+    sessionStorageRawLength: storageRaw ? storageRaw.length : 0,
+    sessionStorageIsArray: Array.isArray(storageParsed),
+    sessionStorageLength: Array.isArray(storageParsed) ? storageParsed.length : null,
+    sessionStorageError: storageError,
+    entries: Array.isArray(storageParsed) ? storageParsed : Array.isArray(windowValue) ? windowValue : null
+  };
+  location.hash = '__llm_consolelog=' + encodeURIComponent(JSON.stringify(result));
+})()"#;
+    w.eval(js).map_err(|e| format!("eval failed: {e}"))?;
+    for i in 0..15 {
+        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+        let url = w.url().map_err(|e| e.to_string())?;
+        if let Some(frag) = url.fragment() {
+            if let Some(data) = frag.strip_prefix("__llm_consolelog=") {
+                let _ = w.eval("if(location.hash.startsWith('#__llm_consolelog=')){history.replaceState(null,'',location.pathname+location.search);}");
+                return Ok(data.to_string());
+            }
+        }
+        if i == 14 {
+            return Err("timeout waiting for console log from ChatGPT webview".into());
+        }
+    }
+    Err("unexpected".into())
+}
+
+#[tauri::command]
+pub async fn get_language_debug_log(app: tauri::AppHandle) -> Result<String, String> {
+    use tauri::Manager;
+    let w = app.get_webview(CHATGPT_TRANSLATE_LABEL).ok_or("webview not found")?;
+    let js = r#"(function(){
+  if (location.hash.startsWith('#__llm_langlog=')) {
+    history.replaceState(null, '', location.pathname + location.search);
+  }
+  var windowValue = window.__llmChatgptLanguageDebugLog;
+  var storageRaw = null;
+  var storageParsed = null;
+  var storageError = null;
+  try {
+    storageRaw = sessionStorage.getItem('__llmChatgptLanguageDebugLog');
+    storageParsed = storageRaw ? JSON.parse(storageRaw) : null;
+  } catch (e) { storageError = String(e); }
+  var result = {
+    href: location.href,
+    readyState: document.readyState,
+    hasWindowProperty: Object.prototype.hasOwnProperty.call(window, '__llmChatgptLanguageDebugLog'),
+    windowValueType: typeof windowValue,
+    windowIsArray: Array.isArray(windowValue),
+    windowLength: Array.isArray(windowValue) ? windowValue.length : null,
+    hasSessionStorageValue: storageRaw !== null,
+    sessionStorageRawLength: storageRaw ? storageRaw.length : 0,
+    sessionStorageIsArray: Array.isArray(storageParsed),
+    sessionStorageLength: Array.isArray(storageParsed) ? storageParsed.length : null,
+    sessionStorageError: storageError,
+    entries: Array.isArray(storageParsed) ? storageParsed : Array.isArray(windowValue) ? windowValue : null
+  };
+  location.hash = '__llm_langlog=' + encodeURIComponent(JSON.stringify(result));
+})()"#;
+    w.eval(js).map_err(|e| format!("eval failed: {e}"))?;
+    for i in 0..15 {
+        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+        let url = w.url().map_err(|e| e.to_string())?;
+        if let Some(frag) = url.fragment() {
+            if let Some(data) = frag.strip_prefix("__llm_langlog=") {
+                let _ = w.eval("if(location.hash.startsWith('#__llm_langlog=')){history.replaceState(null,'',location.pathname+location.search);}");
+                return Ok(data.to_string());
+            }
+        }
+        if i == 14 {
+            return Err("timeout waiting for language debug log from ChatGPT webview".into());
+        }
+    }
+    Err("unexpected".into())
+}
+
+#[tauri::command]
 pub async fn set_chatgpt_translate_text(app: tauri::AppHandle, text: String) -> Result<(), String> {
     use tauri::Manager;
     println!("[Ctrl+C+C] set_chatgpt_translate_text, len={}", text.len());
@@ -1725,13 +1935,32 @@ pub async fn set_chatgpt_translate_text(app: tauri::AppHandle, text: String) -> 
 }
 
 #[tauri::command]
-pub async fn set_chatgpt_translate_languages(app: tauri::AppHandle, source_label: String, target_label: String) -> Result<(), String> {
+pub async fn set_chatgpt_translate_languages(
+    app: tauri::AppHandle,
+    source_label: String,
+    target_label: String,
+    source_label_en: String,
+    target_label_en: String,
+) -> Result<(), String> {
+    eprintln!("[set_chatgpt_translate_languages] source={} / {} target={} / {}", source_label, source_label_en, target_label, target_label_en);
     use tauri::Manager;
     let w = app.get_webview(CHATGPT_TRANSLATE_LABEL).ok_or("webview not found")?;
+    eprintln!("[set_chatgpt_translate_languages] webview found label={}", CHATGPT_TRANSLATE_LABEL);
     let sl = serde_json::to_string(&source_label).map_err(|e| e.to_string())?;
     let tl = serde_json::to_string(&target_label).map_err(|e| e.to_string())?;
-    let js = format!(r#"(function(){{var sl={sl};var tl={tl};function n(s){{return(s||'').replace(/\s+/g,' ').trim();}}function getSourceButton(){{return Array.from(document.querySelectorAll('button[aria-label]')).find(function(b){{var a=b.getAttribute('aria-label')||'';return a.includes('翻訳元の言語')||a.includes('Source language');}});}}function getTargetButton(){{return Array.from(document.querySelectorAll('button[aria-label]')).find(function(b){{var a=b.getAttribute('aria-label')||'';return a.includes('翻訳先の言語')||a.includes('Target language');}});}}function findOption(label){{var options=Array.from(document.querySelectorAll('button[role="option"],[role="option"],[role="menuitem"]'));return options.find(function(el){{return n(el.textContent||el.innerText)===label;}});}}function selectLanguage(button,label){{if(!button)return false;var current=n(button.textContent||button.innerText);var aria=button.getAttribute('aria-label')||'';if(current===label||aria.includes(label))return true;button.click();setTimeout(function(){{var option=findOption(label);if(option)option.click();}},250);return false;}}function applyLanguages(){{var sourceButton=getSourceButton();var targetButton=getTargetButton();if(!sourceButton||!targetButton)return false;var sourceOk=selectLanguage(sourceButton,sl);var targetOk=selectLanguage(targetButton,tl);return sourceOk&&targetOk;}}if(applyLanguages())return;var c=0;var m=40;var iv=setInterval(function(){{c++;var sb=getSourceButton();var tb=getTargetButton();var sOk=sb&&(n(sb.textContent||sb.innerText)===(sl)||((sb.getAttribute('aria-label')||'').includes(sl)));var tOk=tb&&(n(tb.textContent||tb.innerText)===(tl)||((tb.getAttribute('aria-label')||'').includes(tl)));if(sOk&&tOk){{clearInterval(iv);return;}}applyLanguages();if(c>=m){{clearInterval(iv);}}}},250);}})();"#);
-    w.eval(&js).map_err(|e| e.to_string())
+    let sle = serde_json::to_string(&source_label_en).map_err(|e| e.to_string())?;
+    let tle = serde_json::to_string(&target_label_en).map_err(|e| e.to_string())?;
+    let js = format!(r#"(function(){{var sl={sl};var tl={tl};var slEn={sle};var tlEn={tle};var sourceAliases=[sl,slEn].filter(Boolean);var targetAliases=[tl,tlEn].filter(Boolean);var desiredKey=JSON.stringify([sl,tl]);var controller=window.__llmChatgptLanguageController||{{runId:0,desiredKey:null,active:false}};window.__llmChatgptLanguageController=controller;controller.runId+=1;controller.desiredKey=desiredKey;controller.active=true;var runId=controller.runId;function isCurrentRun(){{return controller.active&&controller.runId===runId&&controller.desiredKey===desiredKey;}}function finishCurrentRun(){{if(isCurrentRun())controller.active=false;}}var pendingSelection=null;var LANG_LOG_KEY='__llmChatgptLanguageDebugLog';var MAX_LOGS=500;function readLangLogs(){{try{{var raw=sessionStorage.getItem(LANG_LOG_KEY);if(!raw)return[];var parsed=JSON.parse(raw);return Array.isArray(parsed)?parsed:[];}}catch(e){{return[];}}}}function writeLangLogs(entries){{try{{var str=JSON.stringify(entries);sessionStorage.setItem(LANG_LOG_KEY,str);}}catch(e){{}}window.__llmChatgptLanguageDebugLog=entries;}}function dbg(event,data){{try{{var entries=readLangLogs();var nowStr='';try{{nowStr=new Date().toISOString();}}catch(dtErr){{nowStr='date-error';}}var common={{runId:runId,cRunId:controller.runId,cActive:controller.active,desiredKey:desiredKey,pending:pendingSelection,href:location.href,readyState:document.readyState}};entries.push(Object.assign({{ts:nowStr,event:event}},common,data||{{}}));if(entries.length>MAX_LOGS)entries.splice(0,entries.length-MAX_LOGS);writeLangLogs(entries);if(window.__llmChatgptConsoleLogEnabled){{console.log('[LangDbg]',event,data||{{}});}}}}catch(dbgErr){{try{{console.error('[LangDbg] dbg error:',dbgErr);}}catch(e2){{}}}}}}function n(s){{return(s||'').replace(/\s+/g,' ').trim();}}function isVisible(el){{if(!el)return false;var r=el.getBoundingClientRect();var s=window.getComputedStyle(el);return r.width>0&&r.height>0&&s.display!=='none'&&s.visibility!=='hidden';}}function getOptionSnapshot(reason){{var allOpts=Array.from(document.querySelectorAll('[role="option"],[role="menuitem"]'));var opts=allOpts.filter(isVisible).map(function(el){{var r=el.getBoundingClientRect();return{{text:n(el.textContent||el.innerText).slice(0,80),aria:n(el.getAttribute('aria-label')||'').slice(0,80),role:el.getAttribute('role')||'',id:(el.id||'').slice(0,60),rect:{{x:Math.round(r.x),y:Math.round(r.y),w:Math.round(r.width),h:Math.round(r.height)}},vis:isVisible(el),disabled:el.disabled||false,parentRole:el.parentElement?el.parentElement.getAttribute('role')||'':'',parentText:el.parentElement?n(el.parentElement.textContent||'').slice(0,60):''}};}});var menu=getVisibleLanguageMenu();var menuInfo=null;if(menu){{var mr=menu.getBoundingClientRect();menuInfo={{tag:menu.tagName,role:menu.getAttribute('role')||'',cls:(typeof menu.className==='string'?menu.className:'').slice(0,120),rect:{{x:Math.round(mr.x),y:Math.round(mr.y),w:Math.round(mr.width),h:Math.round(mr.height)}},vis:isVisible(menu),childCount:menu.childElementCount,totalRoleOpts:allOpts.length,visRoleOpts:opts.length}};}}dbg('optionSnapshot',{{reason:reason,menu:menuInfo,optCount:opts.length,opts:opts.slice(0,30)}});}}function getSnapshotSignature(){{return Array.from(document.querySelectorAll('[role="option"],[role="menuitem"]')).filter(isVisible).map(function(el){{return n(el.textContent||el.innerText)+'|'+n(el.getAttribute('aria-label')||'')+'|'+(el.id||'')+'|'+(isVisible(el)?'1':'0');}}).join('||');}}var lastSnapshotSig='';function snapshotIfNeeded(reason,attemptNum,total){{if(attemptNum===0||attemptNum===10||attemptNum>=total-1){{getOptionSnapshot(reason);lastSnapshotSig=getSnapshotSignature();return;}}var sig=getSnapshotSignature();if(sig!==lastSnapshotSig){{getOptionSnapshot(reason+'(changed)');lastSnapshotSig=sig;}}}}function getSourceButtonByAria(){{return Array.from(document.querySelectorAll('button[aria-label]')).find(function(b){{var a=b.getAttribute('aria-label')||'';return a.includes("翻訳元の言語")||a.includes("Source language");}});}}function getTargetButtonByAria(){{return Array.from(document.querySelectorAll('button[aria-label]')).find(function(b){{var a=b.getAttribute('aria-label')||'';return a.includes("翻訳先の言語")||a.includes("Target language");}});}}function getFallbackLanguageButtons(){{var root=document.querySelector('[data-llm-chatgpt-form="true"]')||document.querySelector('[data-llm-chatgpt-container="true"]')||document;return Array.from(root.querySelectorAll('button.interactive-button.interactive-button-secondary')).filter(function(b){{if(!isVisible(b))return false;var span=b.querySelector('span.truncate');if(!span)return false;return n(span.textContent||span.innerText).length>0;}}).sort(function(a,b){{return a.getBoundingClientRect().left-b.getBoundingClientRect().left;}});}}function getLanguageButtons(){{var srcAria=getSourceButtonByAria();var tgtAria=getTargetButtonByAria();if(srcAria&&tgtAria)return{{source:srcAria,target:tgtAria}};var fallback=getFallbackLanguageButtons();if(fallback.length!==2)return{{source:null,target:null}};return{{source:fallback[0],target:fallback[1]}};}}function getButtonLanguageText(button){{if(!button)return"";var span=button.querySelector('span.truncate');return n((span&&(span.textContent||span.innerText))||button.textContent||button.innerText);}}function getVisibleLanguageMenu(){{return Array.from(document.querySelectorAll('[role="dialog"],[role="listbox"]')).find(function(menu){{if(!isVisible(menu))return false;var searchInput=menu.querySelector('input[placeholder*="言語"],input[type="search"]');var hasLanguageOptions=Array.from(menu.querySelectorAll('button,[role="option"],[role="menuitem"]')).some(function(el){{var text=(el.textContent||'').trim();return text==="日本語"||text==="英語"||text==="イタリア語"||text==="フランス語";}});return !!(searchInput||hasLanguageOptions);}})||null;}}function isLanguageMenuOpenForButton(button){{if(!button)return false;if(button.getAttribute("aria-expanded")==="true")return true;var controls=button.getAttribute("aria-controls");if(controls){{var controlled=document.getElementById(controls);if(controlled&&isVisible(controlled))return true;}}return getVisibleLanguageMenu()!==null;}}function findOption(aliases){{var normalizedAliases=aliases.filter(Boolean).map(n);return Array.from(document.querySelectorAll('[role="option"],[role="menuitem"]')).filter(isVisible).find(function(el){{var text=n(el.textContent||el.innerText);var aria=n(el.getAttribute('aria-label')||'');return normalizedAliases.indexOf(text)!==-1||normalizedAliases.indexOf(aria)!==-1;}})||null;}}function waitForLanguageApplied(role,aliases,attempts){{if(!isCurrentRun())return;var buttons=getLanguageButtons();var button=role==="source"?buttons.source:buttons.target;var current=getButtonLanguageText(button);var normalizedAliases=aliases.filter(Boolean).map(n);if(normalizedAliases.indexOf(current)!==-1){{dbg('waitForLanguageApplied.matched',{{kind:role,current:current}});pendingSelection=null;return;}}if(attempts<=0){{dbg('waitForLanguageApplied.timeout',{{kind:role,current:current}});if(isCurrentRun())pendingSelection=null;return;}}setTimeout(function(){{if(!isCurrentRun())return;waitForLanguageApplied(role,aliases,attempts-1);}},100);}}function clickOptionWithRetry(kind,aliases,attempts){{dbg('clickOptionWithRetry.entry',{{kind:kind,aliases:aliases,attempts:attempts}});function attempt(remaining){{if(!isCurrentRun())return;var attemptNum=attempts-remaining;snapshotIfNeeded('attempt',attemptNum,attempts);var option=findOption(aliases);if(option){{if(!isCurrentRun())return;var elText=n(option.textContent||option.innerText);dbg('findOption.hit',{{kind:kind,text:elText}});option.click();dbg('option.click',{{kind:kind,text:elText}});waitForLanguageApplied(kind,aliases,20);return;}}dbg('findOption.miss',{{kind:kind,remaining:remaining,attemptNum:attemptNum}});if(remaining<=0){{dbg('clickOptionWithRetry.exhausted',{{kind:kind}});if(isCurrentRun())pendingSelection=null;return;}}setTimeout(function(){{if(!isCurrentRun())return;attempt(remaining-1);}},100);}}attempt(attempts);}}function selectLanguage(kind,button,aliases){{if(!button)return"missing";var current=getButtonLanguageText(button);dbg('selectLanguage.entry',{{kind:kind,current:current,aliases:aliases,menuOpen:isLanguageMenuOpenForButton(button)}});var normalizedAliases=aliases.filter(Boolean).map(n);if(normalizedAliases.indexOf(current)!==-1){{if(pendingSelection===kind&&isCurrentRun())pendingSelection=null;return"matched";}}if(pendingSelection!==null&&isCurrentRun())return"pending";if(!isCurrentRun())return"stale";pendingSelection=kind;dbg('selectLanguage.beforeClick',{{kind:kind,menuOpen:isLanguageMenuOpenForButton(button),ariaExpanded:button.getAttribute('aria-expanded'),ariaControls:button.getAttribute('aria-controls')||'',activeEl:document.activeElement?document.activeElement.tagName:''}});if(!isLanguageMenuOpenForButton(button)){{button.click();}}setTimeout(function(){{if(!isCurrentRun())return;var menuOpen=isLanguageMenuOpenForButton(button);dbg('selectLanguage.afterClick100ms',{{kind:kind,menuOpen:menuOpen,ariaExpanded:button.getAttribute('aria-expanded')}});if(menuOpen){{getOptionSnapshot('afterClick100ms');}}}},100);setTimeout(function(){{if(!isCurrentRun())return;var menuOpen=isLanguageMenuOpenForButton(button);dbg('selectLanguage.afterClick300ms',{{kind:kind,menuOpen:menuOpen,ariaExpanded:button.getAttribute('aria-expanded')}});}},300);setTimeout(function(){{if(!isCurrentRun())return;clickOptionWithRetry(kind,aliases,20);}},150);return"pending";}}function applyLanguages(){{dbg('applyLanguages.entry',{{sourceLabel:sl,sourceLabelEn:slEn,targetLabel:tl,targetLabelEn:tlEn,sourceAliases:sourceAliases,targetAliases:targetAliases}});var buttons=getLanguageButtons();dbg('applyLanguages.buttons',{{hasSource:!!buttons.source,hasTarget:!!buttons.target}});if(!buttons.source||!buttons.target){{dbg('earlyReturn',{{from:'applyLanguages',reason:'missingButtons',hasSource:!!buttons.source,hasTarget:!!buttons.target}});return"missing";}}dbg('beforeSelectSource',{{sourceAliases:sourceAliases}});var sourceState=selectLanguage("source",buttons.source,sourceAliases);dbg('afterSelectSourceCall',{{state:sourceState}});if(sourceState!=="matched"){{dbg('earlyReturn',{{from:'applyLanguages',reason:'sourceNotMatched',state:sourceState}});return sourceState;}}dbg('beforeSelectTarget',{{targetAliases:targetAliases}});var targetState=selectLanguage("target",buttons.target,targetAliases);dbg('afterSelectTargetCall',{{state:targetState}});if(targetState!=="matched"){{dbg('earlyReturn',{{from:'applyLanguages',reason:'targetNotMatched',state:targetState}});return targetState;}}return"matched";}}dbg('start',{{sourceAliases:sourceAliases,targetAliases:targetAliases}});try{{dbg('afterStart');dbg('beforeApplyLanguages',{{runId:runId,desiredKey:desiredKey}});var state=applyLanguages();dbg('applyLanguages.result',{{state:state}});if(state==="matched"){{dbg('finishCurrentRun',{{reason:'initialMatch'}});finishCurrentRun();return;}}dbg('beforeInterval',{{state:state}});var count=0;var maxAttempts=40;var interval=setInterval(function(){{if(!isCurrentRun()){{clearInterval(interval);return;}}count+=1;var newState=applyLanguages();dbg('interval.poll',{{count:count,state:newState}});if(newState==="matched"){{clearInterval(interval);dbg('finishCurrentRun',{{reason:'pollMatch'}});finishCurrentRun();return;}}if(count>=maxAttempts){{clearInterval(interval);dbg('interval.exhausted',{{count:count}});dbg('finishCurrentRun',{{reason:'maxAttempts'}});finishCurrentRun();}}}},250);dbg('afterInterval',{{intervalSet:true}});}}catch(e){{dbg('fatalError',{{msg:String(e),stack:e&&e.stack?String(e.stack).slice(0,500):'no-stack'}});try{{finishCurrentRun();}}catch(e2){{}}}}}})();"#);
+    match w.eval(&js) {
+        Ok(_) => {
+            eprintln!("[set_chatgpt_translate_languages] eval injected successfully");
+            Ok(())
+        }
+        Err(e) => {
+            eprintln!("[set_chatgpt_translate_languages] eval failed: {}", e);
+            Err(format!("eval failed: {e}"))
+        }
+    }
 }
 
 #[derive(serde::Serialize, Clone)]

@@ -35,7 +35,9 @@ Una aplicación de escritorio para Windows para traducción rápida — al igual
 ### Pestaña ChatGPT Translate
 
 * **ChatGPT integrado** — Abre la interfaz web de ChatGPT dentro de la aplicación y envía instrucciones de traducción.
-* **Configuración de idiomas** — Configura los idiomas de origen y destino desde la pantalla de ajustes.
+* **Soporte para 47 idiomas** — Elige entre 47 idiomas, incluyendo chino (simplificado/tradicional/Hong Kong) y portugués (Brasil/Portugal). Los nombres de idiomas se reconocen tanto en japonés como en inglés.
+* **Aplicación automática de idiomas** — Los idiomas de origen y destino guardados se aplican automáticamente a la página de ChatGPT al iniciar.
+* **Registros de depuración de idioma / consola** — Registros de diagnóstico integrados para la selección de idioma y la salida de consola, copiables desde la barra de estado. Activar/desactivar en ajustes.
 * **Ocultación de elementos LP** — Activar/desactivar en ajustes. Oculta la navegación de marketing y las secciones de la página de ChatGPT para que puedas concentrarte en el formulario de traducción.
 * **Soporte DOM multi-variante** — Se adapta automáticamente a diferentes estructuras de página de ChatGPT (LP de marketing vs. variantes de app/inicio de sesión). Utiliza selectores basados en el atributo `data-llm-chatgpt-container` en lugar de `main#main`, preservando el botón de inicio de sesión mientras oculta solo los elementos de marketing.
 * **Supresión de desplazamiento de página** — Elimina la barra de desplazamiento a nivel de página que aparecía en la variante A, manteniendo la interfaz de traducción contenida dentro de la ventana.

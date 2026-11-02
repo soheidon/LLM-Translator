@@ -1179,7 +1179,12 @@ function ChatGptTranslateSettings({ config, onUpdateGeneral }: { config: AppConf
     const sourceLabelEn = srcLangObj?.nameEn || 'Detect language';
     const targetLabel = tgtLangObj?.nameJa || '日本語';
     const targetLabelEn = tgtLangObj?.nameEn || 'Japanese';
-    invoke('set_chatgpt_translate_languages', { sourceLabel, targetLabel, sourceLabelEn, targetLabelEn }).catch(() => {});
+    invoke('set_chatgpt_translate_languages', { sourceCode, targetCode, sourceLabel, targetLabel, sourceLabelEn, targetLabelEn })
+      .catch(error => {
+        if (!String(error).includes('webview not found')) {
+          console.error('[ChatGPT language settings] apply failed', error);
+        }
+      });
   }
 
   return (

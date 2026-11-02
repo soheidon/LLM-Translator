@@ -474,7 +474,7 @@ function ChatGptTranslatePanel({ consoleLogEnabled }: { consoleLogEnabled?: bool
     invoke('open_chatgpt_translate', { url: CHATGPT_TRANSLATE_URL, ...rect })
       .then(() => {
         console.log('[ChatGPT Lang Invoke]', { sourceCode, targetCode, sourceLabel, targetLabel, sourceLabelEn, targetLabelEn, timestamp: new Date().toISOString() });
-        return invoke('set_chatgpt_translate_languages', { sourceLabel, targetLabel, sourceLabelEn, targetLabelEn });
+        return invoke('set_chatgpt_translate_languages', { sourceCode, targetCode, sourceLabel, targetLabel, sourceLabelEn, targetLabelEn });
       })
       .then(() => {
         console.log('[ChatGPT Lang Invoke] success');
@@ -617,29 +617,40 @@ function AppContent({
     }
   };
   const handleCopyLanguageLog = async () => {
+    let stage = 'invoke';
     try {
       const raw = await invoke<string>('get_language_debug_log');
+      stage = 'decode';
       const decoded = decodeURIComponent(raw);
+      stage = 'parse';
       const result = JSON.parse(decoded);
       console.log('[LanguageLogDiagnostic]', result);
 
       const entries = Array.isArray(result) ? result : result?.entries;
 
       if (!Array.isArray(entries)) {
+        stage = 'clipboard';
         await writeText(JSON.stringify(result, null, 2));
         showDebugMessage('言語ログ診断をコピーしました（ログ配列なし）');
         return;
       }
 
       if (entries.length === 0) {
+        stage = 'clipboard';
         await writeText(JSON.stringify(result, null, 2));
         showDebugMessage('言語ログ診断をコピーしました（0件）');
         return;
       }
 
+      const mayBeTruncated = result.mayBeTruncated ?? entries.length >= 500;
+      stage = 'clipboard';
       await writeText(JSON.stringify({
         diagnostic: {
+          requestId: result.requestId,
           href: result.href,
+          entryCount: result.entryCount ?? entries.length,
+          maxEntries: result.maxEntries ?? 500,
+          mayBeTruncated,
           readyState: result.readyState,
           hasWindowProperty: result.hasWindowProperty,
           windowIsArray: result.windowIsArray,
@@ -651,10 +662,11 @@ function AppContent({
         },
         entries,
       }, null, 2));
-      showDebugMessage(`${entries.length} 件の言語ログをコピーしました`);
+      const truncationNotice = mayBeTruncated ? '（上限到達の可能性あり）' : '';
+      showDebugMessage(`${entries.length} 件の言語ログをコピーしました${truncationNotice}`);
     } catch (e) {
-      console.error('[CopyLanguageLog] failed', e);
-      showDebugMessage(t('status_bar.msg_failed') || 'Failed');
+      console.error('[CopyLanguageLog] failed', { stage, error: e });
+      showDebugMessage(`言語ログコピー失敗 (${stage})`);
     }
   };
 

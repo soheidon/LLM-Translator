@@ -5,6 +5,8 @@ use crate::translator;
 use std::sync::Mutex;
 use tauri::{Manager, State};
 
+static CHATGPT_LANGUAGE_BRIDGE_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+
 pub struct AppState {
     pub config: Mutex<AppConfig>,
 }
@@ -1834,21 +1836,50 @@ pub async fn get_chatgpt_translate_console_log(app: tauri::AppHandle) -> Result<
 #[tauri::command]
 pub async fn get_language_debug_log(app: tauri::AppHandle) -> Result<String, String> {
     use tauri::Manager;
-    let w = app.get_webview(CHATGPT_TRANSLATE_LABEL).ok_or("webview not found")?;
-    let js = r#"(function(){
-  if (location.hash.startsWith('#__llm_langlog=')) {
-    history.replaceState(null, '', location.pathname + location.search);
-  }
-  var windowValue = window.__llmChatgptLanguageDebugLog;
-  var storageRaw = null;
-  var storageParsed = null;
-  var storageError = null;
+
+    let _bridge_guard = CHATGPT_LANGUAGE_BRIDGE_LOCK.lock().await;
+    let webview = app.get_webview(CHATGPT_TRANSLATE_LABEL).ok_or("webview not found")?;
+    let request_id = uuid::Uuid::new_v4().simple().to_string();
+    let request_id_json = serde_json::to_string(&request_id).map_err(|error| error.to_string())?;
+    let script_template = r#"(function() {
+  const requestId = __REQUEST_ID__;
+  const previousBridge = window.__llmChatgptLangBridge;
+  const originalHash = previousBridge && location.hash === previousBridge.resultHash
+    ? previousBridge.originalHash
+    : location.hash;
+  const windowValue = window.__llmChatgptLanguageDebugLog;
+  let storageRaw = null;
+  let storageParsed = null;
+  let storageError = null;
   try {
     storageRaw = sessionStorage.getItem('__llmChatgptLanguageDebugLog');
     storageParsed = storageRaw ? JSON.parse(storageRaw) : null;
-  } catch (e) { storageError = String(e); }
-  var result = {
-    href: location.href,
+  } catch (error) {
+    storageError = String(error);
+  }
+  const sourceEntries = Array.isArray(storageParsed)
+    ? storageParsed
+    : Array.isArray(windowValue) ? windowValue : null;
+  function safeHref(value) {
+    try {
+      const parsed = new URL(value, location.href);
+      return parsed.origin + parsed.pathname;
+    } catch (_) {
+      return location.origin + location.pathname;
+    }
+  }
+  const entries = Array.isArray(sourceEntries) ? sourceEntries.map(function(entry) {
+    if (!entry || typeof entry !== 'object') return entry;
+    const sanitized = Object.assign({}, entry);
+    if (typeof sanitized.href === 'string') sanitized.href = safeHref(sanitized.href);
+    return sanitized;
+  }) : sourceEntries;
+  const result = {
+    requestId,
+    href: location.origin + location.pathname,
+    entryCount: Array.isArray(entries) ? entries.length : null,
+    maxEntries: 500,
+    mayBeTruncated: Array.isArray(entries) && entries.length >= 500,
     readyState: document.readyState,
     hasWindowProperty: Object.prototype.hasOwnProperty.call(window, '__llmChatgptLanguageDebugLog'),
     windowValueType: typeof windowValue,
@@ -1859,27 +1890,38 @@ pub async fn get_language_debug_log(app: tauri::AppHandle) -> Result<String, Str
     sessionStorageIsArray: Array.isArray(storageParsed),
     sessionStorageLength: Array.isArray(storageParsed) ? storageParsed.length : null,
     sessionStorageError: storageError,
-    entries: Array.isArray(storageParsed) ? storageParsed : Array.isArray(windowValue) ? windowValue : null
+    entries
   };
-  location.hash = '__llm_langlog=' + encodeURIComponent(JSON.stringify(result));
+  const resultHash = '#__llm_langlog=' + requestId + '=' + encodeURIComponent(JSON.stringify(result));
+  window.__llmChatgptLangBridge = { requestId, kind: 'language-log', originalHash, resultHash };
+  location.hash = resultHash;
 })()"#;
-    w.eval(js).map_err(|e| format!("eval failed: {e}"))?;
-    for i in 0..15 {
-        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
-        let url = w.url().map_err(|e| e.to_string())?;
-        if let Some(frag) = url.fragment() {
-            if let Some(data) = frag.strip_prefix("__llm_langlog=") {
-                let _ = w.eval("if(location.hash.startsWith('#__llm_langlog=')){history.replaceState(null,'',location.pathname+location.search);}");
-                return Ok(data.to_string());
+    let script = script_template.replace("__REQUEST_ID__", &request_id_json);
+    webview.eval(&script).map_err(|error| format!("language log collection eval failed: {error}"))?;
+
+    let result_prefix = format!("__llm_langlog={request_id}=");
+    for _ in 0..240 {
+        tokio::time::sleep(std::time::Duration::from_millis(25)).await;
+        let url = webview.url().map_err(|error| error.to_string())?;
+        if let Some(fragment) = url.fragment() {
+            if let Some(payload) = fragment.strip_prefix(&result_prefix) {
+                let request_id_js = serde_json::to_string(&request_id).map_err(|error| error.to_string())?;
+                let restore_script = format!(
+                    "(function(){{var b=window.__llmChatgptLangBridge;if(b&&b.requestId==={request_id_js}&&location.hash===b.resultHash){{history.replaceState(null,'',location.pathname+location.search+(b.originalHash||''));delete window.__llmChatgptLangBridge;}}}})();"
+                );
+                webview.eval(&restore_script).map_err(|error| format!("language log URL restore failed: {error}"))?;
+                return Ok(payload.to_string());
             }
         }
-        if i == 14 {
-            return Err("timeout waiting for language debug log from ChatGPT webview".into());
-        }
     }
-    Err("unexpected".into())
-}
 
+    let request_id_js = serde_json::to_string(&request_id).map_err(|error| error.to_string())?;
+    let restore_script = format!(
+        "(function(){{var b=window.__llmChatgptLangBridge;if(b&&b.requestId==={request_id_js}){{if(location.hash===b.resultHash)history.replaceState(null,'',location.pathname+location.search+(b.originalHash||''));delete window.__llmChatgptLangBridge;}}}})();"
+    );
+    let _ = webview.eval(&restore_script);
+    Err("timeout waiting for language debug log from ChatGPT webview".into())
+}
 #[tauri::command]
 pub async fn set_chatgpt_translate_text(app: tauri::AppHandle, text: String) -> Result<(), String> {
     use tauri::Manager;
@@ -1893,32 +1935,366 @@ pub async fn set_chatgpt_translate_text(app: tauri::AppHandle, text: String) -> 
 #[tauri::command]
 pub async fn set_chatgpt_translate_languages(
     app: tauri::AppHandle,
+    source_code: String,
+    target_code: String,
     source_label: String,
     target_label: String,
     source_label_en: String,
     target_label_en: String,
 ) -> Result<(), String> {
-    eprintln!("[set_chatgpt_translate_languages] source={} / {} target={} / {}", source_label, source_label_en, target_label, target_label_en);
     use tauri::Manager;
-    let w = app.get_webview(CHATGPT_TRANSLATE_LABEL).ok_or("webview not found")?;
-    eprintln!("[set_chatgpt_translate_languages] webview found label={}", CHATGPT_TRANSLATE_LABEL);
-    let sl = serde_json::to_string(&source_label).map_err(|e| e.to_string())?;
-    let tl = serde_json::to_string(&target_label).map_err(|e| e.to_string())?;
-    let sle = serde_json::to_string(&source_label_en).map_err(|e| e.to_string())?;
-    let tle = serde_json::to_string(&target_label_en).map_err(|e| e.to_string())?;
-    let js = format!(r#"(function(){{var sl={sl};var tl={tl};var slEn={sle};var tlEn={tle};var sourceAliases=[sl,slEn].filter(Boolean);var targetAliases=[tl,tlEn].filter(Boolean);var desiredKey=JSON.stringify([sl,tl]);var controller=window.__llmChatgptLanguageController||{{runId:0,desiredKey:null,active:false}};window.__llmChatgptLanguageController=controller;controller.runId+=1;controller.desiredKey=desiredKey;controller.active=true;var runId=controller.runId;function isCurrentRun(){{return controller.active&&controller.runId===runId&&controller.desiredKey===desiredKey;}}function finishCurrentRun(){{if(isCurrentRun())controller.active=false;}}var pendingSelection=null;var LANG_LOG_KEY='__llmChatgptLanguageDebugLog';var MAX_LOGS=500;function readLangLogs(){{try{{var raw=sessionStorage.getItem(LANG_LOG_KEY);if(!raw)return[];var parsed=JSON.parse(raw);return Array.isArray(parsed)?parsed:[];}}catch(e){{return[];}}}}function writeLangLogs(entries){{try{{var str=JSON.stringify(entries);sessionStorage.setItem(LANG_LOG_KEY,str);}}catch(e){{}}window.__llmChatgptLanguageDebugLog=entries;}}function dbg(event,data){{try{{var entries=readLangLogs();var nowStr='';try{{nowStr=new Date().toISOString();}}catch(dtErr){{nowStr='date-error';}}var common={{runId:runId,cRunId:controller.runId,cActive:controller.active,desiredKey:desiredKey,pending:pendingSelection,href:location.href,readyState:document.readyState}};entries.push(Object.assign({{ts:nowStr,event:event}},common,data||{{}}));if(entries.length>MAX_LOGS)entries.splice(0,entries.length-MAX_LOGS);writeLangLogs(entries);if(window.__llmChatgptConsoleLogEnabled){{console.log('[LangDbg]',event,data||{{}});}}}}catch(dbgErr){{try{{console.error('[LangDbg] dbg error:',dbgErr);}}catch(e2){{}}}}}}function n(s){{return(s||'').replace(/\s+/g,' ').trim();}}function isVisible(el){{if(!el)return false;var r=el.getBoundingClientRect();var s=window.getComputedStyle(el);return r.width>0&&r.height>0&&s.display!=='none'&&s.visibility!=='hidden';}}function getOptionSnapshot(reason){{var allOpts=Array.from(document.querySelectorAll('[role="option"],[role="menuitem"]'));var opts=allOpts.filter(isVisible).map(function(el){{var r=el.getBoundingClientRect();return{{text:n(el.textContent||el.innerText).slice(0,80),aria:n(el.getAttribute('aria-label')||'').slice(0,80),role:el.getAttribute('role')||'',id:(el.id||'').slice(0,60),rect:{{x:Math.round(r.x),y:Math.round(r.y),w:Math.round(r.width),h:Math.round(r.height)}},vis:isVisible(el),disabled:el.disabled||false,parentRole:el.parentElement?el.parentElement.getAttribute('role')||'':'',parentText:el.parentElement?n(el.parentElement.textContent||'').slice(0,60):''}};}});var menu=getVisibleLanguageMenu();var menuInfo=null;if(menu){{var mr=menu.getBoundingClientRect();menuInfo={{tag:menu.tagName,role:menu.getAttribute('role')||'',cls:(typeof menu.className==='string'?menu.className:'').slice(0,120),rect:{{x:Math.round(mr.x),y:Math.round(mr.y),w:Math.round(mr.width),h:Math.round(mr.height)}},vis:isVisible(menu),childCount:menu.childElementCount,totalRoleOpts:allOpts.length,visRoleOpts:opts.length}};}}dbg('optionSnapshot',{{reason:reason,menu:menuInfo,optCount:opts.length,opts:opts.slice(0,30)}});}}function getSnapshotSignature(){{return Array.from(document.querySelectorAll('[role="option"],[role="menuitem"]')).filter(isVisible).map(function(el){{return n(el.textContent||el.innerText)+'|'+n(el.getAttribute('aria-label')||'')+'|'+(el.id||'')+'|'+(isVisible(el)?'1':'0');}}).join('||');}}var lastSnapshotSig='';function snapshotIfNeeded(reason,attemptNum,total){{if(attemptNum===0||attemptNum===10||attemptNum>=total-1){{getOptionSnapshot(reason);lastSnapshotSig=getSnapshotSignature();return;}}var sig=getSnapshotSignature();if(sig!==lastSnapshotSig){{getOptionSnapshot(reason+'(changed)');lastSnapshotSig=sig;}}}}function getSourceButtonByAria(){{return Array.from(document.querySelectorAll('button[aria-label]')).find(function(b){{var a=b.getAttribute('aria-label')||'';return a.includes("翻訳元の言語")||a.includes("Source language");}});}}function getTargetButtonByAria(){{return Array.from(document.querySelectorAll('button[aria-label]')).find(function(b){{var a=b.getAttribute('aria-label')||'';return a.includes("翻訳先の言語")||a.includes("Target language");}});}}function getFallbackLanguageButtons(){{var root=document.querySelector('[data-llm-chatgpt-form="true"]')||document.querySelector('[data-llm-chatgpt-container="true"]')||document;return Array.from(root.querySelectorAll('button.interactive-button.interactive-button-secondary')).filter(function(b){{if(!isVisible(b))return false;var span=b.querySelector('span.truncate');if(!span)return false;return n(span.textContent||span.innerText).length>0;}}).sort(function(a,b){{return a.getBoundingClientRect().left-b.getBoundingClientRect().left;}});}}function getLanguageButtons(){{var srcAria=getSourceButtonByAria();var tgtAria=getTargetButtonByAria();if(srcAria&&tgtAria)return{{source:srcAria,target:tgtAria}};var fallback=getFallbackLanguageButtons();if(fallback.length!==2)return{{source:null,target:null}};return{{source:fallback[0],target:fallback[1]}};}}function getButtonLanguageText(button){{if(!button)return"";var span=button.querySelector('span.truncate');return n((span&&(span.textContent||span.innerText))||button.textContent||button.innerText);}}function getVisibleLanguageMenu(){{return Array.from(document.querySelectorAll('[role="dialog"],[role="listbox"]')).find(function(menu){{if(!isVisible(menu))return false;var searchInput=menu.querySelector('input[placeholder*="言語"],input[type="search"]');var hasLanguageOptions=Array.from(menu.querySelectorAll('button,[role="option"],[role="menuitem"]')).some(function(el){{var text=(el.textContent||'').trim();return text==="日本語"||text==="英語"||text==="イタリア語"||text==="フランス語";}});return !!(searchInput||hasLanguageOptions);}})||null;}}function isLanguageMenuOpenForButton(button){{if(!button)return false;if(button.getAttribute("aria-expanded")==="true")return true;var controls=button.getAttribute("aria-controls");if(controls){{var controlled=document.getElementById(controls);if(controlled&&isVisible(controlled))return true;}}return getVisibleLanguageMenu()!==null;}}function findOption(aliases){{var normalizedAliases=aliases.filter(Boolean).map(n);return Array.from(document.querySelectorAll('[role="option"],[role="menuitem"]')).filter(isVisible).find(function(el){{var text=n(el.textContent||el.innerText);var aria=n(el.getAttribute('aria-label')||'');return normalizedAliases.indexOf(text)!==-1||normalizedAliases.indexOf(aria)!==-1;}})||null;}}function waitForLanguageApplied(role,aliases,attempts){{if(!isCurrentRun())return;var buttons=getLanguageButtons();var button=role==="source"?buttons.source:buttons.target;var current=getButtonLanguageText(button);var normalizedAliases=aliases.filter(Boolean).map(n);if(normalizedAliases.indexOf(current)!==-1){{dbg('waitForLanguageApplied.matched',{{kind:role,current:current}});pendingSelection=null;return;}}if(attempts<=0){{dbg('waitForLanguageApplied.timeout',{{kind:role,current:current}});if(isCurrentRun())pendingSelection=null;return;}}setTimeout(function(){{if(!isCurrentRun())return;waitForLanguageApplied(role,aliases,attempts-1);}},100);}}function clickOptionWithRetry(kind,aliases,attempts){{dbg('clickOptionWithRetry.entry',{{kind:kind,aliases:aliases,attempts:attempts}});function attempt(remaining){{if(!isCurrentRun())return;var attemptNum=attempts-remaining;snapshotIfNeeded('attempt',attemptNum,attempts);var option=findOption(aliases);if(option){{if(!isCurrentRun())return;var elText=n(option.textContent||option.innerText);dbg('findOption.hit',{{kind:kind,text:elText}});option.click();dbg('option.click',{{kind:kind,text:elText}});waitForLanguageApplied(kind,aliases,20);return;}}dbg('findOption.miss',{{kind:kind,remaining:remaining,attemptNum:attemptNum}});if(remaining<=0){{dbg('clickOptionWithRetry.exhausted',{{kind:kind}});if(isCurrentRun())pendingSelection=null;return;}}setTimeout(function(){{if(!isCurrentRun())return;attempt(remaining-1);}},100);}}attempt(attempts);}}function selectLanguage(kind,button,aliases){{if(!button)return"missing";var current=getButtonLanguageText(button);dbg('selectLanguage.entry',{{kind:kind,current:current,aliases:aliases,menuOpen:isLanguageMenuOpenForButton(button)}});var normalizedAliases=aliases.filter(Boolean).map(n);if(normalizedAliases.indexOf(current)!==-1){{if(pendingSelection===kind&&isCurrentRun())pendingSelection=null;return"matched";}}if(pendingSelection!==null&&isCurrentRun())return"pending";if(!isCurrentRun())return"stale";pendingSelection=kind;dbg('selectLanguage.beforeClick',{{kind:kind,menuOpen:isLanguageMenuOpenForButton(button),ariaExpanded:button.getAttribute('aria-expanded'),ariaControls:button.getAttribute('aria-controls')||'',activeEl:document.activeElement?document.activeElement.tagName:''}});if(!isLanguageMenuOpenForButton(button)){{button.click();}}setTimeout(function(){{if(!isCurrentRun())return;var menuOpen=isLanguageMenuOpenForButton(button);dbg('selectLanguage.afterClick100ms',{{kind:kind,menuOpen:menuOpen,ariaExpanded:button.getAttribute('aria-expanded')}});if(menuOpen){{getOptionSnapshot('afterClick100ms');}}}},100);setTimeout(function(){{if(!isCurrentRun())return;var menuOpen=isLanguageMenuOpenForButton(button);dbg('selectLanguage.afterClick300ms',{{kind:kind,menuOpen:menuOpen,ariaExpanded:button.getAttribute('aria-expanded')}});}},300);setTimeout(function(){{if(!isCurrentRun())return;clickOptionWithRetry(kind,aliases,20);}},150);return"pending";}}function applyLanguages(){{dbg('applyLanguages.entry',{{sourceLabel:sl,sourceLabelEn:slEn,targetLabel:tl,targetLabelEn:tlEn,sourceAliases:sourceAliases,targetAliases:targetAliases}});var buttons=getLanguageButtons();dbg('applyLanguages.buttons',{{hasSource:!!buttons.source,hasTarget:!!buttons.target}});if(!buttons.source||!buttons.target){{dbg('earlyReturn',{{from:'applyLanguages',reason:'missingButtons',hasSource:!!buttons.source,hasTarget:!!buttons.target}});return"missing";}}dbg('beforeSelectSource',{{sourceAliases:sourceAliases}});var sourceState=selectLanguage("source",buttons.source,sourceAliases);dbg('afterSelectSourceCall',{{state:sourceState}});if(sourceState!=="matched"){{dbg('earlyReturn',{{from:'applyLanguages',reason:'sourceNotMatched',state:sourceState}});return sourceState;}}dbg('beforeSelectTarget',{{targetAliases:targetAliases}});var targetState=selectLanguage("target",buttons.target,targetAliases);dbg('afterSelectTargetCall',{{state:targetState}});if(targetState!=="matched"){{dbg('earlyReturn',{{from:'applyLanguages',reason:'targetNotMatched',state:targetState}});return targetState;}}return"matched";}}dbg('start',{{sourceAliases:sourceAliases,targetAliases:targetAliases}});try{{dbg('afterStart');dbg('beforeApplyLanguages',{{runId:runId,desiredKey:desiredKey}});var state=applyLanguages();dbg('applyLanguages.result',{{state:state}});if(state==="matched"){{dbg('finishCurrentRun',{{reason:'initialMatch'}});finishCurrentRun();return;}}dbg('beforeInterval',{{state:state}});var count=0;var maxAttempts=40;var interval=setInterval(function(){{if(!isCurrentRun()){{clearInterval(interval);return;}}count+=1;var newState=applyLanguages();dbg('interval.poll',{{count:count,state:newState}});if(newState==="matched"){{clearInterval(interval);dbg('finishCurrentRun',{{reason:'pollMatch'}});finishCurrentRun();return;}}if(count>=maxAttempts){{clearInterval(interval);dbg('interval.exhausted',{{count:count}});dbg('finishCurrentRun',{{reason:'maxAttempts'}});finishCurrentRun();}}}},250);dbg('afterInterval',{{intervalSet:true}});}}catch(e){{dbg('fatalError',{{msg:String(e),stack:e&&e.stack?String(e.stack).slice(0,500):'no-stack'}});try{{finishCurrentRun();}}catch(e2){{}}}}}})();"#);
-    match w.eval(&js) {
-        Ok(_) => {
-            eprintln!("[set_chatgpt_translate_languages] eval injected successfully");
-            Ok(())
-        }
-        Err(e) => {
-            eprintln!("[set_chatgpt_translate_languages] eval failed: {}", e);
-            Err(format!("eval failed: {e}"))
+
+    let _bridge_guard = CHATGPT_LANGUAGE_BRIDGE_LOCK.lock().await;
+    let webview = app.get_webview(CHATGPT_TRANSLATE_LABEL).ok_or("webview not found")?;
+    let request_id = uuid::Uuid::new_v4().simple().to_string();
+    let params = serde_json::json!({
+        "requestId": request_id.clone(),
+        "sourceCode": source_code,
+        "targetCode": target_code,
+        "sourceLabel": source_label,
+        "targetLabel": target_label,
+        "sourceLabelEn": source_label_en,
+        "targetLabelEn": target_label_en,
+    });
+    let params_json = serde_json::to_string(&params).map_err(|error| error.to_string())?;
+    let script_template = r#"(function() {
+  const params = __PARAMS__;
+  const previousBridge = window.__llmChatgptLangBridge;
+  const originalHash = previousBridge && location.hash === previousBridge.resultHash
+    ? previousBridge.originalHash
+    : location.hash;
+  const controller = window.__llmChatgptLanguageController || { runId: 0, requestId: null, active: false };
+  window.__llmChatgptLanguageController = controller;
+  controller.runId += 1;
+  controller.requestId = params.requestId;
+  controller.active = true;
+  const runId = controller.runId;
+  const logKey = '__llmChatgptLanguageDebugLog';
+  const maxLogs = 500;
+  const sourceAliases = [params.sourceLabel, params.sourceLabelEn];
+  const isAutoDetect = params.sourceCode === 'auto';
+  if (isAutoDetect) {
+    sourceAliases.push('言語を自動検出', '自動検出', 'Auto-detect', 'Auto detect');
+  }
+  const targetAliases = [params.targetLabel, params.targetLabelEn];
+
+  function isCurrentRun() {
+    return controller.active && controller.runId === runId && controller.requestId === params.requestId;
+  }
+  function normalize(value) {
+    return (value || '').replace(/\s+/g, ' ').trim().toLocaleLowerCase();
+  }
+  function visible(element) {
+    if (!element) return false;
+    const rect = element.getBoundingClientRect();
+    const style = window.getComputedStyle(element);
+    return rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden';
+  }
+  function safeHref() {
+    return location.origin + location.pathname;
+  }
+  function readLogs() {
+    try {
+      const parsed = JSON.parse(sessionStorage.getItem(logKey) || '[]');
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (_) {
+      return [];
+    }
+  }
+  function writeLogs(entries) {
+    try { sessionStorage.setItem(logKey, JSON.stringify(entries)); } catch (_) {}
+    window.__llmChatgptLanguageDebugLog = entries;
+  }
+  function debug(event, data) {
+    try {
+      const entries = readLogs();
+      entries.push(Object.assign({
+        ts: new Date().toISOString(),
+        event,
+        runId,
+        requestId: params.requestId,
+        desiredKey: JSON.stringify([params.sourceCode, params.targetCode]),
+        href: safeHref(),
+        readyState: document.readyState
+      }, data || {}));
+      if (entries.length > maxLogs) entries.splice(0, entries.length - maxLogs);
+      writeLogs(entries);
+      if (window.__llmChatgptConsoleLogEnabled) console.log('[LangDbg]', event, data || {});
+    } catch (error) {
+      try { console.error('[LangDbg] logging failed', String(error)); } catch (_) {}
+    }
+  }
+  function findButton(kind) {
+    const japanese = kind === 'source' ? '翻訳元の言語' : '翻訳先の言語';
+    const english = kind === 'source' ? 'Source language' : 'Target language';
+    return Array.from(document.querySelectorAll('button[aria-label]')).find(function(button) {
+      const label = normalize(button.getAttribute('aria-label') || '');
+      if (isSwapButton(button, label)) return false;
+      return label === normalize(japanese) || label.startsWith(normalize(japanese) + ':') ||
+        label === normalize(english) || label.startsWith(normalize(english) + ':');
+    }) || null;
+  }
+  function isSwapButton(button, normalizedLabel) {
+    const label = normalizedLabel || normalize(button && button.getAttribute('aria-label'));
+    const text = normalize(button && (button.textContent || button.innerText));
+    return /入れ替え|入れ換え|swap/.test(label) || /入れ替え|入れ換え|swap/.test(text);
+  }
+  function getLanguageButtons() {
+    let source = findButton('source');
+    let target = findButton('target');
+    if (source && target) return { source, target };
+    const root = document.querySelector('[data-llm-chatgpt-form="true"]') || document.querySelector('[data-llm-chatgpt-container="true"]') || document;
+    const fallback = Array.from(root.querySelectorAll('button.interactive-button.interactive-button-secondary'))
+      .filter(function(button) {
+        if (!visible(button)) return false;
+        if (isSwapButton(button)) return false;
+        const span = button.querySelector('span.truncate');
+        return !!(span && normalize(span.textContent));
+      })
+      .sort(function(a, b) { return a.getBoundingClientRect().left - b.getBoundingClientRect().left; });
+    if (!source && fallback.length >= 1) source = fallback[0];
+    if (!target && fallback.length >= 2) target = fallback[1];
+    return { source, target };
+  }
+  function getLanguageButton(kind) {
+    const buttons = getLanguageButtons();
+    return kind === 'source' ? buttons.source : buttons.target;
+  }
+  function currentValue(button) {
+    if (!button) return '';
+    const text = normalize(button.textContent || button.innerText);
+    if (text) return text;
+    const label = (button.getAttribute('aria-label') || '').replace(/^[^:：]+[:：]\s*/, '');
+    return normalize(label);
+  }
+  function optionPrefix(kind) {
+    return 'translate-' + kind + '-language-';
+  }
+  function findMenu(kind, button) {
+    const controls = button && button.getAttribute('aria-controls');
+    if (controls) {
+      const controlled = document.getElementById(controls);
+      if (visible(controlled)) return controlled;
+    }
+    const prefix = optionPrefix(kind);
+    const menus = Array.from(document.querySelectorAll('[role="listbox"], [role="dialog"]')).filter(visible);
+    const prefixedMenu = menus.find(function(menu) {
+      return Array.from(menu.querySelectorAll('[role="option"], [role="menuitem"], button'))
+        .some(function(option) { return (option.id || '').startsWith(prefix); });
+    });
+    if (prefixedMenu) return prefixedMenu;
+    const optionMenus = menus.filter(function(menu) {
+      return menu.querySelector('[role="option"], [role="menuitem"]');
+    });
+    if (!button || optionMenus.length === 0) return null;
+    const buttonRect = button.getBoundingClientRect();
+    const buttonCenter = buttonRect.left + buttonRect.width / 2;
+    const relatedMenus = optionMenus.map(function(menu) {
+      const rect = menu.getBoundingClientRect();
+      return { menu, distance: Math.abs((rect.left + rect.width / 2) - buttonCenter) };
+    }).sort(function(a, b) { return a.distance - b.distance; });
+    if (button.getAttribute('aria-expanded') === 'true' || optionMenus.length === 1) {
+      return relatedMenus[0].menu;
+    }
+    const nearest = relatedMenus[0];
+    return nearest && nearest.distance <= Math.max(buttonRect.width, 160) ? nearest.menu : null;
+  }
+  function isMenuOpen(kind, button) {
+    return !!(button && button.getAttribute('aria-expanded') === 'true') || !!findMenu(kind, button);
+  }
+  function optionText(option) {
+    return normalize(option.textContent || option.innerText || option.getAttribute('aria-label'));
+  }
+  function findOption(kind, code, aliases, button) {
+    const prefix = optionPrefix(kind);
+    const menu = findMenu(kind, button);
+    const expectedId = kind === 'source' && code === 'auto' ? prefix + 'detect' : null;
+    if (expectedId) {
+      const detectOption = document.getElementById(expectedId);
+      if (visible(detectOption) && (!menu || menu.contains(detectOption))) return detectOption;
+    }
+    const allOptions = menu
+      ? Array.from(menu.querySelectorAll('[role="option"], [role="menuitem"], button')).filter(visible)
+      : Array.from(document.querySelectorAll('[role="option"], [role="menuitem"]')).filter(visible);
+    const prefixed = allOptions.filter(function(option) { return (option.id || '').startsWith(prefix); });
+    const candidates = prefixed.length ? prefixed : allOptions;
+    const normalizedAliases = aliases.filter(Boolean).map(normalize);
+    return candidates.find(function(option) {
+      const text = optionText(option);
+      const aria = normalize(option.getAttribute('aria-label'));
+      return normalizedAliases.includes(text) || normalizedAliases.includes(aria);
+    }) || null;
+  }
+  function wait(ms) {
+    return new Promise(function(resolve) { setTimeout(resolve, ms); });
+  }
+  async function waitForMenu(kind, button) {
+    for (let attempt = 0; attempt < 20; attempt += 1) {
+      if (!isCurrentRun()) return null;
+      const activeButton = getLanguageButton(kind) || button;
+      const menu = findMenu(kind, activeButton);
+      if (menu) return menu;
+      await wait(100);
+    }
+    return null;
+  }
+  async function closeMenu(kind, button) {
+    if (button && isMenuOpen(kind, button)) {
+      try { button.click(); } catch (_) {}
+      await wait(100);
+    }
+  }
+  async function selectLanguage(kind, code, button, label, aliases) {
+    let activeButton = getLanguageButton(kind) || button;
+    if (!activeButton) {
+      debug('selection.missing_button', { kind, code, requested: label });
+      return 'missing_button';
+    }
+    const initial = currentValue(activeButton);
+    debug('selection.start', { kind, code, requested: label, current: initial, buttonAria: activeButton.getAttribute('aria-label') || '' });
+    if (aliases.map(normalize).includes(initial)) {
+      debug('selection.already_matched', { kind, code, current: initial });
+      return 'matched';
+    }
+    if (!isMenuOpen(kind, activeButton)) {
+      try { activeButton.click(); } catch (error) {
+        debug('selection.button_click_error', { kind, code, error: String(error) });
+        return 'apply_error';
+      }
+    }
+    const menu = await waitForMenu(kind, activeButton);
+    if (!menu) {
+      activeButton = getLanguageButton(kind) || activeButton;
+      debug('selection.menu_not_found', { kind, code, current: currentValue(activeButton) });
+      await closeMenu(kind, activeButton);
+      return 'not_found';
+    }
+    let option = null;
+    for (let attempt = 0; attempt < 20; attempt += 1) {
+      if (!isCurrentRun()) return 'cancelled';
+      activeButton = getLanguageButton(kind) || activeButton;
+      option = findOption(kind, code, aliases, activeButton);
+      if (option) break;
+      if (attempt === 0 || attempt === 10 || attempt === 19) {
+        debug('selection.option_snapshot', {
+          kind,
+          code,
+          menuRole: menu.getAttribute('role') || '',
+          options: Array.from(menu.querySelectorAll('[role="option"], [role="menuitem"]')).filter(visible).slice(0, 30).map(function(item) {
+            return { id: item.id || '', role: item.getAttribute('role') || '', text: optionText(item), aria: normalize(item.getAttribute('aria-label')) };
+          })
+        });
+      }
+      await wait(100);
+    }
+    if (!option) {
+      debug('selection.option_not_found', { kind, code, requested: label });
+      await closeMenu(kind, button);
+      return 'not_found';
+    }
+    const optionId = option.id || '';
+    const selectedText = optionText(option);
+    try { option.click(); } catch (error) {
+      debug('selection.option_click_error', { kind, code, optionId, selectedText, error: String(error) });
+      await closeMenu(kind, button);
+      return 'apply_error';
+    }
+    debug('selection.option_clicked', { kind, code, optionId, selectedText });
+    for (let attempt = 0; attempt < 25; attempt += 1) {
+      if (!isCurrentRun()) return 'cancelled';
+      activeButton = getLanguageButton(kind) || activeButton;
+      const current = currentValue(activeButton);
+      if (aliases.map(normalize).includes(current)) {
+        debug('selection.verified', { kind, code, optionId, current });
+        return 'matched';
+      }
+      await wait(100);
+    }
+    activeButton = getLanguageButton(kind) || activeButton;
+    const current = currentValue(activeButton);
+    debug('selection.verification_timeout', { kind, code, optionId, expected: label, current });
+    await closeMenu(kind, activeButton);
+    return 'timeout';
+  }
+  function publishResult(sourceStatus, targetStatus) {
+    if (!isCurrentRun()) return;
+    controller.active = false;
+    const resultHash = '#__llm_langresult=' + params.requestId + ':' + sourceStatus + ':' + targetStatus;
+    window.__llmChatgptLangBridge = { requestId: params.requestId, kind: 'language-result', originalHash, resultHash };
+    debug('selection.complete', { sourceStatus, targetStatus, sourceCurrent: currentValue(getLanguageButtons().source), targetCurrent: currentValue(getLanguageButtons().target) });
+    location.hash = resultHash;
+  }
+  async function run() {
+    debug('selection.request', {
+      sourceCode: params.sourceCode,
+      targetCode: params.targetCode,
+      sourceLabel: params.sourceLabel,
+      sourceLabelEn: params.sourceLabelEn,
+      targetLabel: params.targetLabel,
+      targetLabelEn: params.targetLabelEn
+    });
+    let buttons = getLanguageButtons();
+    for (let attempt = 0; attempt < 40 && (!buttons.source || !buttons.target); attempt += 1) {
+      if (!isCurrentRun()) return;
+      await wait(250);
+      buttons = getLanguageButtons();
+    }
+    buttons = getLanguageButtons();
+    debug('selection.buttons', {
+      sourceAria: buttons.source && buttons.source.getAttribute('aria-label') || '',
+      sourceValue: currentValue(buttons.source),
+      targetAria: buttons.target && buttons.target.getAttribute('aria-label') || '',
+      targetValue: currentValue(buttons.target)
+    });
+    const sourceStatus = await selectLanguage('source', params.sourceCode, buttons.source, params.sourceLabel, sourceAliases);
+    if (!isCurrentRun()) return;
+    buttons = getLanguageButtons();
+    if (sourceStatus !== 'matched') await closeMenu('source', buttons.source);
+    const targetStatus = await selectLanguage('target', params.targetCode, buttons.target, params.targetLabel, targetAliases);
+    if (!isCurrentRun()) return;
+    buttons = getLanguageButtons();
+    if (targetStatus !== 'matched') await closeMenu('target', buttons.target);
+    publishResult(sourceStatus, targetStatus);
+  }
+  run().catch(function(error) {
+    debug('selection.unhandled_error', { error: String(error), stack: error && error.stack ? String(error.stack).slice(0, 500) : '' });
+    publishResult('apply_error', 'apply_error');
+  });
+})()"#;
+    let script = script_template.replace("__PARAMS__", &params_json);
+    if let Err(error) = webview.eval(&script) {
+        return Err(format!("language selection script injection failed: {error}"));
+    }
+
+    let result_prefix = format!("__llm_langresult={request_id}:");
+    for _ in 0..400 {
+        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+        let url = webview.url().map_err(|error| error.to_string())?;
+        if let Some(fragment) = url.fragment() {
+            if let Some(payload) = fragment.strip_prefix(&result_prefix) {
+                let mut statuses = payload.split(':');
+                let source_status = statuses.next().unwrap_or("apply_error");
+                let target_status = statuses.next().unwrap_or("apply_error");
+                let request_id_js = serde_json::to_string(&request_id).map_err(|error| error.to_string())?;
+                let restore_script = format!(
+                    "(function(){{var b=window.__llmChatgptLangBridge;if(b&&b.requestId==={request_id_js}&&location.hash===b.resultHash){{history.replaceState(null,'',location.pathname+location.search+(b.originalHash||''));delete window.__llmChatgptLangBridge;}}}})();"
+                );
+                webview.eval(&restore_script).map_err(|error| format!("language selection URL restore failed: {error}"))?;
+                if source_status == "matched" && target_status == "matched" {
+                    return Ok(());
+                }
+                return Err(format!("ChatGPT language selection failed: source={source_status}, target={target_status}"));
+            }
         }
     }
-}
 
+    let request_id_js = serde_json::to_string(&request_id).map_err(|error| error.to_string())?;
+    let restore_script = format!(
+        "(function(){{var b=window.__llmChatgptLangBridge;if(b&&b.requestId==={request_id_js}){{if(location.hash===b.resultHash)history.replaceState(null,'',location.pathname+location.search+(b.originalHash||''));delete window.__llmChatgptLangBridge;}}var c=window.__llmChatgptLanguageController;if(c&&c.requestId==={request_id_js})c.active=false;}})();"
+    );
+    let _ = webview.eval(&restore_script);
+    Err("timeout waiting for ChatGPT language selection result".into())
+}
 #[derive(serde::Serialize, Clone)]
 pub struct LanguageInfo {
     pub code: String,

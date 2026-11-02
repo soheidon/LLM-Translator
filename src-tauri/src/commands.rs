@@ -677,60 +677,101 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview, hide_lp: bool) -> Result<
         overflow: hidden !important;
       }
 
-      /* Unconstrain ancestor wrappers above outer (Tailwind max-w-* / mx-auto) */
+      /* Collapse sidebar grid column and zero marketing/sidebar spacing variables */
+      :root,
+      body {
+        --x13mh34a: 0px !important;
+        --mkt-header-height: 0px !important;
+      }
+
+      /* Page chrome: app sidebar, sidebar headers, marketing headers, and footers */
+      #stage-slideover-sidebar,
+      #sidebar-header,
+      #contentful-header,
+      body > div aside,
+      aside:not([data-testid*="translate"]),
+      aside header,
+      body > div > div > aside,
+      body > div footer,
+      footer:not([data-testid*="translate"]),
+      [data-llm-chatgpt-outer="true"] > header,
+      [data-llm-chatgpt-outer="true"] > footer,
+      [data-llm-chatgpt-outer="true"] ~ footer,
+      [data-llm-chatgpt-container="true"] > header,
+      [data-llm-chatgpt-container="true"] h1,
+      [data-testid="signup-button"],
+      [data-testid="login-button"],
+      .prompt-card,
+      a.prompt-card,
+      [data-llm-translator-hidden-suggestion="true"] {
+        display: none !important;
+      }
+
+      /* Collapse sidebar column in grid container */
+      [class*="x67ebes"],
+      div:has(> aside) {
+        grid-template-columns: 0px minmax(0, 1fr) !important;
+      }
+
+      /* Unconstrain ancestor wrappers above outer (Tailwind/StyleX max-w-* / mx-auto) */
       [data-llm-chatgpt-width-wrapper="true"] {
         width: 100% !important;
         max-width: none !important;
         margin-left: 0 !important;
         margin-right: 0 !important;
+        overflow: visible !important;
       }
 
-      /* Outer wrapper: remove Tailwind padding/max-width from parent of container */
+      /* Outer wrapper: fill full available width and height without right overflow */
       [data-llm-chatgpt-outer="true"] {
         padding: 0 !important;
         margin: 0 !important;
-        width: min(80vw, 1600px) !important;
-        max-width: min(80vw, 1600px) !important;
-        margin-left: auto !important;
-        margin-right: auto !important;
-        min-height: calc(100vh - 44px) !important;
-        height: calc(100vh - 44px) !important;
-        max-height: calc(100vh - 44px) !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-height: 100vh !important;
+        height: 100vh !important;
+        max-height: 100vh !important;
         display: flex !important;
         flex-direction: column !important;
-        overflow: hidden !important;
+        overflow: visible !important;
         box-sizing: border-box !important;
       }
 
-      /* Flex layout: page fills viewport height (attribute-based for both variant A & B) */
+      /* Container (main): center and fit translation UI within available area */
       main[data-llm-chatgpt-container="true"],
       [data-llm-chatgpt-container="true"] {
-        min-height: calc(100vh - 44px) !important;
-        height: calc(100vh - 44px) !important;
-        max-height: calc(100vh - 44px) !important;
+        min-height: 100vh !important;
+        height: 100vh !important;
+        max-height: 100vh !important;
         width: 100% !important;
         max-width: none !important;
         box-sizing: border-box !important;
         display: flex !important;
         flex-direction: column !important;
-        overflow: hidden !important;
-        padding-top: 4px !important;
-        padding-bottom: 12px !important;
-        margin-top: 0 !important;
+        overflow: visible !important;
+        padding: 12px 20px !important;
+        margin: 0 !important;
         flex: 1 1 auto !important;
         gap: 12px !important;
       }
 
       main[data-llm-chatgpt-container="true"] > div,
-      [data-llm-chatgpt-container="true"] > div {
+      main[data-llm-chatgpt-container="true"] > section,
+      [data-llm-chatgpt-container="true"] > div,
+      [data-llm-chatgpt-container="true"] > section {
         flex: 1 1 auto !important;
         min-height: 0 !important;
+        width: 100% !important;
+        max-width: none !important;
         display: flex !important;
         flex-direction: column !important;
         padding-top: 0 !important;
         margin-top: 0 !important;
+        overflow: visible !important;
       }
 
+      main[data-llm-chatgpt-container="true"] > header,
+      [data-llm-chatgpt-container="true"] > header,
       [data-llm-chatgpt-container="true"] h1 {
         display: none !important;
         margin: 0 !important;
@@ -738,7 +779,6 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview, hide_lp: bool) -> Result<
         height: 0 !important;
         min-height: 0 !important;
       }
-
 
       [data-llm-chatgpt-form="true"] {
         width: 100% !important;
@@ -750,23 +790,37 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview, hide_lp: bool) -> Result<
         gap: 12px !important;
         margin-top: 0 !important;
         padding-top: 0 !important;
+        overflow: visible !important;
       }
 
+      /* Language selection row: keep visible above cards */
+      [data-llm-chatgpt-language-row="true"] {
+        width: 100% !important;
+        flex: 0 0 auto !important;
+        overflow: visible !important;
+        position: relative !important;
+        z-index: 100 !important;
+      }
+
+      /* Translation cards row: side-by-side two cards layout */
       [data-llm-chatgpt-translate-row="true"] {
         flex: 1 1 auto !important;
         min-height: 0 !important;
-        display: flex !important;
-        flex-direction: row !important;
-        gap: 24px !important;
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 16px !important;
         width: 100% !important;
+        box-sizing: border-box !important;
+        overflow: visible !important;
       }
 
       [data-llm-chatgpt-column="true"] {
-        flex: 1 1 0 !important;
         min-width: 0 !important;
         min-height: 0 !important;
+        height: 100% !important;
         display: flex !important;
         flex-direction: column !important;
+        box-sizing: border-box !important;
       }
 
       [data-llm-chatgpt-result-wrapper="true"] {
@@ -777,122 +831,24 @@ fn apply_chatgpt_translate_cleanup(w: &tauri::Webview, hide_lp: bool) -> Result<
       }
 
       [data-llm-chatgpt-source-textarea="true"],
-      [data-llm-chatgpt-target-textarea="true"] {
+      [data-llm-chatgpt-target-textarea="true"],
+      [data-llm-chatgpt-column="true"] textarea {
         flex: 1 1 auto !important;
         width: 100% !important;
         height: 100% !important;
         min-height: 0 !important;
         max-height: none !important;
         box-sizing: border-box !important;
+        resize: none !important;
+        overflow-y: auto !important;
       }
 
-      [data-llm-chatgpt-column="true"] > textarea {
-        width: 100% !important;
+      /* Language selection popovers: ensure proper stacking without altering native fixed coordinates */
+      #translate-source-language-popover,
+      #translate-target-language-popover {
+        z-index: 99999 !important;
       }
-
-      /* Header: minimal height for login row, right-aligned */
-      [data-llm-chatgpt-login-header="true"] {
-        height: 44px !important;
-        min-height: 44px !important;
-        padding: 4px 24px 4px 24px !important;
-        margin: 0 !important;
-        background: transparent !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: flex-end !important;
-        overflow: visible !important;
-        position: relative !important;
-        z-index: 40 !important;
-      }
-
-      /* Login block: normal flow, right-aligned inside the header */
-      [data-llm-chatgpt-login-block="true"] {
-        position: static !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: flex-end !important;
-        gap: 8px !important;
-        pointer-events: auto !important;
-        z-index: 41 !important;
-      }
-
-      [data-llm-chatgpt-container="true"] [data-testid="signup-button"] {
-        display: none !important;
-      }
-
-      [data-llm-chatgpt-container="true"] [data-testid="login-button"] {
-        display: inline-flex !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-      }
-
-      .prompt-card,
-      a.prompt-card {
-        display: none !important;
-      }
-
-      /* Hide marketing LP header (variant A) */
-      /* Slim login-only header bar (variant A: keep login, hide marketing nav) */
-      #contentful-header {
-        display: flex !important;
-        height: 44px !important;
-        min-height: 44px !important;
-        max-height: 44px !important;
-        align-items: center !important;
-        justify-content: flex-end !important;
-        padding: 4px 24px !important;
-        box-sizing: border-box !important;
-        position: relative !important;
-        top: auto !important;
-        z-index: 40 !important;
-        overflow: hidden !important;
-      }
-
-      /* Hide marketing nav/logo inside contentful-header, keep auth area */
-      #contentful-header nav,
-      #contentful-header ul,
-      #contentful-header li,
-      #contentful-header [href*="/overview"],
-      #contentful-header [href*="/features"],
-      #contentful-header [href*="/learn"],
-      #contentful-header [href*="/business"],
-      #contentful-header [href*="/pricing"],
-      #contentful-header [href*="/download"] {
-        display: none !important;
-      }
-
-      #contentful-header > div:first-child {
-        display: none !important;
-      }
-
-      #contentful-header [data-testid="signup-button"] {
-        display: none !important;
-      }
-
-      #contentful-header [data-testid="login-button"] {
-        display: inline-flex !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-      }
-
-      /* Override LP header height CSS variable — also on body so calc() picks it up */
-      :root,
-      body {
-        --mkt-header-height: 0px !important;
-      }
-
-      /* Hide app sidebar header by ID (variant B, safer than class wildcard) */
-      #sidebar-header {
-        display: none !important;
-      }
-
-      @media (max-width: 1100px) {
-        [data-llm-chatgpt-outer="true"] {
-          width: calc(100vw - 32px) !important;
-          max-width: calc(100vw - 32px) !important;
-        }
-      }
-    `;
+        `;
     document.documentElement.appendChild(style);
   }
 

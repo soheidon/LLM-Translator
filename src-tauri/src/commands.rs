@@ -2093,11 +2093,9 @@ pub async fn set_chatgpt_translate_languages(
       const rect = menu.getBoundingClientRect();
       return { menu, distance: Math.abs((rect.left + rect.width / 2) - buttonCenter) };
     }).sort(function(a, b) { return a.distance - b.distance; });
-    if (button.getAttribute('aria-expanded') === 'true' || optionMenus.length === 1) {
-      return relatedMenus[0].menu;
-    }
     const nearest = relatedMenus[0];
-    return nearest && nearest.distance <= Math.max(buttonRect.width, 160) ? nearest.menu : null;
+    const maxDistance = Math.max(buttonRect.width, 160);
+    return nearest && nearest.distance <= maxDistance ? nearest.menu : null;
   }
   function isMenuOpen(kind, button) {
     return !!(button && button.getAttribute('aria-expanded') === 'true') || !!findMenu(kind, button);

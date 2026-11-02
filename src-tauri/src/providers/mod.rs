@@ -66,6 +66,4 @@ pub enum TranslationError {
     ParseError(String),
     #[error("Rate limited")]
     RateLimited,
-    #[error("Text too long ({0} chars)")]
-    TextTooLong(usize),
 }

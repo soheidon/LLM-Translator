@@ -37,11 +37,25 @@ export const SUPPORTED_LANGUAGES: { code: LanguageCode; nativeName: string }[] =
   { code: 'it', nativeName: 'Italiano' },
 ];
 
-const translationsCache: Record<string, Translations> = {};
+const translationLoaders: Record<LanguageCode, () => Promise<Translations>> = {
+  en: async () => (await import('./en.json')).default,
+  ja: async () => (await import('./ja.json')).default,
+  'zh-CN': async () => (await import('./zh-CN.json')).default,
+  'zh-TW': async () => (await import('./zh-TW.json')).default,
+  ko: async () => (await import('./ko.json')).default,
+  fr: async () => (await import('./fr.json')).default,
+  de: async () => (await import('./de.json')).default,
+  es: async () => (await import('./es.json')).default,
+  pt: async () => (await import('./pt.json')).default,
+  ru: async () => (await import('./ru.json')).default,
+  it: async () => (await import('./it.json')).default,
+};
+
+const translationsCache: Partial<Record<LanguageCode, Translations>> = {};
 
 export async function loadTranslations(lang: LanguageCode): Promise<Translations> {
   if (translationsCache[lang]) return translationsCache[lang];
-  const mod = await import(`./${lang}.json`);
-  translationsCache[lang] = mod.default ?? mod;
-  return translationsCache[lang];
+  const translations = await translationLoaders[lang]();
+  translationsCache[lang] = translations;
+  return translations;
 }

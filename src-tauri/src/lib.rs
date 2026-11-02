@@ -12,8 +12,24 @@ use tauri::{Emitter, Manager};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    let log_plugin = {
+        #[cfg(debug_assertions)]
+        {
+            // Keep `tauri dev` usable when the app cannot write to the OS log directory.
+            tauri_plugin_log::Builder::default()
+                .clear_targets()
+                .target(tauri_plugin_log::Target::new(
+                    tauri_plugin_log::TargetKind::Stdout,
+                ))
+        }
+        #[cfg(not(debug_assertions))]
+        {
+            tauri_plugin_log::Builder::default()
+        }
+    };
+
     tauri::Builder::default()
-        .plugin(tauri_plugin_log::Builder::default().build())
+        .plugin(log_plugin.build())
         .plugin(tauri_plugin_global_shortcut::Builder::default().build())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_shell::init())
